@@ -1,121 +1,97 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [capabilities, setCapabilities] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Summarizer test state
+  const [inputText, setInputText] = useState('')
+  const [summary, setSummary] = useState('')
+  const [summarizing, setSummarizing] = useState(false)
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/capabilities')
+      .then(res => res.json())
+      .then(data => {
+        setCapabilities(data.capabilities || [])
+        setLoading(false)
+      })
+      .catch(err => {
+        setError(err.message)
+        setLoading(false)
+      })
+  }, [])
+
+  const runSummarizer = async () => {
+    if (!inputText.trim()) return
+    setSummarizing(true)
+    setSummary('')
+
+    try {
+      const res = await fetch('http://localhost:3001/api/capabilities/text-summarizer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: inputText })
+      })
+      const data = await res.json()
+      if (data.summary) {
+        setSummary(data.summary)
+      } else {
+        setSummary('Error: ' + (data.error || 'Unknown error'))
+      }
+    } catch (err) {
+      setSummary('Failed to reach backend')
+    }
+    setSummarizing(false)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header>
+        <h1>XhumAI</h1>
+        <p>Quantum AI OS · Capability Layer</p>
+      </header>
 
-      <div className="ticks"></div>
+      <main>
+        {loading && <p>Loading capabilities...</p>}
+        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {!loading && !error && (
+          <div className="capability-grid">
+            {capabilities.map(cap => (
+              <div key={cap.id} className="capability-card">
+                <h3>{cap.name}</h3>
+                <p>{cap.description}</p>
+                <span className="category">{cap.category}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {/* === First Real Capability Test === */}
+        <div className="summarizer-box">
+          <h2>Text Summarizer (Live Test)</h2>
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Paste any long text here..."
+            rows={6}
+          />
+          <button onClick={runSummarizer} disabled={summarizing}>
+            {summarizing ? 'Summarizing...' : 'Run Summarizer'}
+          </button>
+
+          {summary && (
+            <div className="result">
+              <strong>Summary:</strong>
+              <p>{summary}</p>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   )
 }
 

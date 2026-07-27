@@ -1,0 +1,33 @@
+export interface Capability {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  endpoint: string;
+  inputSchema: any;
+  outputSchema: any;
+}
+
+// Seed capabilities
+export const capabilities: Capability[] = [
+  {
+    id: "pdf-to-excel",
+    name: "PDF to Excel",
+    description: "Convert PDF tables to Excel/CSV",
+    category: "documents",
+    endpoint: "/api/capabilities/pdf-to-excel",
+    inputSchema: { type: "file", formats: ["pdf"] },
+    outputSchema: { type: "file", formats: ["xlsx", "csv"] }
+  },
+  {
+    id: "text-summarizer",
+    name: "Text Summarizer",
+    description: "Condense long text",
+    category: "writing",
+    endpoint: "/api/capabilities/text-summarizer",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "text" }
+  }
+];
+
+export default capabilities;
