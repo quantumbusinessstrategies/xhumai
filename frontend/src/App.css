@@ -19,7 +19,6 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* Full-screen 3D canvas */
 .canvas-wrap {
   position: absolute;
   inset: 0;
@@ -32,7 +31,6 @@ html, body, #root {
   display: block;
 }
 
-/* Text sits on top */
 .content {
   position: relative;
   z-index: 10;
@@ -43,7 +41,7 @@ html, body, #root {
   justify-content: center;
   text-align: center;
   padding: 2rem;
-  pointer-events: none; /* let mouse pass through to canvas except on form */
+  pointer-events: none;
 }
 
 .logo {
@@ -55,7 +53,6 @@ html, body, #root {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 40px rgba(180, 140, 255, 0.15);
   pointer-events: none;
 }
 
@@ -72,7 +69,7 @@ html, body, #root {
 .search-form {
   width: 100%;
   max-width: 520px;
-  pointer-events: auto; /* only the input is interactive */
+  pointer-events: auto;
 }
 
 .search-form input {
