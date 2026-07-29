@@ -4,154 +4,204 @@ import './App.css'
 
 function App() {
   const [query, setQuery] = useState('')
-  const [activity, setActivity] = useState(0)
   const mountRef = useRef(null)
   const activityRef = useRef(0)
-
-  // Keep a live reference so the animation loop can read current activity
-  useEffect(() => {
-    activityRef.current = activity
-  }, [activity])
+  const targetActivity = useRef(0)
 
   useEffect(() => {
     if (!mountRef.current) return
 
-    // === Scene setup ===
     const width = window.innerWidth
     const height = window.innerHeight
+    const DPR = Math.min(window.devicePixelRatio, 1.75)
 
+    // Scene
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x030308)
+    scene.background = new THREE.Color(0x02020a)
 
-    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 200)
-    camera.position.set(0, 3.6, 9)
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 500)
+    camera.position.set(0, 2.8, 11)
     camera.lookAt(0, 0, 0)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })
     renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+    renderer.setPixelRatio(DPR)
     mountRef.current.appendChild(renderer.domElement)
 
-    // === Stars ===
-    const starGeo = new THREE.BufferGeometry()
-    const starCount = 3500
-    const positions = new Float32Array(starCount * 3)
-    for (let i = 0; i < starCount * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 120
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    const stars = new THREE.Points(
-      starGeo,
-      new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true, opacity: 0.7 })
-    )
-    scene.add(stars)
+    // ========== GALAXY / NEBULA PARTICLES ==========
+    const galaxyCount = 14000
+    const galaxyPos = new Float32Array(galaxyCount * 3)
+    const galaxyCol = new Float32Array(galaxyCount * 3)
+    const galaxySize = new Float32Array(galaxyCount)
 
-    // === Black hole core ===
+    for (let i = 0; i < galaxyCount; i++) {
+      const i3 = i * 3
+      const r = Math.pow(Math.random(), 0.55) * 9.5
+      const a = Math.random() * Math.PI * 2
+      const y = (Math.random() - 0.5) * (1.8 + r * 0.15)
+
+      galaxyPos[i3] = Math.cos(a) * r
+      galaxyPos[i3 + 1] = y
+      galaxyPos[i3 + 2] = Math.sin(a) * r
+
+      // Color shifts from purple/blue core to cyan outer
+      const t = r / 9.5
+      const hue = 0.72 - t * 0.25
+      const c = new THREE.Color().setHSL(hue, 0.85, 0.45 + Math.random() * 0.25)
+      galaxyCol[i3] = c.r
+      galaxyCol[i3 + 1] = c.g
+      galaxyCol[i3 + 2] = c.b
+
+      galaxySize[i] = 0.015 + Math.random() * 0.04
+    }
+
+    const galaxyGeo = new THREE.BufferGeometry()
+    galaxyGeo.setAttribute('position', new THREE.BufferAttribute(galaxyPos, 3))
+    galaxyGeo.setAttribute('color', new THREE.BufferAttribute(galaxyCol, 3))
+
+    const galaxyMat = new THREE.PointsMaterial({
+      size: 0.035,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true
+    })
+
+    const galaxy = new THREE.Points(galaxyGeo, galaxyMat)
+    galaxy.rotation.x = 0.35
+    scene.add(galaxy)
+
+    // ========== ACCRETION DISK (dense particle ring) ==========
+    const diskCount = 6000
+    const diskPos = new Float32Array(diskCount * 3)
+    const diskCol = new Float32Array(diskCount * 3)
+
+    for (let i = 0; i < diskCount; i++) {
+      const i3 = i * 3
+      const r = 1.4 + Math.random() * 3.8
+      const a = Math.random() * Math.PI * 2
+      const y = (Math.random() - 0.5) * 0.18
+
+      diskPos[i3] = Math.cos(a) * r
+      diskPos[i3 + 1] = y
+      diskPos[i3 + 2] = Math.sin(a) * r
+
+      // Hotter closer to center
+      const heat = 1 - (r - 1.4) / 3.8
+      const c = new THREE.Color().setHSL(0.08 + heat * 0.12, 0.95, 0.55 + heat * 0.2)
+      diskCol[i3] = c.r
+      diskCol[i3 + 1] = c.g
+      diskCol[i3 + 2] = c.b
+    }
+
+    const diskGeo = new THREE.BufferGeometry()
+    diskGeo.setAttribute('position', new THREE.BufferAttribute(diskPos, 3))
+    diskGeo.setAttribute('color', new THREE.BufferAttribute(diskCol, 3))
+
+    const diskMat = new THREE.PointsMaterial({
+      size: 0.028,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+
+    const disk = new THREE.Points(diskGeo, diskMat)
+    disk.rotation.x = Math.PI / 2.4
+    disk.rotation.z = 0.12
+    scene.add(disk)
+
+    // ========== BLACK HOLE CORE ==========
     const core = new THREE.Mesh(
       new THREE.SphereGeometry(1.05, 64, 64),
       new THREE.MeshBasicMaterial({ color: 0x000000 })
     )
     scene.add(core)
 
-    // === Event horizon glow ===
+    // Soft event horizon glow
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(1.18, 32, 32),
+      new THREE.SphereGeometry(1.25, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x1a0a2e,
+        color: 0x2a0a4a,
         transparent: true,
-        opacity: 0.35,
-        side: THREE.BackSide
+        opacity: 0.4,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending
       })
     )
     scene.add(glow)
 
-    // === Accretion disk (tilted) ===
-    const diskGroup = new THREE.Group()
-    diskGroup.rotation.x = Math.PI / 2.55
-    diskGroup.rotation.z = 0.18
+    // ========== ORBITING ENERGY PARTICLES ==========
+    const orbitCount = 8
+    const orbits = []
+    const orbitGeo = new THREE.SphereGeometry(0.07, 12, 12)
 
-    const disk = new THREE.Mesh(
-      new THREE.RingGeometry(1.25, 4.3, 128),
-      new THREE.MeshBasicMaterial({
-        color: 0xc9a0ff,
+    for (let i = 0; i < orbitCount; i++) {
+      const mat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(0.65 + Math.random() * 0.2, 0.9, 0.6),
         transparent: true,
-        opacity: 0.55,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending
+        opacity: 0.9
       })
-    )
-    diskGroup.add(disk)
+      const mesh = new THREE.Mesh(orbitGeo, mat)
+      scene.add(mesh)
 
-    // Inner hotter ring
-    const innerRing = new THREE.Mesh(
-      new THREE.RingGeometry(1.15, 1.95, 64),
-      new THREE.MeshBasicMaterial({
-        color: 0xff9f43,
-        transparent: true,
-        opacity: 0.45,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending
+      orbits.push({
+        mesh,
+        angle: (i / orbitCount) * Math.PI * 2,
+        speed: 0.008 + Math.random() * 0.012,
+        radius: 3.2 + Math.random() * 2.5,
+        yAmp: 0.6 + Math.random() * 1.2,
+        phase: Math.random() * Math.PI * 2
       })
-    )
-    diskGroup.add(innerRing)
+    }
 
-    scene.add(diskGroup)
-
-    // === Soft nebula planes ===
-    const nebula1 = new THREE.Mesh(
-      new THREE.PlaneGeometry(22, 14),
-      new THREE.MeshBasicMaterial({
-        color: 0x2a1050,
-        transparent: true,
-        opacity: 0.18,
-        blending: THREE.AdditiveBlending
-      })
-    )
-    nebula1.position.set(0, 0, -10)
-    scene.add(nebula1)
-
-    const nebula2 = new THREE.Mesh(
-      new THREE.PlaneGeometry(28, 16),
-      new THREE.MeshBasicMaterial({
-        color: 0x0d1b3e,
-        transparent: true,
-        opacity: 0.12,
-        blending: THREE.AdditiveBlending
-      })
-    )
-    nebula2.position.set(4, -2, -14)
-    nebula2.rotation.z = 0.3
-    scene.add(nebula2)
-
-    // === Animation loop ===
+    // ========== ANIMATION ==========
     let frameId
+    const clock = new THREE.Clock()
+
     const animate = () => {
       frameId = requestAnimationFrame(animate)
+      const t = clock.getElapsedTime()
 
-      const t = performance.now() * 0.001
+      // Smooth activity toward target
+      activityRef.current += (targetActivity.current - activityRef.current) * 0.06
       const act = activityRef.current
 
-      // Disk spin – faster with activity
-      diskGroup.rotation.z = t * (0.18 + act * 0.9)
+      // Galaxy slow spin
+      galaxy.rotation.y = t * 0.012
+      galaxy.rotation.z = Math.sin(t * 0.08) * 0.03
+
+      // Disk spins faster with activity
+      disk.rotation.z = t * (0.22 + act * 1.1)
 
       // Glow pulse
-      glow.material.opacity = 0.28 + Math.sin(t * 1.4) * 0.07 + act * 0.25
+      glow.material.opacity = 0.32 + Math.sin(t * 1.6) * 0.08 + act * 0.28
 
-      // Inner ring reacts more
-      innerRing.material.opacity = 0.4 + act * 0.35
+      // Orbiting particles
+      for (const o of orbits) {
+        o.angle += o.speed * (1 + act * 2.5)
+        const x = Math.cos(o.angle) * o.radius
+        const z = Math.sin(o.angle) * o.radius
+        const y = Math.sin(o.angle * 1.4 + o.phase) * o.yAmp
+        o.mesh.position.set(x, y, z)
+        o.mesh.material.opacity = 0.7 + act * 0.3
+      }
 
-      // Slow nebula drift
-      nebula1.rotation.z = t * 0.015
-      nebula2.rotation.z = t * 0.01 + 0.3
-
-      // Stars very slow drift
-      stars.rotation.y = t * 0.008
+      // Gentle camera breathe
+      camera.position.y = 2.8 + Math.sin(t * 0.25) * 0.15
+      camera.lookAt(0, 0, 0)
 
       renderer.render(scene, camera)
+
+      // Decay activity slowly
+      targetActivity.current *= 0.985
     }
     animate()
 
-    // === Resize handler ===
+    // Resize
     const onResize = () => {
       const w = window.innerWidth
       const h = window.innerHeight
@@ -161,7 +211,6 @@ function App() {
     }
     window.addEventListener('resize', onResize)
 
-    // Cleanup
     return () => {
       cancelAnimationFrame(frameId)
       window.removeEventListener('resize', onResize)
@@ -169,36 +218,39 @@ function App() {
         mountRef.current.removeChild(renderer.domElement)
       }
       renderer.dispose()
+      galaxyGeo.dispose()
+      diskGeo.dispose()
+      galaxyMat.dispose()
+      diskMat.dispose()
     }
   }, [])
 
-  // Mouse movement increases activity
+  // Mouse movement adds activity
   const handleMouseMove = (e) => {
-    const x = e.clientX / window.innerWidth
-    const y = e.clientY / window.innerHeight
-    const intensity = Math.abs(x - 0.5) + Math.abs(y - 0.5)
-    setActivity(prev => Math.min(1, prev * 0.92 + intensity * 0.08))
+    const dx = Math.abs(e.movementX) + Math.abs(e.movementY)
+    if (dx > 2) {
+      targetActivity.current = Math.min(1, targetActivity.current + dx * 0.004)
+    }
   }
 
-  // Typing increases activity
+  // Typing adds strong activity
   const handleInput = (e) => {
     setQuery(e.target.value)
-    setActivity(prev => Math.min(1, prev + 0.15))
+    targetActivity.current = Math.min(1, targetActivity.current + 0.18)
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!query.trim()) return
-    setActivity(1)
+    targetActivity.current = 1
     console.log('User asked for:', query)
+    // Future: route into capability engine
   }
 
   return (
     <div className="landing" onMouseMove={handleMouseMove}>
-      {/* 3D canvas mounts here */}
       <div className="canvas-wrap" ref={mountRef} />
 
-      {/* Text overlay */}
       <div className="content">
         <h1 className="logo">XhumAI</h1>
         <p className="tagline">WORK LESS. LIVE MORE.</p>
