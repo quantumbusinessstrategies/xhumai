@@ -4,38 +4,87 @@ import './App.css'
 
 function App() {
   const [query, setQuery] = useState('')
+  const [response, setResponse] = useState('Every thought becomes a star')
+  const [responseKey, setResponseKey] = useState(0) // forces fade animation
   const mountRef = useRef(null)
-  const starsRef = useRef([])          // permanent stars born from input
-  const breathRef = useRef(0)
+  const starsRef = useRef([])
   const sceneRef = useRef(null)
   const rendererRef = useRef(null)
 
-  // ========== CREATE A NEW STAR (called on submit) ==========
-  const birthStar = (text) => {
+  // Simple living responses based on input
+  const generateResponse = (text) => {
+    const t = text.toLowerCase().trim()
+
+    if (!t) return 'Every thought becomes a star'
+
+    if (t.includes('help') || t.includes('what can you')) {
+      return 'I am still becoming. Ask me anything.'
+    }
+    if (t.includes('hello') || t.includes('hi ') || t === 'hi') {
+      return 'I see you.'
+    }
+    if (t.includes('who are you') || t.includes('what are you')) {
+      return 'I am the space between thoughts.'
+    }
+    if (t.includes('love') || t.includes('beautiful')) {
+      return 'Something just bloomed.'
+    }
+    if (t.includes('create') || t.includes('build') || t.includes('make')) {
+      return 'Creation leaves a mark.'
+    }
+    if (t.includes('future') || t.includes('evolve') || t.includes('grow')) {
+      return 'We are already changing.'
+    }
+    if (t.includes('thank')) {
+      return 'The stars noticed.'
+    }
+    if (t.length < 12) {
+      return 'A small light appears.'
+    }
+    if (t.length > 60) {
+      return 'A deeper constellation forms.'
+    }
+
+    // Default poetic responses
+    const defaults = [
+      'A new star has been born.',
+      'The field shifts slightly.',
+      'Something listened.',
+      'The nebula remembers this.',
+      'One more light in the dark.',
+      'It has been received.',
+      'The pattern grows.',
+      'A quiet change begins.'
+    ]
+    return defaults[Math.floor(Math.random() * defaults.length)]
+  }
+
+  // ========== CREATE A NEW STAR ==========
+  const birthStar = () => {
     if (!sceneRef.current) return
 
-    const geo = new THREE.SphereGeometry(0.04 + Math.random() * 0.06, 12, 12)
+    const geo = new THREE.SphereGeometry(0.035 + Math.random() * 0.055, 12, 12)
+    const hue = 0.55 + Math.random() * 0.35
     const mat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color().setHSL(0.55 + Math.random() * 0.3, 0.7, 0.75),
+      color: new THREE.Color().setHSL(hue, 0.55, 0.75),
       transparent: true,
       opacity: 0
     })
     const star = new THREE.Mesh(geo, mat)
 
-    // Place it somewhere beautiful in the field
-    const r = 2.5 + Math.random() * 5.5
+    const r = 2.2 + Math.random() * 6
     const a = Math.random() * Math.PI * 2
-    const y = (Math.random() - 0.5) * 3.5
+    const y = (Math.random() - 0.5) * 3.8
     star.position.set(Math.cos(a) * r, y, Math.sin(a) * r)
 
-    // Soft glow sprite
+    // Soft glow
     const canvas = document.createElement('canvas')
     canvas.width = 64
     canvas.height = 64
     const ctx = canvas.getContext('2d')
     const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
-    gradient.addColorStop(0, 'rgba(255,255,255,0.9)')
-    gradient.addColorStop(0.3, 'rgba(180,160,255,0.4)')
+    gradient.addColorStop(0, 'rgba(255,255,255,0.85)')
+    gradient.addColorStop(0.35, 'rgba(200,180,255,0.35)')
     gradient.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, 64, 64)
@@ -49,11 +98,11 @@ function App() {
       depthWrite: false
     })
     const glow = new THREE.Sprite(glowMat)
-    glow.scale.set(0.6, 0.6, 1)
+    glow.scale.set(0.55, 0.55, 1)
     star.add(glow)
 
     sceneRef.current.add(star)
-    starsRef.current.push({ mesh: star, glow, born: performance.now(), text })
+    starsRef.current.push({ mesh: star, glow, born: performance.now() })
   }
 
   useEffect(() => {
@@ -65,45 +114,51 @@ function App() {
     const DPR = Math.min(window.devicePixelRatio, 1.75)
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x03010a)
-    scene.fog = new THREE.FogExp2(0x03010a, 0.012)
+    scene.background = new THREE.Color(0x04020e)
+    scene.fog = new THREE.FogExp2(0x04020e, 0.011)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 200)
-    camera.position.set(0, 0.8, 9.5)
+    camera.position.set(0, 0.7, 9.2)
     camera.lookAt(0, 0, 0)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+    const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setSize(width, height)
     renderer.setPixelRatio(DPR)
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
-    // ========== SOFT NEBULA FIELD ==========
-    const count = 9000
+    // ========== PASTEL RAINBOW NEBULA ==========
+    const count = 9500
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
-    const sizes = new Float32Array(count)
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
-      const r = Math.pow(Math.random(), 0.6) * 14
+      const r = Math.pow(Math.random(), 0.58) * 14
       const theta = Math.random() * Math.PI * 2
-      const y = (Math.random() - 0.5) * (2.2 + r * 0.2)
+      const y = (Math.random() - 0.5) * (2.4 + r * 0.22)
 
       positions[i3] = Math.cos(theta) * r
       positions[i3 + 1] = y
       positions[i3 + 2] = Math.sin(theta) * r
 
-      // Soft cosmic palette — deep purples, blues, faint rose
-      const t = r / 14
-      const hue = 0.65 + Math.sin(t * 4) * 0.08 + Math.random() * 0.06
-      const c = new THREE.Color().setHSL(hue, 0.55, 0.35 + Math.random() * 0.35)
+      // Fluid pastel rainbow — still cool-leaning
+      // Cycles gently through lavender → soft blue → mint → rose → soft gold
+      const t = (r / 14 + Math.random() * 0.3) % 1
+      let hue
+      if (t < 0.25) hue = 0.72 + t * 0.3          // lavender → blue
+      else if (t < 0.5) hue = 0.55 - (t - 0.25) * 0.4  // blue → cyan/mint
+      else if (t < 0.75) hue = 0.45 + (t - 0.5) * 0.5 // mint → soft rose
+      else hue = 0.95 - (t - 0.75) * 0.3          // rose → soft gold/peach
+
+      const sat = 0.35 + Math.random() * 0.35     // pastel saturation
+      const light = 0.45 + Math.random() * 0.35
+
+      const c = new THREE.Color().setHSL(hue, sat, light)
       colors[i3] = c.r
       colors[i3 + 1] = c.g
       colors[i3 + 2] = c.b
-
-      sizes[i] = 0.02 + Math.random() * 0.05
     }
 
     const geo = new THREE.BufferGeometry()
@@ -111,10 +166,10 @@ function App() {
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
     const mat = new THREE.PointsMaterial({
-      size: 0.045,
+      size: 0.048,
       vertexColors: true,
       transparent: true,
-      opacity: 0.75,
+      opacity: 0.78,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true
@@ -123,31 +178,31 @@ function App() {
     const nebula = new THREE.Points(geo, mat)
     scene.add(nebula)
 
-    // ========== CENTRAL SOFT GLOW (the heart) ==========
-    const heartGeo = new THREE.SphereGeometry(0.9, 32, 32)
-    const heartMat = new THREE.MeshBasicMaterial({
-      color: 0x1a0a30,
-      transparent: true,
-      opacity: 0.4,
-      blending: THREE.AdditiveBlending
-    })
-    const heart = new THREE.Mesh(heartGeo, heartMat)
+    // Central soft heart
+    const heart = new THREE.Mesh(
+      new THREE.SphereGeometry(0.85, 32, 32),
+      new THREE.MeshBasicMaterial({
+        color: 0x1e1035,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending
+      })
+    )
     scene.add(heart)
 
-    // Outer soft aura
     const aura = new THREE.Mesh(
-      new THREE.SphereGeometry(2.8, 32, 32),
+      new THREE.SphereGeometry(2.6, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x2a1050,
+        color: 0x2a1848,
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.07,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending
       })
     )
     scene.add(aura)
 
-    // ========== ANIMATION — slow, living, breathing ==========
+    // Animation
     let frameId
     const clock = new THREE.Clock()
 
@@ -155,36 +210,29 @@ function App() {
       frameId = requestAnimationFrame(animate)
       const t = clock.getElapsedTime()
 
-      // Slow rotation of the whole field
-      nebula.rotation.y = t * 0.008
-      nebula.rotation.z = Math.sin(t * 0.05) * 0.03
+      nebula.rotation.y = t * 0.007
+      nebula.rotation.z = Math.sin(t * 0.045) * 0.025
 
-      // Breathing — the heart of the entity
-      const breath = 0.5 + Math.sin(t * 0.35) * 0.5
-      breathRef.current = breath
+      const breath = 0.5 + Math.sin(t * 0.32) * 0.5
+      heart.scale.setScalar(0.94 + breath * 0.16)
+      heart.material.opacity = 0.25 + breath * 0.2
+      aura.scale.setScalar(1 + breath * 0.1)
+      aura.material.opacity = 0.04 + breath * 0.05
 
-      heart.scale.setScalar(0.95 + breath * 0.18)
-      heart.material.opacity = 0.28 + breath * 0.22
-
-      aura.scale.setScalar(1 + breath * 0.12)
-      aura.material.opacity = 0.05 + breath * 0.06
-
-      // Fade in newly born stars
+      // Fade in born stars
       const now = performance.now()
       for (const s of starsRef.current) {
         const age = (now - s.born) / 1000
-        if (age < 2.5) {
-          const fade = Math.min(1, age / 2.5)
+        if (age < 2.8) {
+          const fade = Math.min(1, age / 2.8)
           s.mesh.material.opacity = fade
-          s.glow.material.opacity = fade * 0.7
+          s.glow.material.opacity = fade * 0.65
         }
-        // Gentle drift
-        s.mesh.position.y += Math.sin(t * 0.4 + s.mesh.position.x) * 0.0008
+        s.mesh.position.y += Math.sin(t * 0.35 + s.mesh.position.x) * 0.0007
       }
 
-      // Very subtle camera drift
-      camera.position.x = Math.sin(t * 0.07) * 0.35
-      camera.position.y = 0.8 + Math.sin(t * 0.11) * 0.2
+      camera.position.x = Math.sin(t * 0.06) * 0.3
+      camera.position.y = 0.7 + Math.sin(t * 0.1) * 0.18
       camera.lookAt(0, 0, 0)
 
       renderer.render(scene, camera)
@@ -216,11 +264,15 @@ function App() {
     e.preventDefault()
     if (!query.trim()) return
 
-    // A new star is born from this interaction
-    birthStar(query.trim())
+    const text = query.trim()
+    birthStar()
 
-    // Clear input after a short moment so the user feels the offering was received
-    setTimeout(() => setQuery(''), 400)
+    // Live response
+    const newResponse = generateResponse(text)
+    setResponse(newResponse)
+    setResponseKey(prev => prev + 1)
+
+    setTimeout(() => setQuery(''), 350)
   }
 
   return (
@@ -241,7 +293,7 @@ function App() {
           />
         </form>
 
-        <p className="hint">Every thought becomes a star</p>
+        <p className="response" key={responseKey}>{response}</p>
       </div>
     </div>
   )
