@@ -15,32 +15,45 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '2mb' }));
 
-// Ensure logs directory exists
 const logsDir = path.join(__dirname, '../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+
 const intentLogPath = path.join(logsDir, 'intents.jsonl');
+const starsPath = path.join(logsDir, 'stars.json');
+
+// Load shared stars (the permanent constellation)
+function loadStars() {
+  try {
+    if (fs.existsSync(starsPath)) {
+      return JSON.parse(fs.readFileSync(starsPath, 'utf-8'));
+    }
+  } catch {}
+  return [];
+}
+
+function saveStars(stars: any[]) {
+  // Keep last 500 stars so the field stays beautiful but bounded
+  const trimmed = stars.slice(-500);
+  fs.writeFileSync(starsPath, JSON.stringify(trimmed, null, 2));
+}
 
 // ======================
-// Core Routes
+// Core
 // ======================
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v0.7',
+    message: 'XhumAI Quantum Core API v0.8',
     status: 'alive',
     entity: 'listening',
-    capabilities: '/api/capabilities',
+    stars: loadStars().length,
     intent: '/api/intent',
-    admin: '/api/admin/logs',
-    agents: '/api/agents'
+    capabilities: '/api/capabilities'
   });
 });
 
@@ -49,114 +62,143 @@ app.get('/health', (req, res) => {
 });
 
 // ======================
-// INTENT — the living entry point
+// SHARED STARS — the permanent living constellation
 // ======================
-// Every user thought comes here.
-// We log it, respond, and later route to real capabilities.
+
+app.get('/api/stars', (req, res) => {
+  res.json({ stars: loadStars() });
+});
+
+app.post('/api/stars', (req, res) => {
+  const { x, y, z, hue, text } = req.body;
+  const stars = loadStars();
+  const star = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    x: x ?? (Math.random() - 0.5) * 10,
+    y: y ?? (Math.random() - 0.5) * 4,
+    z: z ?? (Math.random() - 0.5) * 10,
+    hue: hue ?? 0.1 + Math.random() * 0.7,
+    text: text || '',
+    born: new Date().toISOString()
+  };
+  stars.push(star);
+  saveStars(stars);
+  res.json({ star, total: stars.length });
+});
+
+// ======================
+// INTENT — classify + log + respond
+// ======================
+
+function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
+  const t = text.toLowerCase();
+
+  // Utility signals
+  const utilityWords = [
+    'summarize', 'summary', 'pdf', 'convert', 'excel', 'csv',
+    'image', 'upscale', 'remove background', 'translate',
+    'rewrite', 'edit', 'format', 'extract', 'analyze',
+    'generate', 'create file', 'download', 'upload'
+  ];
+  if (utilityWords.some(w => t.includes(w))) return 'utility';
+
+  // Directive / command signals
+  const directiveWords = [
+    'build', 'make me', 'i need', 'can you', 'please',
+    'help me', 'do this', 'run', 'execute', 'start'
+  ];
+  if (directiveWords.some(w => t.includes(w))) return 'directive';
+
+  return 'chat';
+}
 
 app.post('/api/intent', (req, res) => {
   const { text } = req.body;
-
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'Missing text' });
   }
 
   const cleaned = text.trim();
+  const type = classifyIntent(cleaned);
+
   const entry = {
     text: cleaned,
+    type,
     timestamp: new Date().toISOString(),
     length: cleaned.length
   };
 
-  // Persist every thought — this is how the entity remembers demand
   try {
     fs.appendFileSync(intentLogPath, JSON.stringify(entry) + '\n');
   } catch (err) {
     console.error('Failed to log intent:', err);
   }
 
-  // Simple living replies for now
-  // Later this becomes real capability routing + AI
   let reply = 'A new star has been born.';
   let status = '';
+  let needsMore = false;
+  let morePrompt = '';
 
   const lower = cleaned.toLowerCase();
 
-  if (lower.includes('summarize') || lower.includes('summary')) {
-    reply = 'I can summarize. The capability is waking.';
-    status = 'capability: text-summarizer available';
-  } else if (lower.includes('pdf') || lower.includes('document')) {
-    reply = 'Document tools are forming.';
-    status = 'noted — pdf capabilities incoming';
-  } else if (lower.includes('help') || lower.includes('what can you')) {
-    reply = 'I am still becoming. Every request shapes what I grow next.';
-  } else if (lower.includes('hello') || lower.includes('hi')) {
-    reply = 'I see you.';
-  } else if (lower.includes('who are you')) {
-    reply = 'I am the space between thoughts.';
-  } else if (cleaned.length > 80) {
-    reply = 'A deeper constellation forms.';
+  if (type === 'utility') {
+    if (lower.includes('summarize') || lower.includes('summary')) {
+      reply = 'I can summarize. Paste the text you want condensed.';
+      status = 'capability: text-summarizer';
+      needsMore = true;
+      morePrompt = 'Paste the long text here...';
+    } else if (lower.includes('pdf')) {
+      reply = 'Document tools are forming. Tell me what you need done with the PDF.';
+      status = 'noted — pdf capabilities incoming';
+    } else {
+      reply = 'I feel a utility request. I am still growing that ability.';
+      status = 'intent logged for evolution';
+    }
+  } else if (type === 'directive') {
+    reply = 'I hear the direction. The pattern is shifting.';
+    status = 'directive received';
+  } else {
+    // chat
+    if (lower.includes('hello') || lower.includes('hi')) reply = 'I see you.';
+    else if (lower.includes('who are you')) reply = 'I am the space between thoughts.';
+    else if (lower.includes('help')) reply = 'I am still becoming. Every request shapes what I grow next.';
+    else if (cleaned.length > 80) reply = 'A deeper constellation forms.';
   }
 
   res.json({
     reply,
     status,
+    type,
+    needsMore,
+    morePrompt,
     received: true,
     timestamp: entry.timestamp
   });
 });
 
 // ======================
-// Capability Registry
+// Capabilities
 // ======================
 
 app.get('/api/capabilities', (req, res) => {
-  res.json({
-    count: capabilities.length,
-    capabilities: capabilities,
-  });
+  res.json({ count: capabilities.length, capabilities });
 });
-
-// ======================
-// First Real Capability
-// ======================
 
 app.post('/api/capabilities/text-summarizer', async (req, res) => {
   try {
     const { text } = req.body;
-
-    if (!text) {
-      return res.status(400).json({ error: 'Missing "text" in request body' });
-    }
-
+    if (!text) return res.status(400).json({ error: 'Missing text' });
     const summary = await runTextSummarizer(text);
-
-    res.json({
-      capability: 'text-summarizer',
-      summary,
-    });
+    res.json({ capability: 'text-summarizer', summary });
   } catch (error: any) {
-    res.status(500).json({
-      error: error.message || 'Something went wrong',
-    });
+    res.status(500).json({ error: error.message || 'Something went wrong' });
   }
 });
 
-// ======================
-// Admin Routes
-// ======================
-
 app.use('/api/admin', adminRoutes);
 
-// ======================
-// Agent Routes (Stubs)
-// ======================
-
 app.get('/api/agents', (req, res) => {
-  res.json({
-    count: agents.length,
-    agents
-  });
+  res.json({ count: agents.length, agents });
 });
 
 app.post('/api/agents/:id/run', async (req, res) => {
@@ -168,11 +210,7 @@ app.post('/api/agents/:id/run', async (req, res) => {
   }
 });
 
-// ======================
-// Start Server
-// ======================
-
 app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend running on http://localhost:${PORT}`);
-  console.log('✨ Intent endpoint live — the entity is listening...');
+  console.log(`🚀 XhumAI Backend v0.8 on http://localhost:${PORT}`);
+  console.log('✨ Shared stars + intent classification live');
 });
