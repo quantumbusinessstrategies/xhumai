@@ -3,6 +3,9 @@
   margin: 0 auto;
   padding: 2rem;
   font-family: system-ui, -apple-system, sans-serif;
+  color: #eee;
+  background: #0a0a0a;
+  min-height: 100vh;
 }
 
 header {
@@ -17,64 +20,70 @@ header h1 {
 }
 
 header p {
-  color: #666;
+  color: #888;
   margin-top: 0.5rem;
 }
 
 .capability-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 3rem;
 }
 
 .capability-card {
-  border: 1px solid #e0e0e0;
+  border: 1px solid #333;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.4rem;
   transition: all 0.2s ease;
-  cursor: pointer;
+  background: #111;
 }
 
 .capability-card:hover {
-  border-color: #000;
+  border-color: #666;
   transform: translateY(-2px);
 }
 
 .capability-card h3 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.4rem 0;
 }
 
 .capability-card p {
-  color: #555;
+  color: #999;
   margin: 0 0 1rem 0;
+  font-size: 0.95rem;
 }
 
 .category {
-  font-size: 0.75rem;
-  background: #f0f0f0;
+  font-size: 0.7rem;
+  background: #222;
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: #aaa;
 }
 
+/* Summarizer */
 .summarizer-box {
-  margin-top: 4rem;
+  margin: 3rem auto;
   max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
+}
+
+.summarizer-box h2 {
+  margin-bottom: 1rem;
 }
 
 .summarizer-box textarea {
   width: 100%;
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid #444;
+  border: 1px solid #333;
   background: #111;
   color: white;
   font-size: 1rem;
   margin-bottom: 1rem;
+  resize: vertical;
 }
 
 .summarizer-box button {
@@ -97,4 +106,74 @@ header p {
   padding: 1rem;
   background: #1a1a1a;
   border-radius: 8px;
+  border: 1px solid #333;
+}
+
+/* Admin */
+.admin-section {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid #222;
+}
+
+.admin-section h2 {
+  margin-bottom: 1.5rem;
+}
+
+.stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background: #111;
+  border: 1px solid #333;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+}
+
+.logs {
+  margin-bottom: 2.5rem;
+}
+
+.log-entry {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 0.9rem;
+  align-items: center;
+}
+
+.log-entry .ok { color: #4ade80; }
+.log-entry .fail { color: #f87171; }
+.log-entry .cap { font-weight: 500; min-width: 140px; }
+.log-entry .time { color: #666; }
+.log-entry .ms { color: #555; margin-left: auto; }
+
+.agents {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.agent-card {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.agent-card p {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0.4rem 0 0.6rem 0;
+}
+
+.agent-card .status {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
 }

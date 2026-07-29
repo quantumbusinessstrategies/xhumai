@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import capabilities from '../capabilities/registry';
 import { runTextSummarizer } from '../capabilities/text-summarizer';
+import adminRoutes from './routes/admin';
+import { agents, runAgent } from './agents';
 
 dotenv.config();
 
@@ -23,9 +25,11 @@ app.use(express.json({ limit: '2mb' }));
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v0.2',
+    message: 'XhumAI Quantum Core API v0.3',
     status: 'alive',
     capabilities: '/api/capabilities',
+    admin: '/api/admin/logs',
+    agents: '/api/agents'
   });
 });
 
@@ -70,10 +74,36 @@ app.post('/api/capabilities/text-summarizer', async (req, res) => {
 });
 
 // ======================
+// Admin Routes
+// ======================
+
+app.use('/api/admin', adminRoutes);
+
+// ======================
+// Agent Routes (Stubs)
+// ======================
+
+app.get('/api/agents', (req, res) => {
+  res.json({
+    count: agents.length,
+    agents
+  });
+});
+
+app.post('/api/agents/:id/run', async (req, res) => {
+  try {
+    const result = await runAgent(req.params.id);
+    res.json(result);
+  } catch (error: any) {
+    res.status(404).json({ error: error.message });
+  }
+});
+
+// ======================
 // Start Server
 // ======================
 
 app.listen(PORT, () => {
   console.log(`🚀 XhumAI Backend running on http://localhost:${PORT}`);
-  console.log('✨ Ready for capability modules + self-improvement hooks...');
+  console.log('✨ Admin + Agent stubs online...');
 });
