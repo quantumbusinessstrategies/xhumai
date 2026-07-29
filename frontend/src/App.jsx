@@ -5,7 +5,56 @@ import './App.css'
 function App() {
   const [query, setQuery] = useState('')
   const mountRef = useRef(null)
-  const activityRef = useRef(0)
+  const starsRef = useRef([])          // permanent stars born from input
+  const breathRef = useRef(0)
+  const sceneRef = useRef(null)
+  const rendererRef = useRef(null)
+
+  // ========== CREATE A NEW STAR (called on submit) ==========
+  const birthStar = (text) => {
+    if (!sceneRef.current) return
+
+    const geo = new THREE.SphereGeometry(0.04 + Math.random() * 0.06, 12, 12)
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color().setHSL(0.55 + Math.random() * 0.3, 0.7, 0.75),
+      transparent: true,
+      opacity: 0
+    })
+    const star = new THREE.Mesh(geo, mat)
+
+    // Place it somewhere beautiful in the field
+    const r = 2.5 + Math.random() * 5.5
+    const a = Math.random() * Math.PI * 2
+    const y = (Math.random() - 0.5) * 3.5
+    star.position.set(Math.cos(a) * r, y, Math.sin(a) * r)
+
+    // Soft glow sprite
+    const canvas = document.createElement('canvas')
+    canvas.width = 64
+    canvas.height = 64
+    const ctx = canvas.getContext('2d')
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+    gradient.addColorStop(0, 'rgba(255,255,255,0.9)')
+    gradient.addColorStop(0.3, 'rgba(180,160,255,0.4)')
+    gradient.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 64, 64)
+
+    const glowTex = new THREE.CanvasTexture(canvas)
+    const glowMat = new THREE.SpriteMaterial({
+      map: glowTex,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+    const glow = new THREE.Sprite(glowMat)
+    glow.scale.set(0.6, 0.6, 1)
+    star.add(glow)
+
+    sceneRef.current.add(star)
+    starsRef.current.push({ mesh: star, glow, born: performance.now(), text })
+  }
 
   useEffect(() => {
     const container = mountRef.current
@@ -13,178 +62,135 @@ function App() {
 
     let width = window.innerWidth
     let height = window.innerHeight
-    const DPR = Math.min(window.devicePixelRatio, 1.8)
+    const DPR = Math.min(window.devicePixelRatio, 1.75)
 
-    // Scene
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x01010a)
+    scene.background = new THREE.Color(0x03010a)
+    scene.fog = new THREE.FogExp2(0x03010a, 0.012)
+    sceneRef.current = scene
 
-    // Closer, more immersive camera
-    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 300)
-    camera.position.set(0, 1.8, 7.2)
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 200)
+    camera.position.set(0, 0.8, 9.5)
     camera.lookAt(0, 0, 0)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
     renderer.setSize(width, height)
     renderer.setPixelRatio(DPR)
     container.appendChild(renderer.domElement)
+    rendererRef.current = renderer
 
-    // ========== GALAXY ==========
-    const galaxyCount = 16000
-    const gPos = new Float32Array(galaxyCount * 3)
-    const gCol = new Float32Array(galaxyCount * 3)
+    // ========== SOFT NEBULA FIELD ==========
+    const count = 9000
+    const positions = new Float32Array(count * 3)
+    const colors = new Float32Array(count * 3)
+    const sizes = new Float32Array(count)
 
-    for (let i = 0; i < galaxyCount; i++) {
+    for (let i = 0; i < count; i++) {
       const i3 = i * 3
-      const r = Math.pow(Math.random(), 0.5) * 11
-      const a = Math.random() * Math.PI * 2
-      const y = (Math.random() - 0.5) * (1.6 + r * 0.12)
+      const r = Math.pow(Math.random(), 0.6) * 14
+      const theta = Math.random() * Math.PI * 2
+      const y = (Math.random() - 0.5) * (2.2 + r * 0.2)
 
-      gPos[i3]     = Math.cos(a) * r
-      gPos[i3 + 1] = y
-      gPos[i3 + 2] = Math.sin(a) * r
+      positions[i3] = Math.cos(theta) * r
+      positions[i3 + 1] = y
+      positions[i3 + 2] = Math.sin(theta) * r
 
-      const t = r / 11
-      const c = new THREE.Color().setHSL(0.72 - t * 0.28, 0.9, 0.42 + Math.random() * 0.3)
-      gCol[i3] = c.r; gCol[i3 + 1] = c.g; gCol[i3 + 2] = c.b
+      // Soft cosmic palette — deep purples, blues, faint rose
+      const t = r / 14
+      const hue = 0.65 + Math.sin(t * 4) * 0.08 + Math.random() * 0.06
+      const c = new THREE.Color().setHSL(hue, 0.55, 0.35 + Math.random() * 0.35)
+      colors[i3] = c.r
+      colors[i3 + 1] = c.g
+      colors[i3 + 2] = c.b
+
+      sizes[i] = 0.02 + Math.random() * 0.05
     }
 
-    const galaxyGeo = new THREE.BufferGeometry()
-    galaxyGeo.setAttribute('position', new THREE.BufferAttribute(gPos, 3))
-    galaxyGeo.setAttribute('color', new THREE.BufferAttribute(gCol, 3))
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
-    const galaxy = new THREE.Points(
-      galaxyGeo,
-      new THREE.PointsMaterial({
-        size: 0.04,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.9,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        sizeAttenuation: true
-      })
-    )
-    galaxy.rotation.x = 0.38
-    scene.add(galaxy)
+    const mat = new THREE.PointsMaterial({
+      size: 0.045,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true
+    })
 
-    // ========== ACCRETION DISK ==========
-    const diskCount = 7500
-    const dPos = new Float32Array(diskCount * 3)
-    const dCol = new Float32Array(diskCount * 3)
+    const nebula = new THREE.Points(geo, mat)
+    scene.add(nebula)
 
-    for (let i = 0; i < diskCount; i++) {
-      const i3 = i * 3
-      const r = 1.35 + Math.random() * 4.2
-      const a = Math.random() * Math.PI * 2
-      const y = (Math.random() - 0.5) * 0.22
+    // ========== CENTRAL SOFT GLOW (the heart) ==========
+    const heartGeo = new THREE.SphereGeometry(0.9, 32, 32)
+    const heartMat = new THREE.MeshBasicMaterial({
+      color: 0x1a0a30,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending
+    })
+    const heart = new THREE.Mesh(heartGeo, heartMat)
+    scene.add(heart)
 
-      dPos[i3]     = Math.cos(a) * r
-      dPos[i3 + 1] = y
-      dPos[i3 + 2] = Math.sin(a) * r
-
-      const heat = 1 - (r - 1.35) / 4.2
-      const c = new THREE.Color().setHSL(0.07 + heat * 0.15, 1, 0.5 + heat * 0.25)
-      dCol[i3] = c.r; dCol[i3 + 1] = c.g; dCol[i3 + 2] = c.b
-    }
-
-    const diskGeo = new THREE.BufferGeometry()
-    diskGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3))
-    diskGeo.setAttribute('color', new THREE.BufferAttribute(dCol, 3))
-
-    const disk = new THREE.Points(
-      diskGeo,
-      new THREE.PointsMaterial({
-        size: 0.032,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.95,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      })
-    )
-    disk.rotation.x = Math.PI / 2.35
-    disk.rotation.z = 0.15
-    scene.add(disk)
-
-    // ========== BLACK HOLE ==========
-    const core = new THREE.Mesh(
-      new THREE.SphereGeometry(1.08, 64, 64),
-      new THREE.MeshBasicMaterial({ color: 0x000000 })
-    )
-    scene.add(core)
-
-    const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(1.32, 32, 32),
+    // Outer soft aura
+    const aura = new THREE.Mesh(
+      new THREE.SphereGeometry(2.8, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x3a1060,
+        color: 0x2a1050,
         transparent: true,
-        opacity: 0.45,
+        opacity: 0.08,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending
       })
     )
-    scene.add(glow)
+    scene.add(aura)
 
-    // ========== ORBITING ENERGY ==========
-    const orbits = []
-    const oGeo = new THREE.SphereGeometry(0.09, 14, 14)
-
-    for (let i = 0; i < 10; i++) {
-      const mat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color().setHSL(0.6 + Math.random() * 0.25, 0.95, 0.65),
-        transparent: true,
-        opacity: 0.95
-      })
-      const mesh = new THREE.Mesh(oGeo, mat)
-      scene.add(mesh)
-      orbits.push({
-        mesh,
-        angle: (i / 10) * Math.PI * 2,
-        speed: 0.012 + Math.random() * 0.018,
-        radius: 2.8 + Math.random() * 3.2,
-        yAmp: 0.5 + Math.random() * 1.4,
-        phase: Math.random() * Math.PI * 2
-      })
-    }
-
-    // ========== ANIMATION LOOP (always running) ==========
+    // ========== ANIMATION — slow, living, breathing ==========
     let frameId
     const clock = new THREE.Clock()
 
-    function animate() {
+    const animate = () => {
       frameId = requestAnimationFrame(animate)
       const t = clock.getElapsedTime()
-      const act = activityRef.current
 
-      // Always spinning — activity just makes it faster
-      galaxy.rotation.y = t * 0.018
-      galaxy.rotation.z = Math.sin(t * 0.12) * 0.04
+      // Slow rotation of the whole field
+      nebula.rotation.y = t * 0.008
+      nebula.rotation.z = Math.sin(t * 0.05) * 0.03
 
-      disk.rotation.z = t * (0.35 + act * 1.8)
+      // Breathing — the heart of the entity
+      const breath = 0.5 + Math.sin(t * 0.35) * 0.5
+      breathRef.current = breath
 
-      glow.material.opacity = 0.35 + Math.sin(t * 2.1) * 0.12 + act * 0.35
+      heart.scale.setScalar(0.95 + breath * 0.18)
+      heart.material.opacity = 0.28 + breath * 0.22
 
-      for (const o of orbits) {
-        o.angle += o.speed * (1 + act * 3)
-        const x = Math.cos(o.angle) * o.radius
-        const z = Math.sin(o.angle) * o.radius
-        const y = Math.sin(o.angle * 1.5 + o.phase) * o.yAmp
-        o.mesh.position.set(x, y, z)
+      aura.scale.setScalar(1 + breath * 0.12)
+      aura.material.opacity = 0.05 + breath * 0.06
+
+      // Fade in newly born stars
+      const now = performance.now()
+      for (const s of starsRef.current) {
+        const age = (now - s.born) / 1000
+        if (age < 2.5) {
+          const fade = Math.min(1, age / 2.5)
+          s.mesh.material.opacity = fade
+          s.glow.material.opacity = fade * 0.7
+        }
+        // Gentle drift
+        s.mesh.position.y += Math.sin(t * 0.4 + s.mesh.position.x) * 0.0008
       }
 
-      // Camera slight breathe
-      camera.position.y = 1.8 + Math.sin(t * 0.3) * 0.12
+      // Very subtle camera drift
+      camera.position.x = Math.sin(t * 0.07) * 0.35
+      camera.position.y = 0.8 + Math.sin(t * 0.11) * 0.2
       camera.lookAt(0, 0, 0)
-
-      // Decay activity
-      activityRef.current *= 0.97
 
       renderer.render(scene, camera)
     }
     animate()
 
-    // Resize
     const onResize = () => {
       width = window.innerWidth
       height = window.innerHeight
@@ -201,33 +207,24 @@ function App() {
         container.removeChild(renderer.domElement)
       }
       renderer.dispose()
+      geo.dispose()
+      mat.dispose()
     }
   }, [])
-
-  // Strong activity on mouse move
-  const handleMouseMove = (e) => {
-    const speed = Math.abs(e.movementX) + Math.abs(e.movementY)
-    if (speed > 1) {
-      activityRef.current = Math.min(1, activityRef.current + speed * 0.008)
-    }
-  }
-
-  // Strong activity on typing
-  const handleInput = (e) => {
-    setQuery(e.target.value)
-    activityRef.current = Math.min(1, activityRef.current + 0.35)
-  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!query.trim()) return
-    activityRef.current = 1
-    console.log('User asked for:', query)
+
+    // A new star is born from this interaction
+    birthStar(query.trim())
+
+    // Clear input after a short moment so the user feels the offering was received
+    setTimeout(() => setQuery(''), 400)
   }
 
   return (
-    <div className="landing" onMouseMove={handleMouseMove}>
-      {/* Canvas has NO pointer events so input works */}
+    <div className="landing">
       <div className="canvas-wrap" ref={mountRef} />
 
       <div className="content">
@@ -238,11 +235,13 @@ function App() {
           <input
             type="text"
             value={query}
-            onChange={handleInput}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="What do you need done?"
             autoFocus
           />
         </form>
+
+        <p className="hint">Every thought becomes a star</p>
       </div>
     </div>
   )
