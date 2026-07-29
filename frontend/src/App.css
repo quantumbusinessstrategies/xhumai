@@ -50,11 +50,11 @@ html, body, #root {
   font-weight: 500;
   letter-spacing: -0.04em;
   margin-bottom: 0.5rem;
-  background: linear-gradient(180deg, #fff5f8 0%, #e0d0f0 100%);
+  background: linear-gradient(180deg, #fff5f8 0%, #e8d0f0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 0 42px rgba(220, 160, 220, 0.3));
+  filter: drop-shadow(0 0 42px rgba(220, 160, 220, 0.32));
 }
 
 .tagline {
@@ -62,7 +62,7 @@ html, body, #root {
   letter-spacing: 0.5em;
   text-transform: uppercase;
   color: rgba(230, 200, 230, 0.45);
-  margin-bottom: 4.5rem;
+  margin-bottom: 4.2rem;
   font-weight: 400;
 }
 
@@ -70,6 +70,9 @@ html, body, #root {
   width: 100%;
   max-width: 520px;
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
 .search-form input {
@@ -100,32 +103,57 @@ html, body, #root {
     0 10px 40px rgba(0, 0, 0, 0.45);
 }
 
+.more-input {
+  width: 100%;
+  padding: 1rem 1.3rem;
+  font-size: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 200, 230, 0.2);
+  background: rgba(18, 10, 28, 0.7);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.more-input:focus {
+  border-color: rgba(255, 180, 220, 0.5);
+  box-shadow: 0 0 0 3px rgba(200, 120, 200, 0.12);
+}
+
 .response {
-  margin-top: 1.9rem;
+  margin-top: 1.8rem;
   font-size: 0.95rem;
   letter-spacing: 0.1em;
   color: rgba(240, 210, 240, 0.65);
   min-height: 1.4em;
   animation: fadeIn 1.1s ease;
-  pointer-events: none;
 }
 
 .status {
-  margin-top: 0.6rem;
-  font-size: 0.75rem;
+  margin-top: 0.55rem;
+  font-size: 0.72rem;
   letter-spacing: 0.18em;
   color: rgba(200, 170, 220, 0.35);
   text-transform: uppercase;
   animation: fadeIn 0.8s ease;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
