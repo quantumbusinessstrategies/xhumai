@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import './App.css'
 
-// For local backend testing. On quantimeta.com this will later point to the real API.
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 function App() {
@@ -17,34 +16,68 @@ function App() {
   const mountRef = useRef(null)
   const starsRef = useRef([])
   const sceneRef = useRef(null)
-  const nebulaRef = useRef(null)
+  const gasRef = useRef([])
 
-  // ========== BIRTH STAR (local visual + optional persist) ==========
+  // ========== BIRTH STAR — explosion → implosion (~3s) ==========
   const birthStar = (data = {}) => {
     if (!sceneRef.current) return
 
-    const hue = data.hue ?? (0.05 + Math.random() * 0.75)
-    const geo = new THREE.SphereGeometry(0.035 + Math.random() * 0.045, 10, 10)
+    const hue = data.hue ?? (0.05 + Math.random() * 0.8)
+    const finalSize = 0.032 + Math.random() * 0.04
+
+    const geo = new THREE.SphereGeometry(1, 12, 12)
     const mat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color().setHSL(hue, 0.6, 0.78),
+      color: new THREE.Color().setHSL(hue, 0.65, 0.8),
       transparent: true,
       opacity: 0
     })
     const star = new THREE.Mesh(geo, mat)
+    star.scale.setScalar(0.01)
 
-    const x = data.x ?? (Math.random() - 0.5) * 11
-    const y = data.y ?? (Math.random() - 0.5) * 4.2
-    const z = data.z ?? (Math.random() - 0.5) * 11
+    // Much more random placement across the field
+    const x = data.x ?? (Math.random() - 0.5) * 16
+    const y = data.y ?? (Math.random() - 0.5) * 7
+    const z = data.z ?? (Math.random() - 0.5) * 16
     star.position.set(x, y, z)
 
-    // soft glow
+    // Explosion burst particles (temporary)
+    const burstCount = 18
+    const burstGeo = new THREE.BufferGeometry()
+    const burstPos = new Float32Array(burstCount * 3)
+    const burstVel = []
+    for (let i = 0; i < burstCount; i++) {
+      burstPos[i * 3] = 0
+      burstPos[i * 3 + 1] = 0
+      burstPos[i * 3 + 2] = 0
+      const speed = 0.04 + Math.random() * 0.08
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      burstVel.push({
+        x: Math.sin(phi) * Math.cos(theta) * speed,
+        y: Math.sin(phi) * Math.sin(theta) * speed,
+        z: Math.cos(phi) * speed
+      })
+    }
+    burstGeo.setAttribute('position', new THREE.BufferAttribute(burstPos, 3))
+    const burstMat = new THREE.PointsMaterial({
+      color: new THREE.Color().setHSL(hue, 0.7, 0.85),
+      size: 0.06,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+    const burst = new THREE.Points(burstGeo, burstMat)
+    star.add(burst)
+
+    // Soft glow sprite
     const canvas = document.createElement('canvas')
     canvas.width = 64
     canvas.height = 64
     const ctx = canvas.getContext('2d')
     const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
-    g.addColorStop(0, 'rgba(255,255,255,0.9)')
-    g.addColorStop(0.3, 'rgba(255,200,230,0.4)')
+    g.addColorStop(0, 'rgba(255,255,255,0.95)')
+    g.addColorStop(0.25, 'rgba(255,210,240,0.45)')
     g.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, 64, 64)
@@ -56,23 +89,27 @@ function App() {
       blending: THREE.AdditiveBlending,
       depthWrite: false
     }))
-    glow.scale.set(0.55, 0.55, 1)
+    glow.scale.set(0.15, 0.15, 1)
     star.add(glow)
 
     sceneRef.current.add(star)
+
     starsRef.current.push({
       mesh: star,
       glow,
+      burst,
+      burstVel,
       born: performance.now(),
-      // simple orbital params for living motion
-      orbitSpeed: 0.0003 + Math.random() * 0.0008,
+      finalSize,
+      phase: 'explode', // explode → implode → settle
+      orbitSpeed: 0.0002 + Math.random() * 0.0006,
       orbitRadius: Math.sqrt(x * x + z * z),
       angle: Math.atan2(z, x),
       yBase: y
     })
   }
 
-  // Load shared stars from backend on mount
+  // Load shared stars
   useEffect(() => {
     fetch(`${API}/api/stars`)
       .then(r => r.json())
@@ -81,7 +118,7 @@ function App() {
           data.stars.forEach(s => birthStar(s))
         }
       })
-      .catch(() => {}) // backend may not be reachable from GitHub Pages yet
+      .catch(() => {})
   }, [])
 
   // ========== SCENE ==========
@@ -95,11 +132,11 @@ function App() {
 
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0x05021a)
-    scene.fog = new THREE.FogExp2(0x05021a, 0.011)
+    scene.fog = new THREE.FogExp2(0x05021a, 0.0105)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 200)
-    camera.position.set(0, 0.55, 8.6)
+    camera.position.set(0, 0.5, 8.5)
     camera.lookAt(0, 0, 0)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -107,19 +144,15 @@ function App() {
     renderer.setPixelRatio(DPR)
     container.appendChild(renderer.domElement)
 
-    // ===== DENSE CORE + OUTER FIELD =====
-    // More particles near center for gravitational density feel
+    // ===== MAIN NEBULA (dense toward center) =====
     const count = 12000
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
-
-      // Bias toward center: power distribution
       const u = Math.random()
-      const r = Math.pow(u, 1.7) * 13   // denser near 0
-
+      const r = Math.pow(u, 1.7) * 13
       const theta = Math.random() * Math.PI * 2
       const y = (Math.random() - 0.5) * (1.4 + r * 0.28)
 
@@ -127,7 +160,6 @@ function App() {
       positions[i3 + 1] = y
       positions[i3 + 2] = Math.sin(theta) * r
 
-      // Brighter warm pastel spectrum
       const t = (r / 13 + Math.random() * 0.35) % 1
       let hue
       if (t < 0.22) hue = 0.88 + t * 0.35
@@ -138,7 +170,6 @@ function App() {
 
       const sat = 0.45 + Math.random() * 0.35
       const light = 0.55 + Math.random() * 0.3
-
       const c = new THREE.Color().setHSL(hue, sat, light)
       colors[i3] = c.r
       colors[i3 + 1] = c.g
@@ -153,7 +184,7 @@ function App() {
       size: 0.048,
       vertexColors: true,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.82,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true
@@ -161,22 +192,66 @@ function App() {
 
     const nebula = new THREE.Points(geo, mat)
     scene.add(nebula)
-    nebulaRef.current = nebula
 
-    // Smaller, denser black hole core (~1/4 previous visual weight)
+    // ===== ALMOST-INVISIBLE MULTICOLOR GAS CLOUDS =====
+    const gasClouds = []
+    for (let c = 0; c < 5; c++) {
+      const gCount = 800
+      const gPos = new Float32Array(gCount * 3)
+      const gCol = new Float32Array(gCount * 3)
+      const baseHue = Math.random()
+
+      for (let i = 0; i < gCount; i++) {
+        const i3 = i * 3
+        gPos[i3] = (Math.random() - 0.5) * 22
+        gPos[i3 + 1] = (Math.random() - 0.5) * 10
+        gPos[i3 + 2] = (Math.random() - 0.5) * 22
+
+        const h = (baseHue + Math.random() * 0.15) % 1
+        const col = new THREE.Color().setHSL(h, 0.4, 0.55)
+        gCol[i3] = col.r
+        gCol[i3 + 1] = col.g
+        gCol[i3 + 2] = col.b
+      }
+
+      const gGeo = new THREE.BufferGeometry()
+      gGeo.setAttribute('position', new THREE.BufferAttribute(gPos, 3))
+      gGeo.setAttribute('color', new THREE.BufferAttribute(gCol, 3))
+
+      const gMat = new THREE.PointsMaterial({
+        size: 0.12,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.04 + Math.random() * 0.03, // nearly invisible
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+
+      const cloud = new THREE.Points(gGeo, gMat)
+      cloud.userData = {
+        rotY: (Math.random() - 0.5) * 0.004,
+        rotZ: (Math.random() - 0.5) * 0.002,
+        drift: 0.002 + Math.random() * 0.003
+      }
+      scene.add(cloud)
+      gasClouds.push(cloud)
+    }
+    gasRef.current = gasClouds
+
+    // ===== BLACK HOLE (~10% smaller than previous) =====
     const core = new THREE.Mesh(
-      new THREE.SphereGeometry(0.38, 48, 48),
+      new THREE.SphereGeometry(0.34, 48, 48),
       new THREE.MeshBasicMaterial({ color: 0x000000 })
     )
     scene.add(core)
 
-    // Event horizon soft ring (lensing suggestion)
     const horizon = new THREE.Mesh(
-      new THREE.RingGeometry(0.42, 0.62, 64),
+      new THREE.RingGeometry(0.38, 0.55, 64),
       new THREE.MeshBasicMaterial({
         color: 0x4a2080,
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.32,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending
       })
@@ -184,13 +259,12 @@ function App() {
     horizon.rotation.x = Math.PI / 2.1
     scene.add(horizon)
 
-    // Photon ring suggestion (thin bright ring)
     const photon = new THREE.Mesh(
-      new THREE.RingGeometry(0.58, 0.68, 64),
+      new THREE.RingGeometry(0.52, 0.61, 64),
       new THREE.MeshBasicMaterial({
         color: 0xffc8e8,
         transparent: true,
-        opacity: 0.22,
+        opacity: 0.2,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending
       })
@@ -198,13 +272,12 @@ function App() {
     photon.rotation.x = Math.PI / 2.15
     scene.add(photon)
 
-    // Soft outer aura
     const aura = new THREE.Mesh(
-      new THREE.SphereGeometry(1.9, 32, 32),
+      new THREE.SphereGeometry(1.7, 32, 32),
       new THREE.MeshBasicMaterial({
         color: 0x2a1050,
         transparent: true,
-        opacity: 0.07,
+        opacity: 0.065,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending
       })
@@ -217,56 +290,106 @@ function App() {
     const animate = () => {
       frameId = requestAnimationFrame(animate)
       const t = clock.getElapsedTime()
+      const now = performance.now()
 
-      // Slow living rotation
       nebula.rotation.y = t * 0.0055
       nebula.rotation.z = Math.sin(t * 0.035) * 0.02
 
-      // Stronger breathing
-      const breath = 0.5 + Math.sin(t * 0.33) * 0.5
-      core.scale.setScalar(0.92 + breath * 0.14)
-      horizon.scale.setScalar(0.95 + breath * 0.12)
-      photon.material.opacity = 0.15 + breath * 0.18
-      aura.scale.setScalar(1 + breath * 0.11)
-      aura.material.opacity = 0.04 + breath * 0.06
+      // Gas clouds drift slowly
+      for (const cloud of gasRef.current) {
+        cloud.rotation.y += cloud.userData.rotY
+        cloud.rotation.z += cloud.userData.rotZ
+        cloud.position.x = Math.sin(t * cloud.userData.drift) * 1.2
+        cloud.position.y = Math.cos(t * cloud.userData.drift * 0.7) * 0.6
+      }
 
-      // Subtle gravitational warping feel: pull near-center particles slightly
-      // (lightweight approximation — full lensing shader later)
+      // Breathing
+      const breath = 0.5 + Math.sin(t * 0.33) * 0.5
+      core.scale.setScalar(0.92 + breath * 0.13)
+      horizon.scale.setScalar(0.95 + breath * 0.11)
+      photon.material.opacity = 0.14 + breath * 0.16
+      aura.scale.setScalar(1 + breath * 0.1)
+      aura.material.opacity = 0.04 + breath * 0.05
+
+      // Light gravitational pull on nearby nebula particles
       const pos = nebula.geometry.attributes.position
-      for (let i = 0; i < 400; i++) { // only a subset for performance
-        const idx = (i * 31) % count
+      for (let i = 0; i < 350; i++) {
+        const idx = (i * 37) % count
         const ix = idx * 3
         const x = pos.array[ix]
         const z = pos.array[ix + 2]
         const dist = Math.sqrt(x * x + z * z)
-        if (dist < 2.8 && dist > 0.5) {
-          const pull = 0.00015 * (1 / dist)
+        if (dist < 2.5 && dist > 0.45) {
+          const pull = 0.00012 * (1 / dist)
           pos.array[ix] -= x * pull
           pos.array[ix + 2] -= z * pull
         }
       }
       pos.needsUpdate = true
 
-      // Born stars: fade in + gentle orbital drift
-      const now = performance.now()
+      // ===== STAR LIFECYCLE: explode → implode → settle =====
       for (const s of starsRef.current) {
-        const age = (now - s.born) / 1000
-        if (age < 2.8) {
-          const fade = Math.min(1, age / 2.8)
-          s.mesh.material.opacity = fade
-          s.glow.material.opacity = fade * 0.7
-        }
+        const age = (now - s.born) / 1000 // seconds
 
-        // slow orbital motion around the core
-        s.angle += s.orbitSpeed
-        s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
-        s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
-        s.mesh.position.y = s.yBase + Math.sin(t * 0.4 + s.angle) * 0.15
+        if (age < 1.2) {
+          // EXPLOSION phase — expand fast
+          const p = age / 1.2
+          const ease = 1 - Math.pow(1 - p, 3)
+          const scale = 0.01 + ease * (s.finalSize * 4.5)
+          s.mesh.scale.setScalar(scale)
+          s.mesh.material.opacity = Math.min(1, p * 1.4)
+          s.glow.material.opacity = Math.min(0.85, p * 1.2)
+          s.glow.scale.setScalar(0.15 + ease * 1.8)
+
+          // Burst particles fly outward
+          if (s.burst) {
+            const arr = s.burst.geometry.attributes.position.array
+            for (let i = 0; i < s.burstVel.length; i++) {
+              arr[i * 3] += s.burstVel[i].x
+              arr[i * 3 + 1] += s.burstVel[i].y
+              arr[i * 3 + 2] += s.burstVel[i].z
+              s.burstVel[i].x *= 0.96
+              s.burstVel[i].y *= 0.96
+              s.burstVel[i].z *= 0.96
+            }
+            s.burst.geometry.attributes.position.needsUpdate = true
+            s.burst.material.opacity = 0.9 * (1 - p)
+          }
+        } else if (age < 3.0) {
+          // IMPLOSION phase — collapse into final star
+          const p = (age - 1.2) / 1.8
+          const ease = p * p
+          const scale = s.finalSize * 4.5 * (1 - ease) + s.finalSize * ease
+          s.mesh.scale.setScalar(scale)
+          s.mesh.material.opacity = 1
+          s.glow.material.opacity = 0.85 - ease * 0.25
+          s.glow.scale.setScalar(1.95 - ease * 1.3)
+
+          if (s.burst) {
+            s.burst.material.opacity = Math.max(0, 0.3 * (1 - p))
+          }
+        } else {
+          // SETTLED — stable star with gentle orbit
+          s.mesh.scale.setScalar(s.finalSize)
+          s.mesh.material.opacity = 1
+          s.glow.material.opacity = 0.55
+          s.glow.scale.setScalar(0.65)
+          if (s.burst && s.burst.parent) {
+            s.mesh.remove(s.burst)
+            s.burst.geometry.dispose()
+            s.burst.material.dispose()
+            s.burst = null
+          }
+
+          s.angle += s.orbitSpeed
+          s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
+          s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
+          s.mesh.position.y = s.yBase + Math.sin(t * 0.35 + s.angle) * 0.12
+        }
       }
 
-      // Camera gentle breathe
-      camera.position.x = Math.sin(t * 0.045) * 0.25
-      camera.position.y = 0.55 + Math.sin(t * 0.08) * 0.14
+      camera.position.x = Math.sin(t * 0.045) * 0.22
+      camera.position.y = 0.5 + Math.sin(t * 0.08) * 0.12
       camera.lookAt(0, 0, 0)
 
       renderer.render(scene, camera)
@@ -294,20 +417,18 @@ function App() {
     }
   }, [])
 
-  // ========== SUBMIT ==========
   const handleSubmit = async (e) => {
     e.preventDefault()
     const text = (needsMore ? moreText : query).trim()
     if (!text) return
 
-    // Visual star immediately
-    const hue = 0.05 + Math.random() * 0.75
-    const x = (Math.random() - 0.5) * 10
-    const y = (Math.random() - 0.5) * 3.8
-    const z = (Math.random() - 0.5) * 10
+    const hue = 0.05 + Math.random() * 0.8
+    // Wider random scatter
+    const x = (Math.random() - 0.5) * 15
+    const y = (Math.random() - 0.5) * 6.5
+    const z = (Math.random() - 0.5) * 15
     birthStar({ x, y, z, hue })
 
-    // Persist star to shared constellation
     fetch(`${API}/api/stars`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -356,7 +477,7 @@ function App() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="What do you need done?"
+            placeholder="Speak into the field..."
             autoFocus
             disabled={needsMore}
           />
