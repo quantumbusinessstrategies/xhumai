@@ -23,19 +23,19 @@ function App() {
   const photonRef = useRef(null)
   const horizonRef = useRef(null)
   const auraRef = useRef(null)
-  const typingRef = useRef(false)
+  const typingRef = useRef(0) // smooth 0→1 intensity
   const activateRef = useRef(0)
   const typingTimeout = useRef(null)
 
   const birthStar = (data = {}) => {
     if (!sceneRef.current) return
 
-    const hue = data.hue ?? (0.5 + Math.random() * 0.35)
+    const hue = data.hue ?? Math.random()
     const finalSize = 0.06 + Math.random() * 0.05
 
     const starGeo = new THREE.SphereGeometry(1, 16, 16)
     const starMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color().setHSL(hue, 0.5, 0.9),
+      color: new THREE.Color().setHSL(hue, 0.55, 0.88),
       transparent: true,
       opacity: 0
     })
@@ -115,8 +115,8 @@ function App() {
     const ctx = canvas.getContext('2d')
     const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
     g.addColorStop(0, 'rgba(255,255,255,1)')
-    g.addColorStop(0.2, 'rgba(180,240,255,0.55)')
-    g.addColorStop(0.5, 'rgba(100,200,255,0.15)')
+    g.addColorStop(0.2, 'rgba(200,230,255,0.5)')
+    g.addColorStop(0.5, 'rgba(140,180,255,0.12)')
     g.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, 64, 64)
@@ -133,10 +133,9 @@ function App() {
 
     sceneRef.current.add(star)
 
-    // Cyan activation pulse
     activateRef.current = performance.now()
     setIsActivating(true)
-    setTimeout(() => setIsActivating(false), 1200)
+    setTimeout(() => setIsActivating(false), 1600)
 
     starsRef.current.push({
       mesh: star,
@@ -190,10 +189,11 @@ function App() {
     renderer.setPixelRatio(DPR)
     container.appendChild(renderer.domElement)
 
+    // ===== RICHER RAINBOW NEBULA =====
     const count = 12000
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
-    const basePositions = new Float32Array(count * 3) // for drift restore
+    const basePositions = new Float32Array(count * 3)
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
@@ -209,16 +209,11 @@ function App() {
       basePositions[i3 + 1] = positions[i3 + 1]
       basePositions[i3 + 2] = positions[i3 + 2]
 
-      const t = (r / 13 + Math.random() * 0.35) % 1
-      let hue
-      if (t < 0.22) hue = 0.88 + t * 0.35
-      else if (t < 0.42) hue = 0.1 + (t - 0.22) * 0.55
-      else if (t < 0.62) hue = 0.48 + (t - 0.42) * 0.35
-      else if (t < 0.82) hue = 0.65 + (t - 0.62) * 0.3
-      else hue = 0.78 + (t - 0.82) * 0.28
-
-      const sat = 0.45 + Math.random() * 0.35
-      const light = 0.55 + Math.random() * 0.3
+      // Full soft rainbow spectrum, still pastel
+      const t = (r / 13 + Math.random() * 0.5 + i * 0.00007) % 1
+      const hue = t // full spectrum
+      const sat = 0.4 + Math.random() * 0.35
+      const light = 0.52 + Math.random() * 0.32
       const c = new THREE.Color().setHSL(hue, sat, light)
       colors[i3] = c.r
       colors[i3 + 1] = c.g
@@ -233,7 +228,7 @@ function App() {
       size: 0.048,
       vertexColors: true,
       transparent: true,
-      opacity: 0.82,
+      opacity: 0.8,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true
@@ -242,20 +237,25 @@ function App() {
     const nebula = new THREE.Points(geo, mat)
     scene.add(nebula)
 
+    // ===== TRANSLUCENT RAINBOW FREEFORM CLOUDS =====
     const gasClouds = []
-    for (let c = 0; c < 5; c++) {
-      const gCount = 800
+    const cloudHues = [0.0, 0.12, 0.28, 0.45, 0.58, 0.72, 0.88] // rainbow anchors
+    for (let c = 0; c < 7; c++) {
+      const gCount = 900
       const gPos = new Float32Array(gCount * 3)
       const gCol = new Float32Array(gCount * 3)
-      const baseHue = Math.random()
+      const baseHue = cloudHues[c]
 
       for (let i = 0; i < gCount; i++) {
         const i3 = i * 3
-        gPos[i3] = (Math.random() - 0.5) * 22
-        gPos[i3 + 1] = (Math.random() - 0.5) * 10
-        gPos[i3 + 2] = (Math.random() - 0.5) * 22
-        const h = (baseHue + Math.random() * 0.15) % 1
-        const col = new THREE.Color().setHSL(h, 0.4, 0.55)
+        // Irregular freeform blob
+        const spread = 8 + Math.random() * 14
+        gPos[i3] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 6
+        gPos[i3 + 1] = (Math.random() - 0.5) * (spread * 0.45)
+        gPos[i3 + 2] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 6
+
+        const h = (baseHue + (Math.random() - 0.5) * 0.08 + 1) % 1
+        const col = new THREE.Color().setHSL(h, 0.45 + Math.random() * 0.25, 0.55 + Math.random() * 0.2)
         gCol[i3] = col.r
         gCol[i3 + 1] = col.g
         gCol[i3 + 2] = col.b
@@ -266,10 +266,10 @@ function App() {
       gGeo.setAttribute('color', new THREE.BufferAttribute(gCol, 3))
 
       const gMat = new THREE.PointsMaterial({
-        size: 0.12,
+        size: 0.14 + Math.random() * 0.08,
         vertexColors: true,
         transparent: true,
-        opacity: 0.035 + Math.random() * 0.025,
+        opacity: 0.028 + Math.random() * 0.022, // near translucent
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true
@@ -277,9 +277,10 @@ function App() {
 
       const cloud = new THREE.Points(gGeo, gMat)
       cloud.userData = {
-        rotY: (Math.random() - 0.5) * 0.004,
-        rotZ: (Math.random() - 0.5) * 0.002,
-        drift: 0.002 + Math.random() * 0.003
+        rotY: (Math.random() - 0.5) * 0.003,
+        rotZ: (Math.random() - 0.5) * 0.0015,
+        drift: 0.0015 + Math.random() * 0.0025,
+        phase: Math.random() * Math.PI * 2
       }
       scene.add(cloud)
       gasClouds.push(cloud)
@@ -336,6 +337,7 @@ function App() {
 
     let frameId
     const clock = new THREE.Clock()
+    let smoothTyping = 0
 
     const animate = () => {
       frameId = requestAnimationFrame(animate)
@@ -348,68 +350,69 @@ function App() {
       for (const cloud of gasRef.current) {
         cloud.rotation.y += cloud.userData.rotY
         cloud.rotation.z += cloud.userData.rotZ
-        cloud.position.x = Math.sin(t * cloud.userData.drift) * 1.2
-        cloud.position.y = Math.cos(t * cloud.userData.drift * 0.7) * 0.6
+        cloud.position.x = Math.sin(t * cloud.userData.drift + cloud.userData.phase) * 1.4
+        cloud.position.y = Math.cos(t * cloud.userData.drift * 0.7 + cloud.userData.phase) * 0.7
       }
 
-      // Base breathing
-      const breath = 0.5 + Math.sin(t * 0.33) * 0.5
+      // Smooth typing intensity (lerp — no snap)
+      const targetTyping = typingRef.current
+      smoothTyping += (targetTyping - smoothTyping) * 0.04 // slow mesh
 
-      // Typing reactivity — core brightens, particles drift inward
-      const typingBoost = typingRef.current ? 1 : 0
-      // Cyan activation pulse (on star birth)
+      const breath = 0.5 + Math.sin(t * 0.28) * 0.5 // slower breath
+
+      // Soft activation pulse
       const actAge = (now - activateRef.current) / 1000
-      const actPulse = actAge < 1.2 ? Math.sin((actAge / 1.2) * Math.PI) : 0
+      const actPulse = actAge < 1.6 ? Math.sin((actAge / 1.6) * Math.PI) * 0.55 : 0 // gentler
 
-      const coreScale = 0.92 + breath * 0.13 + typingBoost * 0.08 + actPulse * 0.12
+      // Calm core reaction
+      const coreScale = 0.94 + breath * 0.1 + smoothTyping * 0.035 + actPulse * 0.05
       core.scale.setScalar(coreScale)
 
-      horizon.scale.setScalar(0.95 + breath * 0.11 + typingBoost * 0.06 + actPulse * 0.1)
-      // Photon ring goes electric cyan on activation
-      if (actPulse > 0.05) {
-        photon.material.color.setHex(0x00e5ff)
-        photon.material.opacity = 0.15 + actPulse * 0.55 + breath * 0.1
-      } else if (typingRef.current) {
-        photon.material.color.setHex(0xa0d0ff)
-        photon.material.opacity = 0.22 + breath * 0.14
+      horizon.scale.setScalar(0.96 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
+
+      if (actPulse > 0.08) {
+        photon.material.color.setHex(0x40d8ff)
+        photon.material.opacity = 0.14 + actPulse * 0.28 + breath * 0.08
+      } else if (smoothTyping > 0.15) {
+        photon.material.color.setHex(0xb0d4ff)
+        photon.material.opacity = 0.16 + breath * 0.1 + smoothTyping * 0.06
       } else {
         photon.material.color.setHex(0xc8d8ff)
-        photon.material.opacity = 0.12 + breath * 0.14
+        photon.material.opacity = 0.12 + breath * 0.1
       }
 
-      aura.scale.setScalar(1 + breath * 0.1 + typingBoost * 0.05 + actPulse * 0.08)
-      aura.material.opacity = 0.04 + breath * 0.05 + typingBoost * 0.03 + actPulse * 0.06
+      aura.scale.setScalar(1 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
+      aura.material.opacity = 0.04 + breath * 0.04 + smoothTyping * 0.015 + actPulse * 0.03
       if (actPulse > 0.1) {
-        aura.material.color.setHex(0x0a4060)
+        aura.material.color.setHex(0x153050)
       } else {
         aura.material.color.setHex(0x2a1050)
       }
 
-      // Particle drift — gravity + typing inward pull
+      // Gentle particle drift
       const pos = nebula.geometry.attributes.position
-      for (let i = 0; i < 500; i++) {
+      for (let i = 0; i < 450; i++) {
         const idx = (i * 37) % count
         const ix = idx * 3
         let x = pos.array[ix]
         let z = pos.array[ix + 2]
         const dist = Math.sqrt(x * x + z * z)
 
-        if (dist < 3.2 && dist > 0.4) {
-          const pull = 0.0001 * (1 / dist) + (typingRef.current ? 0.00035 / dist : 0)
+        if (dist < 3.0 && dist > 0.45) {
+          const pull = 0.00008 * (1 / dist) + smoothTyping * 0.00015 / dist
           pos.array[ix] -= x * pull
           pos.array[ix + 2] -= z * pull
         }
 
-        // Soft restore toward base when idle (keeps field from collapsing forever)
-        if (!typingRef.current && dist > 0.5) {
-          pos.array[ix] += (basePositions[ix] - pos.array[ix]) * 0.0008
-          pos.array[ix + 1] += (basePositions[ix + 1] - pos.array[ix + 1]) * 0.0008
-          pos.array[ix + 2] += (basePositions[ix + 2] - pos.array[ix + 2]) * 0.0008
+        if (smoothTyping < 0.1 && dist > 0.5) {
+          pos.array[ix] += (basePositions[ix] - pos.array[ix]) * 0.001
+          pos.array[ix + 1] += (basePositions[ix + 1] - pos.array[ix + 1]) * 0.001
+          pos.array[ix + 2] += (basePositions[ix + 2] - pos.array[ix + 2]) * 0.001
         }
       }
       pos.needsUpdate = true
 
-      // Star lifecycle
+      // Stars
       for (const s of starsRef.current) {
         const age = (now - s.born) / 1000
 
@@ -538,13 +541,13 @@ function App() {
 
   const handleInputChange = (e) => {
     setQuery(e.target.value)
-    typingRef.current = true
+    typingRef.current = 1
     setIsTyping(true)
     if (typingTimeout.current) clearTimeout(typingTimeout.current)
     typingTimeout.current = setTimeout(() => {
-      typingRef.current = false
+      typingRef.current = 0
       setIsTyping(false)
-    }, 900)
+    }, 1200)
   }
 
   const handleSubmit = async (e) => {
@@ -552,7 +555,7 @@ function App() {
     const text = (needsMore ? moreText : query).trim()
     if (!text) return
 
-    const hue = 0.5 + Math.random() * 0.35
+    const hue = Math.random()
     const x = (Math.random() - 0.5) * 8
     const y = (Math.random() - 0.5) * 4
     const z = (Math.random() - 0.5) * 5 - 0.5
