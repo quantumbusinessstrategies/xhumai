@@ -32,6 +32,7 @@ html, body, #root {
   display: block;
 }
 
+/* Vertical breathing room — not crunched to center */
 .content {
   position: relative;
   z-index: 20;
@@ -39,55 +40,57 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   text-align: center;
-  padding: 2rem;
-  padding-top: 12vh; /* pushes title block upward */
+  padding: 10vh 2rem 8vh;
   pointer-events: none;
 }
 
-/* Blocky, tall, square, bold future title */
+.header-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .logo {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: clamp(3.6rem, 10.5vw, 6.2rem);
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 0.95;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.7rem;
   background: linear-gradient(180deg, #ffffff 0%, #e8d8f5 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(0 0 36px rgba(210, 150, 230, 0.28));
-  text-transform: none; /* keep casing */
 }
 
 .tagline {
-  font-size: clamp(0.82rem, 2.1vw, 1.05rem);
-  letter-spacing: 0.48em;
+  font-size: clamp(0.85rem, 2.2vw, 1.1rem);
+  letter-spacing: 0.42em;
   text-transform: uppercase;
-  color: rgba(230, 210, 240, 0.72); /* more opaque */
-  margin-bottom: 3.6rem; /* moved up */
+  color: rgba(235, 220, 250, 0.82);
   font-weight: 500;
 }
 
 .search-form {
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-/* More square, grayscale, hair-thin white border */
+/* Squarer input, grayscale, hair-thin border */
 .search-form input {
   width: 100%;
-  padding: 1.05rem 1.5rem;
+  padding: 1.05rem 1.4rem;
   font-size: 1.05rem;
-  border-radius: 10px; /* more square */
-  border: 1px solid rgba(255, 255, 255, 0.28); /* hair-thin semi-transparent white */
-  background: rgba(30, 30, 38, 0.45); /* grayscale transparent */
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(28, 28, 36, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #e8e8f0;
@@ -98,13 +101,13 @@ html, body, #root {
 }
 
 .search-form input::placeholder {
-  color: rgba(180, 180, 195, 0.55);
-  letter-spacing: 0.04em;
+  color: rgba(185, 185, 200, 0.55);
+  letter-spacing: 0.03em;
 }
 
 .search-form input:focus {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(40, 40, 50, 0.55);
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(36, 36, 46, 0.6);
   box-shadow:
     0 0 0 3px rgba(255, 255, 255, 0.06),
     0 8px 32px rgba(0, 0, 0, 0.4);
@@ -114,9 +117,9 @@ html, body, #root {
   width: 100%;
   padding: 1rem 1.2rem;
   font-size: 0.98rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(28, 28, 36, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(26, 26, 34, 0.6);
   backdrop-filter: blur(12px);
   color: #e8e8f0;
   outline: none;
@@ -127,24 +130,31 @@ html, body, #root {
 }
 
 .more-input:focus {
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.5);
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
 }
 
+.footer-block {
+  min-height: 3.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 .response {
-  margin-top: 1.6rem;
   font-size: 0.92rem;
   letter-spacing: 0.08em;
-  color: rgba(235, 215, 245, 0.7);
+  color: rgba(235, 220, 250, 0.75);
   min-height: 1.4em;
   animation: fadeIn 1s ease;
 }
 
 .status {
-  margin-top: 0.5rem;
+  margin-top: 0.45rem;
   font-size: 0.7rem;
   letter-spacing: 0.16em;
-  color: rgba(200, 180, 220, 0.4);
+  color: rgba(200, 185, 225, 0.42);
   text-transform: uppercase;
   animation: fadeIn 0.8s ease;
 }
