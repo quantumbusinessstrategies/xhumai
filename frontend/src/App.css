@@ -45,28 +45,48 @@ html, body, #root {
   pointer-events: none;
 }
 
-/* ~20% larger overall */
+/* Living logo — slow breath */
 .logo {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: clamp(4.2rem, 12vw, 7rem);
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.05;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.55rem;
   background: linear-gradient(180deg, #ffffff 8%, #d8d0ec 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(0 0 36px rgba(180, 150, 230, 0.25));
+  animation: logoBreath 18s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.logo-activate {
+  filter: drop-shadow(0 0 48px rgba(0, 229, 255, 0.45));
+  transition: filter 0.4s ease;
+}
+
+@keyframes logoBreath {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.018); opacity: 0.94; }
 }
 
 .tagline {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: rgba(225, 215, 245, 0.8);
+  color: rgba(225, 215, 245, 0.82);
   font-weight: 450;
-  margin-bottom: 3.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.purpose {
+  font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+  letter-spacing: 0.06em;
+  color: rgba(180, 200, 230, 0.55);
+  margin-bottom: 3.2rem;
+  font-weight: 400;
 }
 
 .search-form {
@@ -89,7 +109,7 @@ html, body, #root {
   -webkit-backdrop-filter: blur(12px);
   color: #e8e8f0;
   outline: none;
-  transition: all 0.3s ease;
+  transition: all 0.35s ease;
   text-align: center;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
@@ -99,11 +119,12 @@ html, body, #root {
   letter-spacing: 0.02em;
 }
 
-.search-form input:focus {
-  border-color: rgba(255, 255, 255, 0.55);
-  background: rgba(36, 36, 46, 0.6);
+.search-form input:focus,
+.search-form input.input-awake {
+  border-color: rgba(0, 220, 255, 0.45);
+  background: rgba(36, 40, 52, 0.62);
   box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.06),
+    0 0 0 3px rgba(0, 200, 255, 0.08),
     0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
@@ -124,8 +145,8 @@ html, body, #root {
 }
 
 .more-input:focus {
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 220, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(0, 200, 255, 0.06);
 }
 
 .response {

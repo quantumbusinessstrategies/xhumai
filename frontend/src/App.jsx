@@ -12,13 +12,21 @@ function App() {
   const [needsMore, setNeedsMore] = useState(false)
   const [moreText, setMoreText] = useState('')
   const [morePrompt, setMorePrompt] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const [isActivating, setIsActivating] = useState(false)
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
   const sceneRef = useRef(null)
   const gasRef = useRef([])
+  const coreRef = useRef(null)
+  const photonRef = useRef(null)
+  const horizonRef = useRef(null)
+  const auraRef = useRef(null)
+  const typingRef = useRef(false)
+  const activateRef = useRef(0)
+  const typingTimeout = useRef(null)
 
-  // ========== FIREWORK → HOLD → SNAP COLLAPSE → STAR ==========
   const birthStar = (data = {}) => {
     if (!sceneRef.current) return
 
@@ -39,7 +47,6 @@ function App() {
     const z = data.z ?? (Math.random() - 0.5) * 7 - 1
     star.position.set(x, y, z)
 
-    // Smaller sparks that travel farther
     const sparkCount = 64
     const sparkGeo = new THREE.BufferGeometry()
     const sparkPos = new Float32Array(sparkCount * 3)
@@ -48,20 +55,20 @@ function App() {
       sparkPos[i * 3] = 0
       sparkPos[i * 3 + 1] = 0
       sparkPos[i * 3 + 2] = 0
-      const speed = 0.12 + Math.random() * 0.18 // farther reach
+      const speed = 0.12 + Math.random() * 0.18
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
       sparkVel.push({
         x: Math.sin(phi) * Math.cos(theta) * speed,
         y: Math.sin(phi) * Math.sin(theta) * speed,
         z: Math.cos(phi) * speed,
-        drag: 0.97 + Math.random() * 0.02 // less drag = hold/extend longer
+        drag: 0.97 + Math.random() * 0.02
       })
     }
     sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3))
     const sparkMat = new THREE.PointsMaterial({
       color: new THREE.Color().setHSL(hue, 0.55, 0.95),
-      size: 0.028, // smaller particles
+      size: 0.028,
       transparent: true,
       opacity: 1,
       blending: THREE.AdditiveBlending,
@@ -71,7 +78,6 @@ function App() {
     const sparks = new THREE.Points(sparkGeo, sparkMat)
     star.add(sparks)
 
-    // Soft nebula cloud — also smaller points, farther
     const cloudCount = 100
     const cloudGeo = new THREE.BufferGeometry()
     const cloudPos = new Float32Array(cloudCount * 3)
@@ -93,7 +99,7 @@ function App() {
     cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3))
     const cloudMat = new THREE.PointsMaterial({
       color: new THREE.Color().setHSL(hue, 0.4, 0.72),
-      size: 0.06, // smaller
+      size: 0.06,
       transparent: true,
       opacity: 0.65,
       blending: THREE.AdditiveBlending,
@@ -109,8 +115,8 @@ function App() {
     const ctx = canvas.getContext('2d')
     const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
     g.addColorStop(0, 'rgba(255,255,255,1)')
-    g.addColorStop(0.2, 'rgba(210,225,255,0.5)')
-    g.addColorStop(0.5, 'rgba(150,170,240,0.15)')
+    g.addColorStop(0.2, 'rgba(180,240,255,0.55)')
+    g.addColorStop(0.5, 'rgba(100,200,255,0.15)')
     g.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, 64, 64)
@@ -126,6 +132,11 @@ function App() {
     star.add(glow)
 
     sceneRef.current.add(star)
+
+    // Cyan activation pulse
+    activateRef.current = performance.now()
+    setIsActivating(true)
+    setTimeout(() => setIsActivating(false), 1200)
 
     starsRef.current.push({
       mesh: star,
@@ -182,6 +193,7 @@ function App() {
     const count = 12000
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
+    const basePositions = new Float32Array(count * 3) // for drift restore
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
@@ -193,6 +205,9 @@ function App() {
       positions[i3] = Math.cos(theta) * r
       positions[i3 + 1] = y
       positions[i3 + 2] = Math.sin(theta) * r
+      basePositions[i3] = positions[i3]
+      basePositions[i3 + 1] = positions[i3 + 1]
+      basePositions[i3 + 2] = positions[i3 + 2]
 
       const t = (r / 13 + Math.random() * 0.35) % 1
       let hue
@@ -276,6 +291,7 @@ function App() {
       new THREE.MeshBasicMaterial({ color: 0x000000 })
     )
     scene.add(core)
+    coreRef.current = core
 
     const horizon = new THREE.Mesh(
       new THREE.RingGeometry(0.38, 0.55, 64),
@@ -289,6 +305,7 @@ function App() {
     )
     horizon.rotation.x = Math.PI / 2.1
     scene.add(horizon)
+    horizonRef.current = horizon
 
     const photon = new THREE.Mesh(
       new THREE.RingGeometry(0.52, 0.61, 64),
@@ -302,6 +319,7 @@ function App() {
     )
     photon.rotation.x = Math.PI / 2.15
     scene.add(photon)
+    photonRef.current = photon
 
     const aura = new THREE.Mesh(
       new THREE.SphereGeometry(1.7, 32, 32),
@@ -314,6 +332,7 @@ function App() {
       })
     )
     scene.add(aura)
+    auraRef.current = aura
 
     let frameId
     const clock = new THREE.Clock()
@@ -333,32 +352,67 @@ function App() {
         cloud.position.y = Math.cos(t * cloud.userData.drift * 0.7) * 0.6
       }
 
+      // Base breathing
       const breath = 0.5 + Math.sin(t * 0.33) * 0.5
-      core.scale.setScalar(0.92 + breath * 0.13)
-      horizon.scale.setScalar(0.95 + breath * 0.11)
-      photon.material.opacity = 0.12 + breath * 0.14
-      aura.scale.setScalar(1 + breath * 0.1)
-      aura.material.opacity = 0.04 + breath * 0.05
 
+      // Typing reactivity — core brightens, particles drift inward
+      const typingBoost = typingRef.current ? 1 : 0
+      // Cyan activation pulse (on star birth)
+      const actAge = (now - activateRef.current) / 1000
+      const actPulse = actAge < 1.2 ? Math.sin((actAge / 1.2) * Math.PI) : 0
+
+      const coreScale = 0.92 + breath * 0.13 + typingBoost * 0.08 + actPulse * 0.12
+      core.scale.setScalar(coreScale)
+
+      horizon.scale.setScalar(0.95 + breath * 0.11 + typingBoost * 0.06 + actPulse * 0.1)
+      // Photon ring goes electric cyan on activation
+      if (actPulse > 0.05) {
+        photon.material.color.setHex(0x00e5ff)
+        photon.material.opacity = 0.15 + actPulse * 0.55 + breath * 0.1
+      } else if (typingRef.current) {
+        photon.material.color.setHex(0xa0d0ff)
+        photon.material.opacity = 0.22 + breath * 0.14
+      } else {
+        photon.material.color.setHex(0xc8d8ff)
+        photon.material.opacity = 0.12 + breath * 0.14
+      }
+
+      aura.scale.setScalar(1 + breath * 0.1 + typingBoost * 0.05 + actPulse * 0.08)
+      aura.material.opacity = 0.04 + breath * 0.05 + typingBoost * 0.03 + actPulse * 0.06
+      if (actPulse > 0.1) {
+        aura.material.color.setHex(0x0a4060)
+      } else {
+        aura.material.color.setHex(0x2a1050)
+      }
+
+      // Particle drift — gravity + typing inward pull
       const pos = nebula.geometry.attributes.position
-      for (let i = 0; i < 350; i++) {
+      for (let i = 0; i < 500; i++) {
         const idx = (i * 37) % count
         const ix = idx * 3
-        const x = pos.array[ix]
-        const z = pos.array[ix + 2]
+        let x = pos.array[ix]
+        let z = pos.array[ix + 2]
         const dist = Math.sqrt(x * x + z * z)
-        if (dist < 2.5 && dist > 0.45) {
-          const pull = 0.00012 * (1 / dist)
+
+        if (dist < 3.2 && dist > 0.4) {
+          const pull = 0.0001 * (1 / dist) + (typingRef.current ? 0.00035 / dist : 0)
           pos.array[ix] -= x * pull
           pos.array[ix + 2] -= z * pull
+        }
+
+        // Soft restore toward base when idle (keeps field from collapsing forever)
+        if (!typingRef.current && dist > 0.5) {
+          pos.array[ix] += (basePositions[ix] - pos.array[ix]) * 0.0008
+          pos.array[ix + 1] += (basePositions[ix + 1] - pos.array[ix + 1]) * 0.0008
+          pos.array[ix + 2] += (basePositions[ix + 2] - pos.array[ix + 2]) * 0.0008
         }
       }
       pos.needsUpdate = true
 
+      // Star lifecycle
       for (const s of starsRef.current) {
         const age = (now - s.born) / 1000
 
-        // Phase 1: EXPLOSION + HOLD (longer)
         if (age < 1.8) {
           const p = age / 1.8
           const ease = 1 - Math.pow(1 - Math.min(p, 1), 1.6)
@@ -374,7 +428,6 @@ function App() {
               s.sparkVel[i].z *= s.sparkVel[i].drag
             }
             s.sparks.geometry.attributes.position.needsUpdate = true
-            // Stay bright longer, fade only near end of hold
             s.sparks.material.opacity = p < 0.7 ? 1 : 1 - ((p - 0.7) / 0.3) * 0.35
           }
 
@@ -397,16 +450,13 @@ function App() {
           s.glow.scale.setScalar(0.2 + ease * 2.8)
           s.mesh.material.opacity = Math.min(0.45, p * 0.5)
           s.mesh.scale.setScalar(0.02 + ease * s.finalSize * 1.8)
-        }
-        // Phase 2: DRASTIC FAST COLLAPSE
-        else if (age < 2.35) {
-          const p = (age - 1.8) / 0.55 // short, sharp
-          const ease = p * p // accelerate in
+        } else if (age < 2.35) {
+          const p = (age - 1.8) / 0.55
+          const ease = p * p
 
           if (s.sparks) {
             const arr = s.sparks.geometry.attributes.position.array
             for (let i = 0; i < s.sparkVel.length; i++) {
-              // Snap back toward center hard
               arr[i * 3] *= 0.82 - p * 0.15
               arr[i * 3 + 1] *= 0.82 - p * 0.15
               arr[i * 3 + 2] *= 0.82 - p * 0.15
@@ -431,9 +481,7 @@ function App() {
           s.mesh.material.opacity = 0.45 + ease * 0.55
           s.glow.material.opacity = 1 - ease * 0.4
           s.glow.scale.setScalar(3.0 - ease * 2.2)
-        }
-        // Settled
-        else {
+        } else {
           s.mesh.scale.setScalar(s.finalSize)
           s.mesh.material.opacity = 1
           s.glow.material.opacity = 0.55
@@ -488,6 +536,17 @@ function App() {
     }
   }, [])
 
+  const handleInputChange = (e) => {
+    setQuery(e.target.value)
+    typingRef.current = true
+    setIsTyping(true)
+    if (typingTimeout.current) clearTimeout(typingTimeout.current)
+    typingTimeout.current = setTimeout(() => {
+      typingRef.current = false
+      setIsTyping(false)
+    }, 900)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     const text = (needsMore ? moreText : query).trim()
@@ -539,17 +598,19 @@ function App() {
       <div className="canvas-wrap" ref={mountRef} />
 
       <div className="content">
-        <h1 className="logo">XhumAI</h1>
+        <h1 className={`logo ${isActivating ? 'logo-activate' : ''}`}>XhumAI</h1>
         <p className="tagline">WORK LESS. LIVE MORE.</p>
+        <p className="purpose">Intelligence that evolves with you</p>
 
         <form onSubmit={handleSubmit} className="search-form">
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Speak into the field..."
+            onChange={handleInputChange}
+            placeholder="What are you trying to accomplish?"
             autoFocus
             disabled={needsMore}
+            className={isTyping ? 'input-awake' : ''}
           />
 
           {needsMore && (
