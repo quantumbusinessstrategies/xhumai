@@ -18,12 +18,12 @@ function App() {
   const sceneRef = useRef(null)
   const gasRef = useRef([])
 
-  // ========== FIREWORK → NEBULA CLOUD → STAR ==========
+  // ========== FIREWORK → HOLD → SNAP COLLAPSE → STAR ==========
   const birthStar = (data = {}) => {
     if (!sceneRef.current) return
 
     const hue = data.hue ?? (0.5 + Math.random() * 0.35)
-    const finalSize = 0.06 + Math.random() * 0.05 // larger so it's visible
+    const finalSize = 0.06 + Math.random() * 0.05
 
     const starGeo = new THREE.SphereGeometry(1, 16, 16)
     const starMat = new THREE.MeshBasicMaterial({
@@ -34,14 +34,13 @@ function App() {
     const star = new THREE.Mesh(starGeo, starMat)
     star.scale.setScalar(0.02)
 
-    // Keep births in the visible field (not too far / behind)
     const x = data.x ?? (Math.random() - 0.5) * 9
     const y = data.y ?? (Math.random() - 0.5) * 4.5
     const z = data.z ?? (Math.random() - 0.5) * 7 - 1
     star.position.set(x, y, z)
 
-    // Firework sparks
-    const sparkCount = 56
+    // Smaller sparks that travel farther
+    const sparkCount = 64
     const sparkGeo = new THREE.BufferGeometry()
     const sparkPos = new Float32Array(sparkCount * 3)
     const sparkVel = []
@@ -49,20 +48,20 @@ function App() {
       sparkPos[i * 3] = 0
       sparkPos[i * 3 + 1] = 0
       sparkPos[i * 3 + 2] = 0
-      const speed = 0.08 + Math.random() * 0.12
+      const speed = 0.12 + Math.random() * 0.18 // farther reach
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
       sparkVel.push({
         x: Math.sin(phi) * Math.cos(theta) * speed,
         y: Math.sin(phi) * Math.sin(theta) * speed,
         z: Math.cos(phi) * speed,
-        drag: 0.93 + Math.random() * 0.04
+        drag: 0.97 + Math.random() * 0.02 // less drag = hold/extend longer
       })
     }
     sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3))
     const sparkMat = new THREE.PointsMaterial({
-      color: new THREE.Color().setHSL(hue, 0.6, 0.95),
-      size: 0.07,
+      color: new THREE.Color().setHSL(hue, 0.55, 0.95),
+      size: 0.028, // smaller particles
       transparent: true,
       opacity: 1,
       blending: THREE.AdditiveBlending,
@@ -72,8 +71,8 @@ function App() {
     const sparks = new THREE.Points(sparkGeo, sparkMat)
     star.add(sparks)
 
-    // Nebula cloud
-    const cloudCount = 110
+    // Soft nebula cloud — also smaller points, farther
+    const cloudCount = 100
     const cloudGeo = new THREE.BufferGeometry()
     const cloudPos = new Float32Array(cloudCount * 3)
     const cloudVel = []
@@ -81,22 +80,22 @@ function App() {
       cloudPos[i * 3] = 0
       cloudPos[i * 3 + 1] = 0
       cloudPos[i * 3 + 2] = 0
-      const speed = 0.03 + Math.random() * 0.05
+      const speed = 0.05 + Math.random() * 0.09
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
       cloudVel.push({
         x: Math.sin(phi) * Math.cos(theta) * speed,
         y: Math.sin(phi) * Math.sin(theta) * speed,
         z: Math.cos(phi) * speed,
-        drag: 0.96 + Math.random() * 0.02
+        drag: 0.98 + Math.random() * 0.012
       })
     }
     cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3))
     const cloudMat = new THREE.PointsMaterial({
-      color: new THREE.Color().setHSL(hue, 0.45, 0.75),
-      size: 0.14,
+      color: new THREE.Color().setHSL(hue, 0.4, 0.72),
+      size: 0.06, // smaller
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true
@@ -104,7 +103,6 @@ function App() {
     const cloud = new THREE.Points(cloudGeo, cloudMat)
     star.add(cloud)
 
-    // Glow
     const canvas = document.createElement('canvas')
     canvas.width = 64
     canvas.height = 64
@@ -146,7 +144,6 @@ function App() {
   }
 
   useEffect(() => {
-    // slight delay so scene is ready
     const t = setTimeout(() => {
       fetch(`${API}/api/stars`)
         .then(r => r.json())
@@ -361,10 +358,10 @@ function App() {
       for (const s of starsRef.current) {
         const age = (now - s.born) / 1000
 
-        if (age < 0.9) {
-          // FIREWORK
-          const p = age / 0.9
-          const ease = 1 - Math.pow(1 - p, 2)
+        // Phase 1: EXPLOSION + HOLD (longer)
+        if (age < 1.8) {
+          const p = age / 1.8
+          const ease = 1 - Math.pow(1 - Math.min(p, 1), 1.6)
 
           if (s.sparks) {
             const arr = s.sparks.geometry.attributes.position.array
@@ -377,7 +374,8 @@ function App() {
               s.sparkVel[i].z *= s.sparkVel[i].drag
             }
             s.sparks.geometry.attributes.position.needsUpdate = true
-            s.sparks.material.opacity = 1 - p * 0.55
+            // Stay bright longer, fade only near end of hold
+            s.sparks.material.opacity = p < 0.7 ? 1 : 1 - ((p - 0.7) / 0.3) * 0.35
           }
 
           if (s.cloud) {
@@ -391,41 +389,51 @@ function App() {
               s.cloudVel[i].z *= s.cloudVel[i].drag
             }
             s.cloud.geometry.attributes.position.needsUpdate = true
-            s.cloud.material.opacity = 0.25 + p * 0.5
-            s.cloud.material.size = 0.14 + p * 0.08
+            s.cloud.material.opacity = 0.3 + Math.min(p, 0.85) * 0.4
+            s.cloud.material.size = 0.06 + Math.min(p, 0.8) * 0.04
           }
 
-          s.glow.material.opacity = Math.min(1, p * 1.6)
-          s.glow.scale.setScalar(0.2 + ease * 3.2)
-          s.mesh.material.opacity = Math.min(0.5, p * 0.6)
-          s.mesh.scale.setScalar(0.02 + ease * s.finalSize * 2.2)
-        } else if (age < 2.7) {
-          // COLLAPSE
-          const p = (age - 0.9) / 1.8
-          const ease = p * p * (3 - 2 * p)
+          s.glow.material.opacity = Math.min(1, p * 1.3)
+          s.glow.scale.setScalar(0.2 + ease * 2.8)
+          s.mesh.material.opacity = Math.min(0.45, p * 0.5)
+          s.mesh.scale.setScalar(0.02 + ease * s.finalSize * 1.8)
+        }
+        // Phase 2: DRASTIC FAST COLLAPSE
+        else if (age < 2.35) {
+          const p = (age - 1.8) / 0.55 // short, sharp
+          const ease = p * p // accelerate in
 
           if (s.sparks) {
-            s.sparks.material.opacity = Math.max(0, 0.45 * (1 - p))
+            const arr = s.sparks.geometry.attributes.position.array
+            for (let i = 0; i < s.sparkVel.length; i++) {
+              // Snap back toward center hard
+              arr[i * 3] *= 0.82 - p * 0.15
+              arr[i * 3 + 1] *= 0.82 - p * 0.15
+              arr[i * 3 + 2] *= 0.82 - p * 0.15
+            }
+            s.sparks.geometry.attributes.position.needsUpdate = true
+            s.sparks.material.opacity = Math.max(0, 0.65 * (1 - p))
           }
 
           if (s.cloud) {
             const arr = s.cloud.geometry.attributes.position.array
             for (let i = 0; i < s.cloudVel.length; i++) {
-              arr[i * 3] *= 0.95 - p * 0.05
-              arr[i * 3 + 1] *= 0.95 - p * 0.05
-              arr[i * 3 + 2] *= 0.95 - p * 0.05
+              arr[i * 3] *= 0.78 - p * 0.2
+              arr[i * 3 + 1] *= 0.78 - p * 0.2
+              arr[i * 3 + 2] *= 0.78 - p * 0.2
             }
             s.cloud.geometry.attributes.position.needsUpdate = true
-            s.cloud.material.opacity = 0.75 * (1 - ease)
-            s.cloud.material.size = 0.22 * (1 - ease * 0.75)
+            s.cloud.material.opacity = 0.7 * (1 - ease)
+            s.cloud.material.size = 0.1 * (1 - ease)
           }
 
-          s.mesh.scale.setScalar(s.finalSize * 2.2 * (1 - ease) + s.finalSize * ease)
-          s.mesh.material.opacity = 0.5 + ease * 0.5
-          s.glow.material.opacity = 1 - ease * 0.45
-          s.glow.scale.setScalar(3.4 - ease * 2.6)
-        } else {
-          // Settled
+          s.mesh.scale.setScalar(s.finalSize * 1.8 * (1 - ease) + s.finalSize * ease)
+          s.mesh.material.opacity = 0.45 + ease * 0.55
+          s.glow.material.opacity = 1 - ease * 0.4
+          s.glow.scale.setScalar(3.0 - ease * 2.2)
+        }
+        // Settled
+        else {
           s.mesh.scale.setScalar(s.finalSize)
           s.mesh.material.opacity = 1
           s.glow.material.opacity = 0.55
@@ -486,7 +494,6 @@ function App() {
     if (!text) return
 
     const hue = 0.5 + Math.random() * 0.35
-    // Visible placement in front of the field
     const x = (Math.random() - 0.5) * 8
     const y = (Math.random() - 0.5) * 4
     const z = (Math.random() - 0.5) * 5 - 0.5
