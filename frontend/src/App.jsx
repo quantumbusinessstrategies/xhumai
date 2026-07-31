@@ -18,72 +18,101 @@ function App() {
   const sceneRef = useRef(null)
   const gasRef = useRef([])
 
-  // ========== COSMIC STAR BIRTH — stellar flash → collapse =====
+  // ========== FIREWORK → NEBULA CLOUD → STAR ==========
   const birthStar = (data = {}) => {
     if (!sceneRef.current) return
 
-    const hue = data.hue ?? (0.55 + Math.random() * 0.35) // cooler cosmic hues
-    const finalSize = 0.028 + Math.random() * 0.035
+    const hue = data.hue ?? (0.55 + Math.random() * 0.3)
+    const finalSize = 0.03 + Math.random() * 0.032
 
-    const geo = new THREE.SphereGeometry(1, 14, 14)
-    const mat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color().setHSL(hue, 0.5, 0.85),
+    // Final star core (starts invisible, small)
+    const starGeo = new THREE.SphereGeometry(1, 16, 16)
+    const starMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color().setHSL(hue, 0.45, 0.88),
       transparent: true,
       opacity: 0
     })
-    const star = new THREE.Mesh(geo, mat)
-    star.scale.setScalar(0.008)
+    const star = new THREE.Mesh(starGeo, starMat)
+    star.scale.setScalar(0.01)
 
-    // Wide random placement
-    const x = data.x ?? (Math.random() - 0.5) * 16
-    const y = data.y ?? (Math.random() - 0.5) * 7.5
-    const z = data.z ?? (Math.random() - 0.5) * 16
+    const x = data.x ?? (Math.random() - 0.5) * 14
+    const y = data.y ?? (Math.random() - 0.5) * 6.5
+    const z = data.z ?? (Math.random() - 0.5) * 14
     star.position.set(x, y, z)
 
-    // Cosmic debris — thin stellar filaments, not candy bubbles
-    const burstCount = 28
-    const burstGeo = new THREE.BufferGeometry()
-    const burstPos = new Float32Array(burstCount * 3)
-    const burstVel = []
-    for (let i = 0; i < burstCount; i++) {
-      burstPos[i * 3] = 0
-      burstPos[i * 3 + 1] = 0
-      burstPos[i * 3 + 2] = 0
-      // Prefer equatorial disk + some polar jets (more cosmic)
-      const isJet = Math.random() < 0.18
-      const speed = isJet ? 0.09 + Math.random() * 0.06 : 0.025 + Math.random() * 0.045
+    // Firework sparks — many small points shooting out
+    const sparkCount = 48
+    const sparkGeo = new THREE.BufferGeometry()
+    const sparkPos = new Float32Array(sparkCount * 3)
+    const sparkVel = []
+    for (let i = 0; i < sparkCount; i++) {
+      sparkPos[i * 3] = 0
+      sparkPos[i * 3 + 1] = 0
+      sparkPos[i * 3 + 2] = 0
+      const speed = 0.06 + Math.random() * 0.1
       const theta = Math.random() * Math.PI * 2
-      const phi = isJet
-        ? (Math.random() < 0.5 ? 0.15 : Math.PI - 0.15) + (Math.random() - 0.5) * 0.3
-        : Math.acos(2 * Math.random() - 1) * 0.7 + Math.PI * 0.15
-      burstVel.push({
+      const phi = Math.acos(2 * Math.random() - 1)
+      sparkVel.push({
         x: Math.sin(phi) * Math.cos(theta) * speed,
-        y: Math.cos(phi) * speed * (isJet ? 1.4 : 0.6),
-        z: Math.sin(phi) * Math.sin(theta) * speed
+        y: Math.sin(phi) * Math.sin(theta) * speed,
+        z: Math.cos(phi) * speed,
+        drag: 0.94 + Math.random() * 0.03
       })
     }
-    burstGeo.setAttribute('position', new THREE.BufferAttribute(burstPos, 3))
-    const burstMat = new THREE.PointsMaterial({
-      color: new THREE.Color().setHSL(hue, 0.35, 0.9),
-      size: 0.035,
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3))
+    const sparkMat = new THREE.PointsMaterial({
+      color: new THREE.Color().setHSL(hue, 0.55, 0.92),
+      size: 0.04,
       transparent: true,
-      opacity: 0.75,
+      opacity: 1,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true
     })
-    const burst = new THREE.Points(burstGeo, burstMat)
-    star.add(burst)
+    const sparks = new THREE.Points(sparkGeo, sparkMat)
+    star.add(sparks)
 
-    // Soft stellar glow (cool white-blue, not pink candy)
+    // Nebula cloud shell — soft expanding then collapsing volume
+    const cloudCount = 90
+    const cloudGeo = new THREE.BufferGeometry()
+    const cloudPos = new Float32Array(cloudCount * 3)
+    const cloudVel = []
+    for (let i = 0; i < cloudCount; i++) {
+      cloudPos[i * 3] = 0
+      cloudPos[i * 3 + 1] = 0
+      cloudPos[i * 3 + 2] = 0
+      const speed = 0.02 + Math.random() * 0.045
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      cloudVel.push({
+        x: Math.sin(phi) * Math.cos(theta) * speed,
+        y: Math.sin(phi) * Math.sin(theta) * speed,
+        z: Math.cos(phi) * speed,
+        drag: 0.97 + Math.random() * 0.015
+      })
+    }
+    cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3))
+    const cloudMat = new THREE.PointsMaterial({
+      color: new THREE.Color().setHSL(hue, 0.4, 0.7),
+      size: 0.09,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true
+    })
+    const cloud = new THREE.Points(cloudGeo, cloudMat)
+    star.add(cloud)
+
+    // Soft glow sprite
     const canvas = document.createElement('canvas')
     canvas.width = 64
     canvas.height = 64
     const ctx = canvas.getContext('2d')
     const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
-    g.addColorStop(0, 'rgba(240,245,255,0.95)')
-    g.addColorStop(0.25, 'rgba(180,200,255,0.35)')
-    g.addColorStop(0.55, 'rgba(120,140,220,0.12)')
+    g.addColorStop(0, 'rgba(255,255,255,0.95)')
+    g.addColorStop(0.2, 'rgba(200,220,255,0.4)')
+    g.addColorStop(0.5, 'rgba(140,160,230,0.12)')
     g.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, 64, 64)
@@ -95,7 +124,7 @@ function App() {
       blending: THREE.AdditiveBlending,
       depthWrite: false
     }))
-    glow.scale.set(0.12, 0.12, 1)
+    glow.scale.set(0.1, 0.1, 1)
     star.add(glow)
 
     sceneRef.current.add(star)
@@ -103,11 +132,13 @@ function App() {
     starsRef.current.push({
       mesh: star,
       glow,
-      burst,
-      burstVel,
+      sparks,
+      sparkVel,
+      cloud,
+      cloudVel,
       born: performance.now(),
       finalSize,
-      orbitSpeed: 0.00015 + Math.random() * 0.0005,
+      orbitSpeed: 0.00015 + Math.random() * 0.00045,
       orbitRadius: Math.sqrt(x * x + z * z),
       angle: Math.atan2(z, x),
       yBase: y
@@ -147,7 +178,6 @@ function App() {
     renderer.setPixelRatio(DPR)
     container.appendChild(renderer.domElement)
 
-    // Main nebula
     const count = 12000
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
@@ -196,7 +226,6 @@ function App() {
     const nebula = new THREE.Points(geo, mat)
     scene.add(nebula)
 
-    // Soft gas clouds
     const gasClouds = []
     for (let c = 0; c < 5; c++) {
       const gCount = 800
@@ -241,7 +270,6 @@ function App() {
     }
     gasRef.current = gasClouds
 
-    // Black hole core
     const core = new THREE.Mesh(
       new THREE.SphereGeometry(0.34, 48, 48),
       new THREE.MeshBasicMaterial({ color: 0x000000 })
@@ -326,57 +354,92 @@ function App() {
       }
       pos.needsUpdate = true
 
-      // Cosmic birth lifecycle
+      // Firework → nebula cloud → star
       for (const s of starsRef.current) {
         const age = (now - s.born) / 1000
 
-        if (age < 0.9) {
-          // Flash expand — bright stellar ignition
-          const p = age / 0.9
-          const ease = 1 - Math.pow(1 - p, 2.5)
-          const scale = 0.008 + ease * (s.finalSize * 5.5)
-          s.mesh.scale.setScalar(scale)
-          s.mesh.material.opacity = Math.min(1, p * 1.6)
-          s.glow.material.opacity = Math.min(0.9, p * 1.4)
-          s.glow.scale.setScalar(0.12 + ease * 2.4)
+        if (age < 0.85) {
+          // FIREWORK burst
+          const p = age / 0.85
+          const ease = 1 - Math.pow(1 - p, 2)
 
-          if (s.burst) {
-            const arr = s.burst.geometry.attributes.position.array
-            for (let i = 0; i < s.burstVel.length; i++) {
-              arr[i * 3] += s.burstVel[i].x
-              arr[i * 3 + 1] += s.burstVel[i].y
-              arr[i * 3 + 2] += s.burstVel[i].z
-              s.burstVel[i].x *= 0.97
-              s.burstVel[i].y *= 0.97
-              s.burstVel[i].z *= 0.97
+          if (s.sparks) {
+            const arr = s.sparks.geometry.attributes.position.array
+            for (let i = 0; i < s.sparkVel.length; i++) {
+              arr[i * 3] += s.sparkVel[i].x
+              arr[i * 3 + 1] += s.sparkVel[i].y
+              arr[i * 3 + 2] += s.sparkVel[i].z
+              s.sparkVel[i].x *= s.sparkVel[i].drag
+              s.sparkVel[i].y *= s.sparkVel[i].drag
+              s.sparkVel[i].z *= s.sparkVel[i].drag
             }
-            s.burst.geometry.attributes.position.needsUpdate = true
-            s.burst.material.opacity = 0.75 * (1 - p * 0.7)
+            s.sparks.geometry.attributes.position.needsUpdate = true
+            s.sparks.material.opacity = 1 - p * 0.6
           }
-        } else if (age < 2.8) {
-          // Collapse into stable star
-          const p = (age - 0.9) / 1.9
-          const ease = p * p * (3 - 2 * p)
-          const scale = s.finalSize * 5.5 * (1 - ease) + s.finalSize * ease
-          s.mesh.scale.setScalar(scale)
-          s.mesh.material.opacity = 1
-          s.glow.material.opacity = 0.9 - ease * 0.35
-          s.glow.scale.setScalar(2.5 - ease * 1.85)
 
-          if (s.burst) {
-            s.burst.material.opacity = Math.max(0, 0.25 * (1 - p))
+          if (s.cloud) {
+            const arr = s.cloud.geometry.attributes.position.array
+            for (let i = 0; i < s.cloudVel.length; i++) {
+              arr[i * 3] += s.cloudVel[i].x
+              arr[i * 3 + 1] += s.cloudVel[i].y
+              arr[i * 3 + 2] += s.cloudVel[i].z
+              s.cloudVel[i].x *= s.cloudVel[i].drag
+              s.cloudVel[i].y *= s.cloudVel[i].drag
+              s.cloudVel[i].z *= s.cloudVel[i].drag
+            }
+            s.cloud.geometry.attributes.position.needsUpdate = true
+            s.cloud.material.opacity = 0.2 + p * 0.45
+            s.cloud.material.size = 0.09 + p * 0.06
           }
+
+          s.glow.material.opacity = Math.min(0.95, p * 1.5)
+          s.glow.scale.setScalar(0.1 + ease * 2.8)
+          s.mesh.material.opacity = Math.min(0.4, p * 0.5)
+          s.mesh.scale.setScalar(0.01 + ease * s.finalSize * 2)
+        } else if (age < 2.6) {
+          // NEBULA COLLAPSE into star
+          const p = (age - 0.85) / 1.75
+          const ease = p * p * (3 - 2 * p)
+
+          if (s.sparks) {
+            s.sparks.material.opacity = Math.max(0, 0.4 * (1 - p))
+          }
+
+          if (s.cloud) {
+            // Pull cloud particles back toward center
+            const arr = s.cloud.geometry.attributes.position.array
+            for (let i = 0; i < s.cloudVel.length; i++) {
+              arr[i * 3] *= 0.96 - p * 0.04
+              arr[i * 3 + 1] *= 0.96 - p * 0.04
+              arr[i * 3 + 2] *= 0.96 - p * 0.04
+            }
+            s.cloud.geometry.attributes.position.needsUpdate = true
+            s.cloud.material.opacity = 0.65 * (1 - ease)
+            s.cloud.material.size = 0.15 * (1 - ease * 0.7)
+          }
+
+          s.mesh.scale.setScalar(s.finalSize * 2 * (1 - ease) + s.finalSize * ease)
+          s.mesh.material.opacity = 0.4 + ease * 0.6
+          s.glow.material.opacity = 0.95 - ease * 0.4
+          s.glow.scale.setScalar(2.9 - ease * 2.2)
         } else {
-          // Settled
+          // Settled star
           s.mesh.scale.setScalar(s.finalSize)
           s.mesh.material.opacity = 1
-          s.glow.material.opacity = 0.5
-          s.glow.scale.setScalar(0.6)
-          if (s.burst && s.burst.parent) {
-            s.mesh.remove(s.burst)
-            s.burst.geometry.dispose()
-            s.burst.material.dispose()
-            s.burst = null
+          s.glow.material.opacity = 0.48
+          s.glow.scale.setScalar(0.55)
+
+          if (s.sparks && s.sparks.parent) {
+            s.mesh.remove(s.sparks)
+            s.sparks.geometry.dispose()
+            s.sparks.material.dispose()
+            s.sparks = null
+          }
+          if (s.cloud && s.cloud.parent) {
+            s.mesh.remove(s.cloud)
+            s.cloud.geometry.dispose()
+            s.cloud.material.dispose()
+            s.cloud = null
           }
 
           s.angle += s.orbitSpeed
@@ -420,10 +483,10 @@ function App() {
     const text = (needsMore ? moreText : query).trim()
     if (!text) return
 
-    const hue = 0.55 + Math.random() * 0.35
-    const x = (Math.random() - 0.5) * 15
-    const y = (Math.random() - 0.5) * 7
-    const z = (Math.random() - 0.5) * 15
+    const hue = 0.55 + Math.random() * 0.3
+    const x = (Math.random() - 0.5) * 14
+    const y = (Math.random() - 0.5) * 6.5
+    const z = (Math.random() - 0.5) * 14
     birthStar({ x, y, z, hue })
 
     fetch(`${API}/api/stars`, {
@@ -466,10 +529,8 @@ function App() {
       <div className="canvas-wrap" ref={mountRef} />
 
       <div className="content">
-        <div className="header-block">
-          <h1 className="logo">XhumAI</h1>
-          <p className="tagline">WORK LESS. LIVE MORE.</p>
-        </div>
+        <h1 className="logo">XhumAI</h1>
+        <p className="tagline">WORK LESS. LIVE MORE.</p>
 
         <form onSubmit={handleSubmit} className="search-form">
           <input
@@ -495,10 +556,8 @@ function App() {
           <button type="submit" className="sr-only">Send</button>
         </form>
 
-        <div className="footer-block">
-          <p className="response" key={responseKey}>{response}</p>
-          {status && <p className="status">{status}</p>}
-        </div>
+        <p className="response" key={responseKey}>{response}</p>
+        {status && <p className="status">{status}</p>}
       </div>
     </div>
   )
