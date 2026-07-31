@@ -4,6 +4,90 @@ import './App.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
+// ---- Shape textures (canvas) ----
+function makeShapeTexture(drawFn, size = 64) {
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, size, size)
+  drawFn(ctx, size)
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.needsUpdate = true
+  return tex
+}
+
+function drawCircle(ctx, s) {
+  const c = s / 2
+  const g = ctx.createRadialGradient(c, c, 0, c, c, c * 0.9)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.5, 'rgba(255,255,255,0.7)')
+  g.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(c, c, c * 0.85, 0, Math.PI * 2)
+  ctx.fill()
+}
+
+function drawSquare(ctx, s) {
+  const pad = s * 0.18
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  ctx.fillRect(pad, pad, s - pad * 2, s - pad * 2)
+  // soft edge
+  ctx.globalCompositeOperation = 'destination-in'
+  const g = ctx.createRadialGradient(s/2, s/2, s*0.2, s/2, s/2, s*0.55)
+  g.addColorStop(0, 'rgba(0,0,0,1)')
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, s, s)
+}
+
+function drawPolygon(ctx, s, sides, pointy = false) {
+  const c = s / 2
+  const r = s * 0.38
+  ctx.beginPath()
+  for (let i = 0; i < sides; i++) {
+    const a = (i / sides) * Math.PI * 2 - Math.PI / 2 + (pointy ? 0 : Math.PI / sides)
+    const x = c + Math.cos(a) * r
+    const y = c + Math.sin(a) * r
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  ctx.fill()
+  ctx.globalCompositeOperation = 'destination-in'
+  const g = ctx.createRadialGradient(c, c, r * 0.3, c, c, r * 1.2)
+  g.addColorStop(0, 'rgba(0,0,0,1)')
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, s, s)
+}
+
+function drawStar(ctx, s, points) {
+  const c = s / 2
+  const outer = s * 0.4
+  const inner = s * 0.18
+  ctx.beginPath()
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outer : inner
+    const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2
+    const x = c + Math.cos(a) * r
+    const y = c + Math.sin(a) * r
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  ctx.fill()
+  ctx.globalCompositeOperation = 'destination-in'
+  const g = ctx.createRadialGradient(c, c, inner, c, c, outer * 1.15)
+  g.addColorStop(0, 'rgba(0,0,0,1)')
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, s, s)
+}
+
 function App() {
   const [query, setQuery] = useState('')
   const [response, setResponse] = useState('Every thought becomes a star')
@@ -19,11 +103,9 @@ function App() {
   const starsRef = useRef([])
   const sceneRef = useRef(null)
   const gasRef = useRef([])
-  const coreRef = useRef(null)
-  const photonRef = useRef(null)
-  const horizonRef = useRef(null)
-  const auraRef = useRef(null)
-  const typingRef = useRef(0) // smooth 0→1 intensity
+  const layersRef = useRef([]) // shape point layers
+  const specialsRef = useRef([]) // mini BH, wireframes, etc.
+  const typingRef = useRef(0)
   const activateRef = useRef(0)
   const typingTimeout = useRef(null)
 
@@ -137,6 +219,8 @@ function App() {
     setIsActivating(true)
     setTimeout(() => setIsActivating(false), 1600)
 
+    // Orbital state with possible gravitational warp
+    const orbitRadius = Math.sqrt(x * x + z * z)
     starsRef.current.push({
       mesh: star,
       glow,
@@ -147,9 +231,13 @@ function App() {
       born: performance.now(),
       finalSize,
       orbitSpeed: 0.00012 + Math.random() * 0.0004,
-      orbitRadius: Math.sqrt(x * x + z * z),
+      orbitRadius,
       angle: Math.atan2(z, x),
-      yBase: y
+      yBase: y,
+      warping: false,
+      warpT: 0,
+      warpFrom: null,
+      warpTo: null
     })
   }
 
@@ -189,57 +277,198 @@ function App() {
     renderer.setPixelRatio(DPR)
     container.appendChild(renderer.domElement)
 
-    // ===== RICHER RAINBOW NEBULA =====
-    const count = 12000
-    const positions = new Float32Array(count * 3)
-    const colors = new Float32Array(count * 3)
-    const basePositions = new Float32Array(count * 3)
+    // Shape textures
+    const texCircle = makeShapeTexture(drawCircle)
+    const texSquare = makeShapeTexture(drawSquare)
+    const texHex = makeShapeTexture((ctx, s) => drawPolygon(ctx, s, 6))
+    const texPent = makeShapeTexture((ctx, s) => drawPolygon(ctx, s, 5))
+    const texStar6 = makeShapeTexture((ctx, s) => drawStar(ctx, s, 6))
+    const texStar7 = makeShapeTexture((ctx, s) => drawStar(ctx, s, 7))
 
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3
-      const u = Math.random()
-      const r = Math.pow(u, 1.7) * 13
+    // Distribution of 2D shape layers (of ~11k point particles)
+    // square 30%, circle 30%, hex 15%, pent 5%, star6 5%, star7 4% ≈ 89%
+    // remaining ~11% reserved conceptually for specials (we spawn fewer 3D specials)
+    const layerDefs = [
+      { tex: texSquare, count: 3300, size: 0.055 },
+      { tex: texCircle, count: 3300, size: 0.05 },
+      { tex: texHex, count: 1650, size: 0.052 },
+      { tex: texPent, count: 550, size: 0.05 },
+      { tex: texStar6, count: 550, size: 0.058 },
+      { tex: texStar7, count: 440, size: 0.056 }
+    ]
+
+    const layers = []
+    const baseOpacity = 0.9 // ~10% more opaque than prior ~0.8
+
+    for (const def of layerDefs) {
+      const positions = new Float32Array(def.count * 3)
+      const colors = new Float32Array(def.count * 3)
+      const basePositions = new Float32Array(def.count * 3)
+      const hues = new Float32Array(def.count)
+
+      for (let i = 0; i < def.count; i++) {
+        const i3 = i * 3
+        const u = Math.random()
+        const r = Math.pow(u, 1.7) * 13
+        const theta = Math.random() * Math.PI * 2
+        const y = (Math.random() - 0.5) * (1.4 + r * 0.28)
+
+        positions[i3] = Math.cos(theta) * r
+        positions[i3 + 1] = y
+        positions[i3 + 2] = Math.sin(theta) * r
+        basePositions[i3] = positions[i3]
+        basePositions[i3 + 1] = y
+        basePositions[i3 + 2] = positions[i3 + 2]
+
+        hues[i] = Math.random()
+        const c = new THREE.Color().setHSL(hues[i], 0.45 + Math.random() * 0.3, 0.55 + Math.random() * 0.28)
+        colors[i3] = c.r
+        colors[i3 + 1] = c.g
+        colors[i3 + 2] = c.b
+      }
+
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+      const mat = new THREE.PointsMaterial({
+        size: def.size,
+        map: def.tex,
+        vertexColors: true,
+        transparent: true,
+        opacity: baseOpacity,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+        alphaTest: 0.01
+      })
+
+      const pts = new THREE.Points(geo, mat)
+      scene.add(pts)
+      layers.push({ pts, geo, mat, hues, basePositions, count: def.count })
+    }
+    layersRef.current = layers
+
+    // ===== SPECIAL 3D PARTICLES (sparse) =====
+    const specials = []
+
+    // Mini black holes ~5% visual weight but sparse count for perf (~40)
+    for (let i = 0; i < 40; i++) {
+      const r = 2 + Math.random() * 10
       const theta = Math.random() * Math.PI * 2
-      const y = (Math.random() - 0.5) * (1.4 + r * 0.28)
-
-      positions[i3] = Math.cos(theta) * r
-      positions[i3 + 1] = y
-      positions[i3 + 2] = Math.sin(theta) * r
-      basePositions[i3] = positions[i3]
-      basePositions[i3 + 1] = positions[i3 + 1]
-      basePositions[i3 + 2] = positions[i3 + 2]
-
-      // Full soft rainbow spectrum, still pastel
-      const t = (r / 13 + Math.random() * 0.5 + i * 0.00007) % 1
-      const hue = t // full spectrum
-      const sat = 0.4 + Math.random() * 0.35
-      const light = 0.52 + Math.random() * 0.32
-      const c = new THREE.Color().setHSL(hue, sat, light)
-      colors[i3] = c.r
-      colors[i3 + 1] = c.g
-      colors[i3 + 2] = c.b
+      const y = (Math.random() - 0.5) * 3.5
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.04 + Math.random() * 0.04, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0x000000 })
+      )
+      mesh.position.set(Math.cos(theta) * r, y, Math.sin(theta) * r)
+      // dark halo
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08 + Math.random() * 0.05, 10, 10),
+        new THREE.MeshBasicMaterial({
+          color: 0x0a0618,
+          transparent: true,
+          opacity: 0.5,
+          blending: THREE.NormalBlending
+        })
+      )
+      mesh.add(halo)
+      scene.add(mesh)
+      specials.push({
+        mesh,
+        type: 'minibh',
+        orbitSpeed: 0.00008 + Math.random() * 0.00025,
+        orbitRadius: r,
+        angle: theta,
+        yBase: y
+      })
     }
 
-    const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    // Wireframe cubes ~2% → ~25
+    for (let i = 0; i < 25; i++) {
+      const r = 2.5 + Math.random() * 9
+      const theta = Math.random() * Math.PI * 2
+      const y = (Math.random() - 0.5) * 3.2
+      const mesh = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(0.08, 0.08, 0.08)),
+        new THREE.LineBasicMaterial({
+          color: new THREE.Color().setHSL(Math.random(), 0.5, 0.7),
+          transparent: true,
+          opacity: 0.7
+        })
+      )
+      mesh.position.set(Math.cos(theta) * r, y, Math.sin(theta) * r)
+      scene.add(mesh)
+      specials.push({
+        mesh,
+        type: 'cube',
+        orbitSpeed: 0.0001 + Math.random() * 0.0003,
+        orbitRadius: r,
+        angle: theta,
+        yBase: y,
+        spin: 0.005 + Math.random() * 0.01
+      })
+    }
 
-    const mat = new THREE.PointsMaterial({
-      size: 0.048,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      sizeAttenuation: true
-    })
+    // Icosahedrons ~2% → ~20
+    for (let i = 0; i < 20; i++) {
+      const r = 2.5 + Math.random() * 9
+      const theta = Math.random() * Math.PI * 2
+      const y = (Math.random() - 0.5) * 3
+      const mesh = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.05, 0),
+        new THREE.MeshBasicMaterial({
+          color: new THREE.Color().setHSL(Math.random(), 0.5, 0.65),
+          transparent: true,
+          opacity: 0.75,
+          wireframe: Math.random() > 0.5
+        })
+      )
+      mesh.position.set(Math.cos(theta) * r, y, Math.sin(theta) * r)
+      scene.add(mesh)
+      specials.push({
+        mesh,
+        type: 'ico',
+        orbitSpeed: 0.0001 + Math.random() * 0.0003,
+        orbitRadius: r,
+        angle: theta,
+        yBase: y,
+        spin: 0.004 + Math.random() * 0.008
+      })
+    }
 
-    const nebula = new THREE.Points(geo, mat)
-    scene.add(nebula)
+    // Dodecahedrons ~1% → ~12
+    for (let i = 0; i < 12; i++) {
+      const r = 3 + Math.random() * 8
+      const theta = Math.random() * Math.PI * 2
+      const y = (Math.random() - 0.5) * 2.8
+      const mesh = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.055, 0),
+        new THREE.MeshBasicMaterial({
+          color: new THREE.Color().setHSL(Math.random(), 0.5, 0.65),
+          transparent: true,
+          opacity: 0.7,
+          wireframe: true
+        })
+      )
+      mesh.position.set(Math.cos(theta) * r, y, Math.sin(theta) * r)
+      scene.add(mesh)
+      specials.push({
+        mesh,
+        type: 'dodeca',
+        orbitSpeed: 0.00008 + Math.random() * 0.00025,
+        orbitRadius: r,
+        angle: theta,
+        yBase: y,
+        spin: 0.003 + Math.random() * 0.007
+      })
+    }
 
-    // ===== TRANSLUCENT RAINBOW FREEFORM CLOUDS =====
+    specialsRef.current = specials
+
+    // Translucent rainbow freeform clouds
     const gasClouds = []
-    const cloudHues = [0.0, 0.12, 0.28, 0.45, 0.58, 0.72, 0.88] // rainbow anchors
+    const cloudHues = [0.0, 0.12, 0.28, 0.45, 0.58, 0.72, 0.88]
     for (let c = 0; c < 7; c++) {
       const gCount = 900
       const gPos = new Float32Array(gCount * 3)
@@ -248,12 +477,10 @@ function App() {
 
       for (let i = 0; i < gCount; i++) {
         const i3 = i * 3
-        // Irregular freeform blob
         const spread = 8 + Math.random() * 14
         gPos[i3] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 6
         gPos[i3 + 1] = (Math.random() - 0.5) * (spread * 0.45)
         gPos[i3 + 2] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 6
-
         const h = (baseHue + (Math.random() - 0.5) * 0.08 + 1) % 1
         const col = new THREE.Color().setHSL(h, 0.45 + Math.random() * 0.25, 0.55 + Math.random() * 0.2)
         gCol[i3] = col.r
@@ -269,7 +496,7 @@ function App() {
         size: 0.14 + Math.random() * 0.08,
         vertexColors: true,
         transparent: true,
-        opacity: 0.028 + Math.random() * 0.022, // near translucent
+        opacity: 0.03 + Math.random() * 0.025,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true
@@ -287,12 +514,12 @@ function App() {
     }
     gasRef.current = gasClouds
 
+    // Core black hole
     const core = new THREE.Mesh(
       new THREE.SphereGeometry(0.34, 48, 48),
       new THREE.MeshBasicMaterial({ color: 0x000000 })
     )
     scene.add(core)
-    coreRef.current = core
 
     const horizon = new THREE.Mesh(
       new THREE.RingGeometry(0.38, 0.55, 64),
@@ -306,7 +533,6 @@ function App() {
     )
     horizon.rotation.x = Math.PI / 2.1
     scene.add(horizon)
-    horizonRef.current = horizon
 
     const photon = new THREE.Mesh(
       new THREE.RingGeometry(0.52, 0.61, 64),
@@ -320,7 +546,6 @@ function App() {
     )
     photon.rotation.x = Math.PI / 2.15
     scene.add(photon)
-    photonRef.current = photon
 
     const aura = new THREE.Mesh(
       new THREE.SphereGeometry(1.7, 32, 32),
@@ -333,7 +558,6 @@ function App() {
       })
     )
     scene.add(aura)
-    auraRef.current = aura
 
     let frameId
     const clock = new THREE.Clock()
@@ -344,8 +568,42 @@ function App() {
       const t = clock.getElapsedTime()
       const now = performance.now()
 
-      nebula.rotation.y = t * 0.0055
-      nebula.rotation.z = Math.sin(t * 0.035) * 0.02
+      // Rainbow color drift on all shape layers
+      for (const layer of layersRef.current) {
+        layer.pts.rotation.y = t * 0.0055
+        layer.pts.rotation.z = Math.sin(t * 0.035) * 0.02
+        const cols = layer.geo.attributes.color
+        for (let i = 0; i < layer.count; i++) {
+          layer.hues[i] = (layer.hues[i] + 0.00015) % 1 // slow rainbow shift
+          const c = new THREE.Color().setHSL(layer.hues[i], 0.5, 0.62)
+          cols.array[i * 3] = c.r
+          cols.array[i * 3 + 1] = c.g
+          cols.array[i * 3 + 2] = c.b
+        }
+        cols.needsUpdate = true
+
+        // gentle gravity + typing pull
+        const pos = layer.geo.attributes.position
+        const targetTyping = typingRef.current
+        for (let i = 0; i < Math.min(200, layer.count); i++) {
+          const idx = (i * 41) % layer.count
+          const ix = idx * 3
+          const x = pos.array[ix]
+          const z = pos.array[ix + 2]
+          const dist = Math.sqrt(x * x + z * z)
+          if (dist < 3.0 && dist > 0.45) {
+            const pull = 0.00008 / dist + smoothTyping * 0.00012 / dist
+            pos.array[ix] -= x * pull
+            pos.array[ix + 2] -= z * pull
+          }
+          if (smoothTyping < 0.1 && dist > 0.5) {
+            pos.array[ix] += (layer.basePositions[ix] - pos.array[ix]) * 0.001
+            pos.array[ix + 1] += (layer.basePositions[ix + 1] - pos.array[ix + 1]) * 0.001
+            pos.array[ix + 2] += (layer.basePositions[ix + 2] - pos.array[ix + 2]) * 0.001
+          }
+        }
+        pos.needsUpdate = true
+      }
 
       for (const cloud of gasRef.current) {
         cloud.rotation.y += cloud.userData.rotY
@@ -354,20 +612,26 @@ function App() {
         cloud.position.y = Math.cos(t * cloud.userData.drift * 0.7 + cloud.userData.phase) * 0.7
       }
 
-      // Smooth typing intensity (lerp — no snap)
+      // Specials orbit + spin
+      for (const s of specialsRef.current) {
+        s.angle += s.orbitSpeed
+        s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
+        s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
+        s.mesh.position.y = s.yBase + Math.sin(t * 0.3 + s.angle) * 0.1
+        if (s.spin) {
+          s.mesh.rotation.x += s.spin
+          s.mesh.rotation.y += s.spin * 0.7
+        }
+      }
+
       const targetTyping = typingRef.current
-      smoothTyping += (targetTyping - smoothTyping) * 0.04 // slow mesh
+      smoothTyping += (targetTyping - smoothTyping) * 0.04
 
-      const breath = 0.5 + Math.sin(t * 0.28) * 0.5 // slower breath
-
-      // Soft activation pulse
+      const breath = 0.5 + Math.sin(t * 0.28) * 0.5
       const actAge = (now - activateRef.current) / 1000
-      const actPulse = actAge < 1.6 ? Math.sin((actAge / 1.6) * Math.PI) * 0.55 : 0 // gentler
+      const actPulse = actAge < 1.6 ? Math.sin((actAge / 1.6) * Math.PI) * 0.55 : 0
 
-      // Calm core reaction
-      const coreScale = 0.94 + breath * 0.1 + smoothTyping * 0.035 + actPulse * 0.05
-      core.scale.setScalar(coreScale)
-
+      core.scale.setScalar(0.94 + breath * 0.1 + smoothTyping * 0.035 + actPulse * 0.05)
       horizon.scale.setScalar(0.96 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
 
       if (actPulse > 0.08) {
@@ -383,36 +647,8 @@ function App() {
 
       aura.scale.setScalar(1 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
       aura.material.opacity = 0.04 + breath * 0.04 + smoothTyping * 0.015 + actPulse * 0.03
-      if (actPulse > 0.1) {
-        aura.material.color.setHex(0x153050)
-      } else {
-        aura.material.color.setHex(0x2a1050)
-      }
 
-      // Gentle particle drift
-      const pos = nebula.geometry.attributes.position
-      for (let i = 0; i < 450; i++) {
-        const idx = (i * 37) % count
-        const ix = idx * 3
-        let x = pos.array[ix]
-        let z = pos.array[ix + 2]
-        const dist = Math.sqrt(x * x + z * z)
-
-        if (dist < 3.0 && dist > 0.45) {
-          const pull = 0.00008 * (1 / dist) + smoothTyping * 0.00015 / dist
-          pos.array[ix] -= x * pull
-          pos.array[ix + 2] -= z * pull
-        }
-
-        if (smoothTyping < 0.1 && dist > 0.5) {
-          pos.array[ix] += (basePositions[ix] - pos.array[ix]) * 0.001
-          pos.array[ix + 1] += (basePositions[ix + 1] - pos.array[ix + 1]) * 0.001
-          pos.array[ix + 2] += (basePositions[ix + 2] - pos.array[ix + 2]) * 0.001
-        }
-      }
-      pos.needsUpdate = true
-
-      // Stars
+      // Born stars + gravitational warp near core
       for (const s of starsRef.current) {
         const age = (now - s.born) / 1000
 
@@ -503,10 +739,57 @@ function App() {
             s.cloud = null
           }
 
-          s.angle += s.orbitSpeed
-          s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
-          s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
-          s.mesh.position.y = s.yBase + Math.sin(t * 0.35 + s.angle) * 0.12
+          // Gravitational warp: when near the core, curve hard around it
+          if (!s.warping && s.orbitRadius > 0.9 && s.orbitRadius < 2.8 && Math.random() < 0.002) {
+            s.warping = true
+            s.warpT = 0
+            s.warpFrom = { r: s.orbitRadius, angle: s.angle }
+            // slingshot: swing closer then fling out slightly
+            s.warpTo = {
+              r: Math.max(0.7, s.orbitRadius * (0.45 + Math.random() * 0.25)),
+              angle: s.angle + (Math.random() < 0.5 ? 1 : -1) * (1.2 + Math.random() * 1.5)
+            }
+          }
+
+          if (s.warping) {
+            s.warpT += 0.018 // fast bullet curve
+            const p = Math.min(1, s.warpT)
+            // ease in-out for curved path feel
+            const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2
+
+            if (p < 0.5) {
+              // dive toward core
+              const q = e * 2
+              s.orbitRadius = s.warpFrom.r + (s.warpTo.r - s.warpFrom.r) * q
+              s.angle = s.warpFrom.angle + (s.warpTo.angle - s.warpFrom.angle) * q * 0.5
+            } else {
+              // fling back out to slightly new orbit
+              const q = (e - 0.5) * 2
+              const outR = s.warpFrom.r * (1.05 + Math.random() * 0.15)
+              s.orbitRadius = s.warpTo.r + (outR - s.warpTo.r) * q
+              s.angle = s.warpFrom.angle + (s.warpTo.angle - s.warpFrom.angle) * (0.5 + q * 0.5)
+            }
+
+            s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
+            s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
+            s.mesh.position.y = s.yBase + Math.sin(t * 0.5 + s.angle) * 0.2
+
+            // stretch glow during warp for speed feel
+            s.glow.scale.setScalar(0.7 + Math.sin(p * Math.PI) * 1.2)
+
+            if (p >= 1) {
+              s.warping = false
+              s.orbitRadius = Math.sqrt(
+                s.mesh.position.x ** 2 + s.mesh.position.z ** 2
+              )
+              s.glow.scale.setScalar(0.7)
+            }
+          } else {
+            s.angle += s.orbitSpeed
+            s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
+            s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
+            s.mesh.position.y = s.yBase + Math.sin(t * 0.35 + s.angle) * 0.12
+          }
         }
       }
 
@@ -534,8 +817,6 @@ function App() {
         container.removeChild(renderer.domElement)
       }
       renderer.dispose()
-      geo.dispose()
-      mat.dispose()
     }
   }, [])
 
