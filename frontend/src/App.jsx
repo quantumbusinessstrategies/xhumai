@@ -259,6 +259,21 @@ function App() {
     return () => clearTimeout(g)
   }, [])
 
+  // ensure initial black overlay on first load (so animations appear over black)
+  useEffect(() => {
+    const existing = document.querySelector('.sn-black-overlay')
+    if (!existing) {
+      const be = document.createElement('div')
+      be.className = 'sn-black-overlay'
+      // show full black immediately
+      be.style.opacity = '1'
+      document.body.appendChild(be)
+    } else {
+      existing.style.opacity = '1'
+    }
+    return () => {}
+  }, [])
+
   useEffect(() => {
 
     const t = setTimeout(() => {
@@ -604,6 +619,9 @@ function App() {
       // 3) after halo in (0.5s) do instant BOOM supernova (2.5s)
       setTimeout(() => {
         // create supernova canvas
+        // fade black to reveal current background quickly
+        try { black.style.transition = 'opacity 250ms linear'; black.style.opacity = '0' } catch (e) {}
+
         const s = document.createElement('canvas')
         s.className = 'sn-canvas'
         document.body.appendChild(s)
@@ -666,10 +684,9 @@ function App() {
               if (prog < 1) requestAnimationFrame(settle)
               else {
                 // cleanup: remove supernova canvas and halo, fade black overlay out
-                s.remove()
-                halo.remove()
-                black.style.opacity = '0'
-                setTimeout(() => { black.remove() }, 600)
+                  s.remove()
+                  halo.remove()
+                  try { black.remove() } catch (e) {}
               }
             }
             requestAnimationFrame(settle)
@@ -678,6 +695,27 @@ function App() {
         requestAnimationFrame(step)
       }, 500)
     }, 250)
+  }
+
+  // Restart full sequence from top (clears overlays and replays selected animation)
+  function restartSequence() {
+    // remove any existing overlays/canvases
+    document.querySelectorAll('.pixel-canvas, .sn-canvas, .sn-black-overlay, .sn-halo').forEach(el => el.remove())
+    // re-add initial black overlay
+    const be = document.createElement('div')
+    be.className = 'sn-black-overlay'
+    be.style.opacity = '1'
+    document.body.appendChild(be)
+
+    // reset initialGlitch and re-run selected animation
+    setInitialGlitch(true)
+    // schedule clearing initialGlitch after 3s
+    setTimeout(() => setInitialGlitch(false), 3000)
+
+    // trigger pixel formation for pixel/combo modes
+    if (animMode === 'pixel' || animMode === 'combo') {
+      setTimeout(() => playPixelForm(['.logo', '.tagline', '.purpose', '.response', '.status'], 4000), 120)
+    }
   }
 
   useEffect(() => {
@@ -1307,10 +1345,10 @@ function App() {
   return (
     <div className="landing">
       <div className="anim-controls" aria-hidden>
-        <button onClick={() => { setAnimMode('glitch'); setInitialGlitch(true); setTimeout(() => setInitialGlitch(false), 3100) }} className={animMode === 'glitch' ? 'active' : ''}>Glitch</button>
-        <button onClick={() => { setAnimMode('pixel'); setInitialGlitch(true); setTimeout(() => setInitialGlitch(false), 4100) }} className={animMode === 'pixel' ? 'active' : ''}>Pixel</button>
-        <button onClick={() => { setAnimMode('combo'); setInitialGlitch(true); setTimeout(() => setInitialGlitch(false), 4100); setTimeout(() => playPixelForm(['.logo', '.tagline', '.purpose', '.response', '.status'], 4000), 120) }} className={animMode === 'combo' ? 'active' : ''}>Combo</button>
-        <button onClick={() => { setInitialGlitch(true); if (animMode === 'pixel' || animMode === 'combo') setTimeout(() => playPixelForm(['.logo', '.tagline', '.purpose', '.response', '.status'], 4000), 120); setTimeout(() => setInitialGlitch(false), animMode === 'pixel' ? 4100 : 3100) }}>Replay</button>
+        <button onClick={() => { setAnimMode('glitch'); restartSequence() }} className={animMode === 'glitch' ? 'active' : ''}>Glitch</button>
+        <button onClick={() => { setAnimMode('pixel'); restartSequence() }} className={animMode === 'pixel' ? 'active' : ''}>Pixel</button>
+        <button onClick={() => { setAnimMode('combo'); restartSequence() }} className={animMode === 'combo' ? 'active' : ''}>Combo</button>
+        <button onClick={() => restartSequence()}>Replay</button>
       </div>
       <div className="canvas-wrap" ref={mountRef} />
 

@@ -295,7 +295,7 @@ html, body, #root {
   z-index: 9999;
 }
 
-.pixel-canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999 }
+.pixel-canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5 }
 
 /* supernova overlays */
 .sn-black-overlay {
@@ -304,8 +304,8 @@ html, body, #root {
   background: #000;
   opacity: 0;
   pointer-events: none;
-  z-index: 10000;
-  transition: opacity 180ms linear;
+  z-index: 2; /* behind content (content z-index:20) */
+  transition: opacity 250ms linear;
 }
 
 .sn-halo {
@@ -316,12 +316,12 @@ html, body, #root {
   box-shadow: 0 0 0 4px rgba(200,230,255,0.0), 0 0 18px 6px rgba(160,220,255,0.0);
   transform: translate(-50%, -50%) scale(0.2);
   opacity: 0;
-  z-index: 10010;
+  z-index: 6; /* above black but below content */
   transition: transform 500ms ease, opacity 500ms ease, box-shadow 500ms ease;
   pointer-events: none;
 }
 
-.sn-canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10005 }
+.sn-canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4 }
 
 .anim-controls {
   position: fixed;
