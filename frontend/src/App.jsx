@@ -599,7 +599,6 @@ function App() {
           layer.mat.transparent = true
           layer.mat.opacity = 0
         }
-      }
       for (const g of gasRef.current) {
         if (g.material) {
           g.material.userData = g.material.userData || {}
