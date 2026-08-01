@@ -26,6 +26,12 @@ html, body, #root {
   pointer-events: none;
 }
 
+/* initial background/canvas fade-in over 4s */
+.canvas-wrap {
+  opacity: 0;
+  animation: bgFade 4s ease forwards;
+}
+
 .canvas-wrap canvas {
   width: 100% !important;
   height: 100% !important;
@@ -154,7 +160,11 @@ html, body, #root {
   letter-spacing: 0.07em;
   color: rgba(230, 218, 245, 0.78);
   min-height: 1.4em;
-  animation: fadeIn 1s ease;
+  /* particle-style intro (staggered by element-specific delays below) */
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  filter: blur(6px);
+  animation: particleIn 2.5s cubic-bezier(.22,.9,.26,1) forwards;
 }
 
 .status {
@@ -163,8 +173,47 @@ html, body, #root {
   letter-spacing: 0.15em;
   color: rgba(195, 180, 220, 0.45);
   text-transform: uppercase;
-  animation: fadeIn 0.8s ease;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  filter: blur(6px);
+  animation: particleIn 1.2s ease forwards;
 }
+
+/* particle-like text entrance animation */
+@keyframes particleIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    filter: blur(8px);
+    text-shadow: 0 0 28px rgba(255,255,255,0.12);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.01);
+    filter: blur(2px);
+    text-shadow: 0 0 8px rgba(255,255,255,0.06);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    text-shadow: none;
+  }
+}
+
+/* background fade keyframes */
+@keyframes bgFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* stagger delays for a more organic particle phasing */
+.content > .logo { animation-delay: 0s; }
+.content > .tagline { animation-delay: 0.08s; }
+.content > .purpose { animation-delay: 0.16s; }
+.content > .search-form { animation-delay: 0.28s; }
+.content > .response { animation-delay: 0.5s; }
+.content > .status { animation-delay: 0.65s; }
 
 .sr-only {
   position: absolute;
