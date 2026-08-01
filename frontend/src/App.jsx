@@ -608,6 +608,8 @@ function App() {
         if (layer.mat) {
           layer.mat.userData = layer.mat.userData || {}
           layer.mat.userData._origOpacity = layer.mat.opacity
+          layer.mat.userData._origTransparent = layer.mat.transparent
+          layer.mat.transparent = true
           layer.mat.opacity = 0
         }
       }
@@ -615,6 +617,8 @@ function App() {
         if (g.material) {
           g.material.userData = g.material.userData || {}
           g.material.userData._origOpacity = g.material.opacity
+          g.material.userData._origTransparent = g.material.transparent
+          g.material.transparent = true
           g.material.opacity = 0
         }
       }
@@ -622,22 +626,30 @@ function App() {
         if (s.mesh && s.mesh.material) {
           s.mesh.material.userData = s.mesh.material.userData || {}
           s.mesh.material.userData._origOpacity = s.mesh.material.opacity
+          s.mesh.material.userData._origTransparent = s.mesh.material.transparent
+          s.mesh.material.transparent = true
           s.mesh.material.opacity = 0
         }
       }
       if (horizonRef.current && horizonRef.current.material) {
         horizonRef.current.material.userData = horizonRef.current.material.userData || {}
         horizonRef.current.material.userData._origOpacity = horizonRef.current.material.opacity
+        horizonRef.current.material.userData._origTransparent = horizonRef.current.material.transparent
+        horizonRef.current.material.transparent = true
         horizonRef.current.material.opacity = 0
       }
       if (photonRef.current && photonRef.current.material) {
         photonRef.current.material.userData = photonRef.current.material.userData || {}
         photonRef.current.material.userData._origOpacity = photonRef.current.material.opacity
+        photonRef.current.material.userData._origTransparent = photonRef.current.material.transparent
+        photonRef.current.material.transparent = true
         photonRef.current.material.opacity = 0
       }
       if (auraRef.current && auraRef.current.material) {
         auraRef.current.material.userData = auraRef.current.material.userData || {}
         auraRef.current.material.userData._origOpacity = auraRef.current.material.opacity
+        auraRef.current.material.userData._origTransparent = auraRef.current.material.transparent
+        auraRef.current.material.transparent = true
         auraRef.current.material.opacity = 0
       }
     } catch (e) {}
@@ -697,6 +709,29 @@ function App() {
             }
           } catch (e) {}
           if (p < 1) requestAnimationFrame(fadeInScene)
+          else {
+            // restore transparent flags to original where stored
+            try {
+              for (const layer of layersRef.current) {
+                if (layer.mat && layer.mat.userData && typeof layer.mat.userData._origTransparent === 'boolean') {
+                  layer.mat.transparent = layer.mat.userData._origTransparent
+                }
+              }
+              for (const g of gasRef.current) {
+                if (g.material && g.material.userData && typeof g.material.userData._origTransparent === 'boolean') {
+                  g.material.transparent = g.material.userData._origTransparent
+                }
+              }
+              for (const s of specialsRef.current) {
+                if (s.mesh && s.mesh.material && s.mesh.material.userData && typeof s.mesh.material.userData._origTransparent === 'boolean') {
+                  s.mesh.material.transparent = s.mesh.material.userData._origTransparent
+                }
+              }
+              if (horizonRef.current && horizonRef.current.material && horizonRef.current.material.userData && typeof horizonRef.current.material.userData._origTransparent === 'boolean') horizonRef.current.material.transparent = horizonRef.current.material.userData._origTransparent
+              if (photonRef.current && photonRef.current.material && photonRef.current.material.userData && typeof photonRef.current.material.userData._origTransparent === 'boolean') photonRef.current.material.transparent = photonRef.current.material.userData._origTransparent
+              if (auraRef.current && auraRef.current.material && auraRef.current.material.userData && typeof auraRef.current.material.userData._origTransparent === 'boolean') auraRef.current.material.transparent = auraRef.current.material.userData._origTransparent
+            } catch (e) {}
+          }
         }
         requestAnimationFrame(fadeInScene)
 
