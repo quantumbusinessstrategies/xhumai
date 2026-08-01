@@ -99,8 +99,7 @@ function App() {
   const [isTyping, setIsTyping] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
-  const [animMode, setAnimMode] = useState('combo') // default to 'combo'
-  const [searchVisible, setSearchVisible] = useState(false)
+  const [animMode, setAnimMode] = useState('glitch') // 'glitch' | 'pixel' | 'combo'
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -791,7 +790,6 @@ function App() {
                 // cleanup: remove supernova canvas and halo
                   s.remove()
                   halo.remove()
-                  try { setSearchVisible(true) } catch (e) {}
               }
             }
             requestAnimationFrame(settle)
@@ -820,7 +818,6 @@ function App() {
 
     // reset initialGlitch and re-run selected animation
     setInitialGlitch(true)
-    setSearchVisible(false)
     // schedule clearing initialGlitch after 3s
     setTimeout(() => setInitialGlitch(false), 3000)
 
@@ -833,9 +830,6 @@ function App() {
   useEffect(() => {
     const container = mountRef.current
     if (!container) return
-
-    // start the combo sequence on load
-    try { restartSequence() } catch (e) {}
 
     let width = window.innerWidth
     let height = window.innerHeight
@@ -1480,12 +1474,13 @@ function App() {
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
         <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
 
-        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''} ${searchVisible ? 'visible' : ''}`}>
+        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`} data-text="search-form">
           <input
             type="text"
             value={query}
             onChange={handleInputChange}
-            placeholder="Inquire"
+            placeholder="What are you trying to accomplish?"
+            autoFocus
             disabled={needsMore}
             className={isTyping ? 'input-awake' : ''}
           />

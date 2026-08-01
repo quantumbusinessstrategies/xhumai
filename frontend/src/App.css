@@ -21,21 +21,21 @@ html, body, #root {
 
 .canvas-wrap {
   position: absolute;
-.search-form { display: none; }
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-.search-form.visible {
-  display: flex !important;
+}
+
+/* initial background/canvas fade-in over 4s */
+.canvas-wrap {
   opacity: 0;
-  transform: translateY(6px) scale(0.995);
-  pointer-events: none;
-  transition: opacity 900ms ease, transform 900ms ease;
+  animation: bgFade 4s ease forwards;
 }
-.search-form.visible.show {
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-}
+
+.canvas-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 .content {
@@ -103,39 +103,20 @@ html, body, #root {
   gap: 0.9rem;
 }
 
-/* Hide search form during initial cinematic intro */
-/* keep search-form visible during intro */
-.search-form { display: flex !important; }
-
-/* Fade control for showing after the cinematic */
-.search-form.hidden {
-  opacity: 0;
-  transform: translateY(6px) scale(0.995);
-  pointer-events: none;
-  transition: opacity 900ms ease, transform 900ms ease;
-}
-.search-form.visible {
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-  transition: opacity 900ms ease, transform 900ms ease;
-}
-
 .search-form input {
   width: 100%;
   padding: 1.25rem 1.6rem;
-  font-size: 1.408rem; /* +10% */
-  font-weight: 700;
+  font-size: 1.28rem;
   border-radius: 8px;
-  border: none;
-  background: rgba(28, 28, 36, 0.4); /* 20% more transparent */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(28, 28, 36, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #e8e8f0;
   outline: none;
   transition: all 0.45s ease;
   text-align: center;
-  box-shadow: none;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .search-form input::placeholder {
@@ -354,9 +335,6 @@ html, body, #root {
   border-radius: 8px;
   backdrop-filter: blur(6px);
 }
-
-/* hide UI controls at startup */
-.anim-controls { display: none !important; }
 
 .anim-controls button {
   color: #fff;
