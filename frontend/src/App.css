@@ -317,8 +317,8 @@ html, body, #root {
   background: #000;
   opacity: 0;
   pointer-events: none;
-  z-index: 2; /* behind content (content z-index:20) */
-  transition: opacity 250ms linear;
+  z-index: 9999; /* cover content until we fade it out */
+  transition: opacity 600ms linear;
 }
 
 .sn-halo {

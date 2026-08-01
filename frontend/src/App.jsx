@@ -662,7 +662,8 @@ function App() {
         try {
           const black = document.querySelector('.sn-black-overlay')
           if (black) {
-            black.style.transition = 'opacity 1000ms linear'
+            // fast fade out at BOOM
+            black.style.transition = 'opacity 600ms linear'
             black.style.opacity = '0'
           }
         } catch (e) {}
