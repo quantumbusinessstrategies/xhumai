@@ -272,90 +272,111 @@ function App() {
     return () => clearTimeout(t)
   }, [])
 
-  // Pixel formation: render text to a canvas, sample pixels, animate divs into place
+  // Canvas-based pixel formation: more efficient than many DOM nodes
   function playPixelForm(selectors = ['.logo'], duration = 4000) {
     const nodes = []
     selectors.forEach(s => document.querySelectorAll(s).forEach(n => nodes.push(n)))
     if (!nodes.length) return
 
-    const overlay = document.createElement('div')
-    overlay.className = 'pixel-overlay'
-    overlay.style.position = 'fixed'
-    overlay.style.left = '0'
-    overlay.style.top = '0'
-    overlay.style.width = '100%'
-    overlay.style.height = '100%'
-    overlay.style.pointerEvents = 'none'
-    document.body.appendChild(overlay)
+    const canvas = document.createElement('canvas')
+    canvas.className = 'pixel-canvas'
+    canvas.style.position = 'fixed'
+    canvas.style.left = '0'
+    canvas.style.top = '0'
+    canvas.style.width = '100%'
+    canvas.style.height = '100%'
+    canvas.style.pointerEvents = 'none'
+    canvas.style.zIndex = '9999'
+    document.body.appendChild(canvas)
 
-    const pixEls = []
+    const DPR = window.devicePixelRatio || 1
+    canvas.width = Math.max(1, Math.floor(window.innerWidth * DPR))
+    canvas.height = Math.max(1, Math.floor(window.innerHeight * DPR))
+    const ctx = canvas.getContext('2d')
+    ctx.scale(DPR, DPR)
+
+    const particles = []
+    const maxParticles = 1200
 
     for (const el of nodes) {
       const text = el.getAttribute('data-text') || el.textContent || ''
       if (!text.trim()) continue
       const rect = el.getBoundingClientRect()
       const cs = getComputedStyle(el)
-      const font = `${cs.fontSize} ${cs.fontFamily}`
-      const color = cs.color || '#fff'
+      const color = cs.color || '#ffffff'
 
-      const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1))
-      const cw = Math.max(2, Math.floor(rect.width * scale))
-      const ch = Math.max(2, Math.floor(rect.height * scale))
-      const c = document.createElement('canvas')
-      c.width = cw
-      c.height = ch
-      const ctx = c.getContext('2d')
-      ctx.fillStyle = 'black'
-      ctx.fillRect(0, 0, cw, ch)
-      ctx.font = `${parseFloat(cs.fontSize) * scale}px ${cs.fontFamily}`
-      ctx.fillStyle = '#ffffff'
-      ctx.textBaseline = 'top'
-      ctx.fillText(text, 0, 0)
+      // downscale sampling to keep particle count reasonable
+      const sampleScale = Math.max(0.25, Math.min(1, 180 / Math.max(rect.width, 120)))
+      const sw = Math.max(2, Math.floor(rect.width * sampleScale))
+      const sh = Math.max(2, Math.floor(rect.height * sampleScale))
+      const off = document.createElement('canvas')
+      off.width = sw
+      off.height = sh
+      const octx = off.getContext('2d')
+      // draw text scaled to sample canvas
+      octx.fillStyle = 'black'
+      octx.fillRect(0, 0, sw, sh)
+      const fontSize = Math.max(8, (parseFloat(cs.fontSize) * sampleScale))
+      octx.font = `${fontSize}px ${cs.fontFamily}`
+      octx.fillStyle = '#fff'
+      octx.textBaseline = 'top'
+      // scale text to fit width
+      octx.fillText(text, 0, 0)
 
-      const img = ctx.getImageData(0, 0, cw, ch).data
-      const step = Math.max(3, Math.floor(Math.min(6, Math.max(2, cw / 80))))
+      const img = octx.getImageData(0, 0, sw, sh).data
+      const step = Math.max(2, Math.floor(3 / sampleScale))
 
-      for (let y = 0; y < ch; y += step) {
-        for (let x = 0; x < cw; x += step) {
-          const idx = (y * cw + x) * 4
-          const a = img[idx + 3]
-          if (a > 50) {
-            const px = document.createElement('div')
-            px.className = 'pixel'
-            const size = Math.ceil(step / scale)
-            px.style.width = size + 'px'
-            px.style.height = size + 'px'
-            px.style.background = color
-            px.style.position = 'fixed'
-            const finalLeft = Math.round(rect.left + (x / scale))
-            const finalTop = Math.round(rect.top + (y / scale))
-            px.style.left = finalLeft + 'px'
-            px.style.top = finalTop + 'px'
-            // start from random offscreen-ish position
-            const randX = (Math.random() - 0.5) * Math.max(window.innerWidth, 300)
-            const randY = (Math.random() - 0.5) * Math.max(window.innerHeight, 300)
-            px.style.transform = `translate(${randX}px, ${randY}px) scale(0.25)`
-            px.style.opacity = '0'
-            px.style.transition = `transform ${0.9 * duration}ms cubic-bezier(.2,.9,.2,1) ${Math.random() * duration * 0.6}ms, opacity ${0.6 * duration}ms ease ${Math.random() * duration * 0.6}ms`
-            overlay.appendChild(px)
-            pixEls.push(px)
+      for (let y = 0; y < sh; y += step) {
+        for (let x = 0; x < sw; x += step) {
+          const idx = (y * sw + x) * 4
+          const alpha = img[idx + 3]
+          if (alpha > 60) {
+            const tx = Math.round(rect.left + (x / sampleScale))
+            const ty = Math.round(rect.top + (y / sampleScale))
+            particles.push({ tx, ty, color, size: Math.max(2, Math.round(2 / sampleScale)) })
+            if (particles.length >= maxParticles) break
           }
         }
+        if (particles.length >= maxParticles) break
       }
+      if (particles.length >= maxParticles) break
     }
 
-    // trigger animation on next frame
-    requestAnimationFrame(() => {
-      for (const p of pixEls) {
-        p.style.transform = 'translate(0,0) scale(1)'
-        p.style.opacity = '1'
-      }
-    })
+    if (!particles.length) { canvas.remove(); return }
 
-    // cleanup after duration + small buffer
-    setTimeout(() => {
-      overlay.remove()
-    }, duration + 300)
+    // initialize particle animation state
+    const start = performance.now()
+    for (const p of particles) {
+      p.sx = Math.random() * window.innerWidth
+      p.sy = Math.random() * window.innerHeight
+      p.delay = Math.random() * (duration * 0.5)
+      p.dur = duration - p.delay
+      p.started = false
+    }
+
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3) }
+
+    let rafId = null
+    function frame(now) {
+      ctx.clearRect(0, 0, canvas.width / DPR, canvas.height / DPR)
+      let remaining = 0
+      for (const p of particles) {
+        const t = (now - start - p.delay) / p.dur
+        if (t < 0) { remaining++; continue }
+        const tt = Math.min(1, Math.max(0, t))
+        const e = easeOutCubic(tt)
+        const x = p.sx + (p.tx - p.sx) * e
+        const y = p.sy + (p.ty - p.sy) * e
+        const size = Math.max(1, p.size * (0.3 + 0.7 * e))
+        ctx.fillStyle = p.color
+        ctx.fillRect(Math.round(x), Math.round(y), Math.round(size), Math.round(size))
+        if (tt < 1) remaining++
+      }
+      if (remaining > 0) rafId = requestAnimationFrame(frame)
+      else { canvas.remove(); cancelAnimationFrame(rafId) }
+    }
+
+    rafId = requestAnimationFrame(frame)
   }
 
   useEffect(() => {

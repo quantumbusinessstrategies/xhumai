@@ -295,12 +295,7 @@ html, body, #root {
   z-index: 9999;
 }
 
-.pixel-overlay .pixel {
-  will-change: transform, opacity;
-  border-radius: 1px;
-  box-shadow: 0 0 0 0 rgba(0,0,0,0.06);
-  backface-visibility: hidden;
-}
+.pixel-canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999 }
 
 .anim-controls {
   position: fixed;
