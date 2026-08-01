@@ -109,6 +109,9 @@ function App() {
   const specialsRef = useRef([]) // mini BH, wireframes, etc.
   const cameraRef = useRef(null)
   const coreRef = useRef(null)
+  const horizonRef = useRef(null)
+  const photonRef = useRef(null)
+  const auraRef = useRef(null)
   const typingRef = useRef(0)
   const activateRef = useRef(0)
   const typingTimeout = useRef(null)
@@ -599,6 +602,45 @@ function App() {
     const black = document.createElement('div')
     black.className = 'sn-black-overlay'
     document.body.appendChild(black)
+    // immediately hide scene layers/specials/clouds by storing original opacities
+    try {
+      for (const layer of layersRef.current) {
+        if (layer.mat) {
+          layer.mat.userData = layer.mat.userData || {}
+          layer.mat.userData._origOpacity = layer.mat.opacity
+          layer.mat.opacity = 0
+        }
+      }
+      for (const g of gasRef.current) {
+        if (g.material) {
+          g.material.userData = g.material.userData || {}
+          g.material.userData._origOpacity = g.material.opacity
+          g.material.opacity = 0
+        }
+      }
+      for (const s of specialsRef.current) {
+        if (s.mesh && s.mesh.material) {
+          s.mesh.material.userData = s.mesh.material.userData || {}
+          s.mesh.material.userData._origOpacity = s.mesh.material.opacity
+          s.mesh.material.opacity = 0
+        }
+      }
+      if (horizonRef.current && horizonRef.current.material) {
+        horizonRef.current.material.userData = horizonRef.current.material.userData || {}
+        horizonRef.current.material.userData._origOpacity = horizonRef.current.material.opacity
+        horizonRef.current.material.opacity = 0
+      }
+      if (photonRef.current && photonRef.current.material) {
+        photonRef.current.material.userData = photonRef.current.material.userData || {}
+        photonRef.current.material.userData._origOpacity = photonRef.current.material.opacity
+        photonRef.current.material.opacity = 0
+      }
+      if (auraRef.current && auraRef.current.material) {
+        auraRef.current.material.userData = auraRef.current.material.userData || {}
+        auraRef.current.material.userData._origOpacity = auraRef.current.material.opacity
+        auraRef.current.material.opacity = 0
+      }
+    } catch (e) {}
     // force paint then set opacity to 1
     requestAnimationFrame(() => { black.style.opacity = '1' })
 
@@ -619,8 +661,44 @@ function App() {
       // 3) after halo in (0.5s) do instant BOOM supernova (2.5s)
       setTimeout(() => {
         // create supernova canvas
-        // fade black to reveal current background quickly
-        try { black.style.transition = 'opacity 250ms linear'; black.style.opacity = '0' } catch (e) {}
+        // fade black to reveal current background over 1s
+        try { black.style.transition = 'opacity 1000ms linear'; black.style.opacity = '0' } catch (e) {}
+
+        // start fading the 3D scene back in over 1.5s
+        const fadeDuration = 1500
+        const fadeStart = performance.now()
+        function fadeInScene(nowF) {
+          const p = Math.min(1, (nowF - fadeStart) / fadeDuration)
+          const eased = p // linear for now
+          try {
+            for (const layer of layersRef.current) {
+              if (layer.mat && layer.mat.userData && typeof layer.mat.userData._origOpacity === 'number') {
+                layer.mat.opacity = layer.mat.userData._origOpacity * eased
+              }
+            }
+            for (const g of gasRef.current) {
+              if (g.material && g.material.userData && typeof g.material.userData._origOpacity === 'number') {
+                g.material.opacity = g.material.userData._origOpacity * eased
+              }
+            }
+            for (const s of specialsRef.current) {
+              if (s.mesh && s.mesh.material && s.mesh.material.userData && typeof s.mesh.material.userData._origOpacity === 'number') {
+                s.mesh.material.opacity = s.mesh.material.userData._origOpacity * eased
+              }
+            }
+            if (horizonRef.current && horizonRef.current.material && horizonRef.current.material.userData && typeof horizonRef.current.material.userData._origOpacity === 'number') {
+              horizonRef.current.material.opacity = horizonRef.current.material.userData._origOpacity * eased
+            }
+            if (photonRef.current && photonRef.current.material && photonRef.current.material.userData && typeof photonRef.current.material.userData._origOpacity === 'number') {
+              photonRef.current.material.opacity = photonRef.current.material.userData._origOpacity * eased
+            }
+            if (auraRef.current && auraRef.current.material && auraRef.current.material.userData && typeof auraRef.current.material.userData._origOpacity === 'number') {
+              auraRef.current.material.opacity = auraRef.current.material.userData._origOpacity * eased
+            }
+          } catch (e) {}
+          if (p < 1) requestAnimationFrame(fadeInScene)
+        }
+        requestAnimationFrame(fadeInScene)
 
         const s = document.createElement('canvas')
         s.className = 'sn-canvas'
@@ -998,6 +1076,7 @@ function App() {
     )
     horizon.rotation.x = Math.PI / 2.1
     scene.add(horizon)
+    horizonRef.current = horizon
 
     const photon = new THREE.Mesh(
       new THREE.RingGeometry(0.52, 0.61, 64),
@@ -1011,6 +1090,7 @@ function App() {
     )
     photon.rotation.x = Math.PI / 2.15
     scene.add(photon)
+    photonRef.current = photon
 
     const aura = new THREE.Mesh(
       new THREE.SphereGeometry(1.7, 32, 32),
@@ -1023,6 +1103,7 @@ function App() {
       })
     )
     scene.add(aura)
+    auraRef.current = aura
 
     let frameId
     const clock = new THREE.Clock()
