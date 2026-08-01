@@ -263,7 +263,19 @@ function App() {
   }, [])
 
   // NOTE: removed initial black overlay — run animations over existing background
-
+  // create initial black overlay so animations start on black
+  useEffect(() => {
+    const existing = document.querySelector('.sn-black-overlay')
+    if (!existing) {
+      const be = document.createElement('div')
+      be.className = 'sn-black-overlay'
+      be.style.opacity = '1'
+      document.body.appendChild(be)
+    } else {
+      existing.style.opacity = '1'
+    }
+    return () => {}
+  }, [])
   useEffect(() => {
 
     const t = setTimeout(() => {
@@ -646,6 +658,15 @@ function App() {
       // 3) after halo in (0.5s) do instant BOOM supernova (2.5s)
       setTimeout(() => {
         // create supernova canvas
+        // find black overlay and fade it to transparent over 1s so the scene shows through
+        try {
+          const black = document.querySelector('.sn-black-overlay')
+          if (black) {
+            black.style.transition = 'opacity 1000ms linear'
+            black.style.opacity = '0'
+          }
+        } catch (e) {}
+
         // start fading the 3D scene back in over 1.5s
         const fadeDuration = 1500
         const fadeStart = performance.now()
@@ -783,6 +804,17 @@ function App() {
   function restartSequence() {
     // remove any existing overlays/canvases
     document.querySelectorAll('.pixel-canvas, .sn-canvas, .sn-black-overlay, .sn-halo').forEach(el => el.remove())
+
+    // re-add initial black overlay so animations start on black again
+    const existing = document.querySelector('.sn-black-overlay')
+    if (!existing) {
+      const be = document.createElement('div')
+      be.className = 'sn-black-overlay'
+      be.style.opacity = '1'
+      document.body.appendChild(be)
+    } else {
+      existing.style.opacity = '1'
+    }
 
     // reset initialGlitch and re-run selected animation
     setInitialGlitch(true)
