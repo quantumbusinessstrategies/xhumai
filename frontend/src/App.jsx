@@ -262,20 +262,7 @@ function App() {
     return () => clearTimeout(g)
   }, [])
 
-  // ensure initial black overlay on first load (so animations appear over black)
-  useEffect(() => {
-    const existing = document.querySelector('.sn-black-overlay')
-    if (!existing) {
-      const be = document.createElement('div')
-      be.className = 'sn-black-overlay'
-      // show full black immediately
-      be.style.opacity = '1'
-      document.body.appendChild(be)
-    } else {
-      existing.style.opacity = '1'
-    }
-    return () => {}
-  }, [])
+  // NOTE: removed initial black overlay — run animations over existing background
 
   useEffect(() => {
 
@@ -379,18 +366,8 @@ function App() {
     const FPS = 30
     const frameInterval = 1000 / FPS
 
-    // helper to ensure black overlay exists immediately when suck starts
-    let _blackEl = null
-    function ensureBlack() {
-      if (_blackEl) return _blackEl
-      const be = document.createElement('div')
-      be.className = 'sn-black-overlay'
-      document.body.appendChild(be)
-      // force paint then set opacity to 1
-      requestAnimationFrame(() => { be.style.opacity = '1' })
-      _blackEl = be
-      return be
-    }
+    // helper stub: previously created a black overlay during suck; now disabled
+    function ensureBlack() { return null }
 
     // WebGL renderer (preferred)
     function webglRenderer(particlesList, onComplete) {
@@ -598,10 +575,7 @@ function App() {
 
   // Supernova visual sequence triggered when pixel formation completes
   function runSupernovaSequence(hx, hy) {
-    // 1) cover background with black immediately
-    const black = document.createElement('div')
-    black.className = 'sn-black-overlay'
-    document.body.appendChild(black)
+    // Run supernova over the existing scene (no black overlay)
     // immediately hide scene layers/specials/clouds by storing original opacities
     try {
       for (const layer of layersRef.current) {
@@ -653,8 +627,7 @@ function App() {
         auraRef.current.material.opacity = 0
       }
     } catch (e) {}
-    // force paint then set opacity to 1
-    requestAnimationFrame(() => { black.style.opacity = '1' })
+    // (no black overlay to paint)
 
     // 2) after 0.25s show halo (0.5s)
     setTimeout(() => {
@@ -673,9 +646,6 @@ function App() {
       // 3) after halo in (0.5s) do instant BOOM supernova (2.5s)
       setTimeout(() => {
         // create supernova canvas
-        // fade black to reveal current background over 1s
-        try { black.style.transition = 'opacity 1000ms linear'; black.style.opacity = '0' } catch (e) {}
-
         // start fading the 3D scene back in over 1.5s
         const fadeDuration = 1500
         const fadeStart = performance.now()
@@ -796,10 +766,9 @@ function App() {
               ctx.globalAlpha = 1
               if (prog < 1) requestAnimationFrame(settle)
               else {
-                // cleanup: remove supernova canvas and halo, fade black overlay out
+                // cleanup: remove supernova canvas and halo
                   s.remove()
                   halo.remove()
-                  try { black.remove() } catch (e) {}
               }
             }
             requestAnimationFrame(settle)
@@ -814,11 +783,6 @@ function App() {
   function restartSequence() {
     // remove any existing overlays/canvases
     document.querySelectorAll('.pixel-canvas, .sn-canvas, .sn-black-overlay, .sn-halo').forEach(el => el.remove())
-    // re-add initial black overlay
-    const be = document.createElement('div')
-    be.className = 'sn-black-overlay'
-    be.style.opacity = '1'
-    document.body.appendChild(be)
 
     // reset initialGlitch and re-run selected animation
     setInitialGlitch(true)
