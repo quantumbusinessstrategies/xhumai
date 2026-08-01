@@ -1474,12 +1474,12 @@ function App() {
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
         <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
 
-        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`} data-text="search-form">
+        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`}>
           <input
             type="text"
             value={query}
             onChange={handleInputChange}
-            placeholder="What are you trying to accomplish?"
+            placeholder="Inquire"
             autoFocus
             disabled={needsMore}
             className={isTyping ? 'input-awake' : ''}

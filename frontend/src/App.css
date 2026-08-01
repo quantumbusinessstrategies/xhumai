@@ -104,14 +104,15 @@ html, body, #root {
 }
 
 /* Hide search form during initial cinematic intro */
-.search-form { display: none !important; }
+/* keep search-form visible during intro */
+.search-form { display: flex !important; }
 
 .search-form input {
   width: 100%;
   padding: 1.25rem 1.6rem;
   font-size: 1.28rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: none;
   background: rgba(28, 28, 36, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -119,7 +120,7 @@ html, body, #root {
   outline: none;
   transition: all 0.45s ease;
   text-align: center;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
 .search-form input::placeholder {
