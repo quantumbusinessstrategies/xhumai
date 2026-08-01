@@ -99,6 +99,7 @@ function App() {
   const [isTyping, setIsTyping] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
+  const [animMode, setAnimMode] = useState('glitch') // 'glitch' | 'pixel' | 'combo'
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -244,12 +245,19 @@ function App() {
 
   useEffect(() => {
     const g = setTimeout(() => setInitialGlitch(false), 3000)
+    // trigger pixel animation if requested
+    if (animMode === 'pixel' || animMode === 'combo') {
+      // small delay so layout stabilizes
+      setTimeout(() => {
+        try {
+          playPixelForm(['.logo', '.tagline', '.purpose', '.response', '.status'], 4000)
+        } catch (e) {}
+      }, 120)
+    }
     return () => clearTimeout(g)
   }, [])
 
   useEffect(() => {
-    // keep previous background/data fetch effect intact
-  }, [])
 
     const t = setTimeout(() => {
       fetch(`${API}/api/stars`)
@@ -263,6 +271,92 @@ function App() {
     }, 400)
     return () => clearTimeout(t)
   }, [])
+
+  // Pixel formation: render text to a canvas, sample pixels, animate divs into place
+  function playPixelForm(selectors = ['.logo'], duration = 4000) {
+    const nodes = []
+    selectors.forEach(s => document.querySelectorAll(s).forEach(n => nodes.push(n)))
+    if (!nodes.length) return
+
+    const overlay = document.createElement('div')
+    overlay.className = 'pixel-overlay'
+    overlay.style.position = 'fixed'
+    overlay.style.left = '0'
+    overlay.style.top = '0'
+    overlay.style.width = '100%'
+    overlay.style.height = '100%'
+    overlay.style.pointerEvents = 'none'
+    document.body.appendChild(overlay)
+
+    const pixEls = []
+
+    for (const el of nodes) {
+      const text = el.getAttribute('data-text') || el.textContent || ''
+      if (!text.trim()) continue
+      const rect = el.getBoundingClientRect()
+      const cs = getComputedStyle(el)
+      const font = `${cs.fontSize} ${cs.fontFamily}`
+      const color = cs.color || '#fff'
+
+      const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1))
+      const cw = Math.max(2, Math.floor(rect.width * scale))
+      const ch = Math.max(2, Math.floor(rect.height * scale))
+      const c = document.createElement('canvas')
+      c.width = cw
+      c.height = ch
+      const ctx = c.getContext('2d')
+      ctx.fillStyle = 'black'
+      ctx.fillRect(0, 0, cw, ch)
+      ctx.font = `${parseFloat(cs.fontSize) * scale}px ${cs.fontFamily}`
+      ctx.fillStyle = '#ffffff'
+      ctx.textBaseline = 'top'
+      ctx.fillText(text, 0, 0)
+
+      const img = ctx.getImageData(0, 0, cw, ch).data
+      const step = Math.max(3, Math.floor(Math.min(6, Math.max(2, cw / 80))))
+
+      for (let y = 0; y < ch; y += step) {
+        for (let x = 0; x < cw; x += step) {
+          const idx = (y * cw + x) * 4
+          const a = img[idx + 3]
+          if (a > 50) {
+            const px = document.createElement('div')
+            px.className = 'pixel'
+            const size = Math.ceil(step / scale)
+            px.style.width = size + 'px'
+            px.style.height = size + 'px'
+            px.style.background = color
+            px.style.position = 'fixed'
+            const finalLeft = Math.round(rect.left + (x / scale))
+            const finalTop = Math.round(rect.top + (y / scale))
+            px.style.left = finalLeft + 'px'
+            px.style.top = finalTop + 'px'
+            // start from random offscreen-ish position
+            const randX = (Math.random() - 0.5) * Math.max(window.innerWidth, 300)
+            const randY = (Math.random() - 0.5) * Math.max(window.innerHeight, 300)
+            px.style.transform = `translate(${randX}px, ${randY}px) scale(0.25)`
+            px.style.opacity = '0'
+            px.style.transition = `transform ${0.9 * duration}ms cubic-bezier(.2,.9,.2,1) ${Math.random() * duration * 0.6}ms, opacity ${0.6 * duration}ms ease ${Math.random() * duration * 0.6}ms`
+            overlay.appendChild(px)
+            pixEls.push(px)
+          }
+        }
+      }
+    }
+
+    // trigger animation on next frame
+    requestAnimationFrame(() => {
+      for (const p of pixEls) {
+        p.style.transform = 'translate(0,0) scale(1)'
+        p.style.opacity = '1'
+      }
+    })
+
+    // cleanup after duration + small buffer
+    setTimeout(() => {
+      overlay.remove()
+    }, duration + 300)
+  }
 
   useEffect(() => {
     const container = mountRef.current
@@ -888,6 +982,12 @@ function App() {
 
   return (
     <div className="landing">
+      <div className="anim-controls" aria-hidden>
+        <button onClick={() => { setAnimMode('glitch'); setInitialGlitch(true); setTimeout(() => setInitialGlitch(false), 3100) }} className={animMode === 'glitch' ? 'active' : ''}>Glitch</button>
+        <button onClick={() => { setAnimMode('pixel'); setInitialGlitch(true); setTimeout(() => setInitialGlitch(false), 4100) }} className={animMode === 'pixel' ? 'active' : ''}>Pixel</button>
+        <button onClick={() => { setAnimMode('combo'); setInitialGlitch(true); setTimeout(() => setInitialGlitch(false), 4100); setTimeout(() => playPixelForm(['.logo', '.tagline', '.purpose', '.response', '.status'], 4000), 120) }} className={animMode === 'combo' ? 'active' : ''}>Combo</button>
+        <button onClick={() => { setInitialGlitch(true); if (animMode === 'pixel' || animMode === 'combo') setTimeout(() => playPixelForm(['.logo', '.tagline', '.purpose', '.response', '.status'], 4000), 120); setTimeout(() => setInitialGlitch(false), animMode === 'pixel' ? 4100 : 3100) }}>Replay</button>
+      </div>
       <div className="canvas-wrap" ref={mountRef} />
 
       <div className="content">
