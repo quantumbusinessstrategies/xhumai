@@ -99,7 +99,7 @@ function App() {
   const [isTyping, setIsTyping] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
-  const [animMode, setAnimMode] = useState('glitch') // 'glitch' | 'pixel' | 'combo'
+  const [animMode, setAnimMode] = useState('combo') // default to 'combo'
   const [searchVisible, setSearchVisible] = useState(false)
 
   const mountRef = useRef(null)
@@ -834,6 +834,9 @@ function App() {
     const container = mountRef.current
     if (!container) return
 
+    // start the combo sequence on load
+    try { restartSequence() } catch (e) {}
+
     let width = window.innerWidth
     let height = window.innerHeight
     const DPR = Math.min(window.devicePixelRatio, 1.75)
@@ -1477,13 +1480,12 @@ function App() {
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
         <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
 
-        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''} ${searchVisible ? 'visible' : 'hidden'}`}>
+        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''} ${searchVisible ? 'visible' : ''}`}>
           <input
             type="text"
             value={query}
             onChange={handleInputChange}
             placeholder="Inquire"
-            autoFocus
             disabled={needsMore}
             className={isTyping ? 'input-awake' : ''}
           />

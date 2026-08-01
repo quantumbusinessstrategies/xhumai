@@ -21,21 +21,21 @@ html, body, #root {
 
 .canvas-wrap {
   position: absolute;
-  inset: 0;
+.search-form { display: none; }
   z-index: 0;
   pointer-events: none;
-}
-
-/* initial background/canvas fade-in over 4s */
-.canvas-wrap {
+.search-form.visible {
+  display: flex !important;
   opacity: 0;
-  animation: bgFade 4s ease forwards;
+  transform: translateY(6px) scale(0.995);
+  pointer-events: none;
+  transition: opacity 900ms ease, transform 900ms ease;
 }
-
-.canvas-wrap canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
+.search-form.visible.show {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
 }
 
 .content {
@@ -354,6 +354,9 @@ html, body, #root {
   border-radius: 8px;
   backdrop-filter: blur(6px);
 }
+
+/* hide UI controls at startup */
+.anim-controls { display: none !important; }
 
 .anim-controls button {
   color: #fff;
