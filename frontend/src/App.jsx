@@ -99,7 +99,7 @@ function App() {
   const [isTyping, setIsTyping] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
-  const [animMode, setAnimMode] = useState('glitch') // 'glitch' | 'pixel' | 'combo'
+  const [animMode, setAnimMode] = useState('combo') // 'glitch' | 'pixel' | 'combo'
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -269,10 +269,11 @@ function App() {
     if (!existing) {
       const be = document.createElement('div')
       be.className = 'sn-black-overlay'
-      be.style.opacity = '1'
+      // keep transparent by default so original background shows
+      be.style.opacity = '0'
       document.body.appendChild(be)
     } else {
-      existing.style.opacity = '1'
+      existing.style.opacity = '0'
     }
     return () => {}
   }, [])
