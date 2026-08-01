@@ -806,15 +806,15 @@ function App() {
     // remove any existing overlays/canvases
     document.querySelectorAll('.pixel-canvas, .sn-canvas, .sn-black-overlay, .sn-halo').forEach(el => el.remove())
 
-    // re-add initial black overlay so animations start on black again
+    // re-add initial black overlay (keep transparent so background remains visible)
     const existing = document.querySelector('.sn-black-overlay')
     if (!existing) {
       const be = document.createElement('div')
       be.className = 'sn-black-overlay'
-      be.style.opacity = '1'
+      be.style.opacity = '0'
       document.body.appendChild(be)
     } else {
-      existing.style.opacity = '1'
+      existing.style.opacity = '0'
     }
 
     // reset initialGlitch and re-run selected animation
