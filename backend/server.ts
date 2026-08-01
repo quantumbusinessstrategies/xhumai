@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import capabilities from '../capabilities/registry';
 import { runTextSummarizer } from '../capabilities/text-summarizer';
+import { runActionExtractor } from '../capabilities/action-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -48,7 +49,7 @@ function saveStars(stars: any[]) {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v0.8',
+    message: 'XhumAI Quantum Core API v0.9',
     status: 'alive',
     entity: 'listening',
     stars: loadStars().length,
@@ -98,7 +99,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'summarize', 'summary', 'pdf', 'convert', 'excel', 'csv',
     'image', 'upscale', 'remove background', 'translate',
     'rewrite', 'edit', 'format', 'extract', 'analyze',
-    'generate', 'create file', 'download', 'upload'
+    'generate', 'create file', 'download', 'upload',
+    'action', 'todo', 'to-do', 'next steps', 'action items'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -147,6 +149,18 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('action') ||
+      lower.includes('todo') ||
+      lower.includes('to-do') ||
+      lower.includes('next steps') ||
+      lower.includes('action items') ||
+      lower.includes('extract')
+    ) {
+      reply = 'I can pull the next steps out. Paste the text or notes.';
+      status = 'capability: action-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, email, or plan here...';
     } else if (lower.includes('pdf')) {
       reply = 'Document tools are forming. Tell me what you need done with the PDF.';
       status = 'noted — pdf capabilities incoming';
@@ -195,6 +209,17 @@ app.post('/api/capabilities/text-summarizer', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/action-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const actions = await runActionExtractor(text);
+    res.json({ capability: 'action-extractor', actions });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -211,6 +236,6 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v0.8 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent classification live');
+  console.log(`🚀 XhumAI Backend v0.9 on http://localhost:${PORT}`);
+  console.log('✨ Shared stars + intent classification + action-extractor live');
 });
