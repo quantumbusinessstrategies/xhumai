@@ -790,6 +790,7 @@ function App() {
                 // cleanup: remove supernova canvas and halo
                   s.remove()
                   halo.remove()
+                  try { setSearchVisible(true) } catch (e) {}
               }
             }
             requestAnimationFrame(settle)
@@ -1476,13 +1477,12 @@ function App() {
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
         <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
 
-        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`} data-text="search-form">
+        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''} ${searchVisible ? 'visible' : ''}`}>
           <input
             type="text"
             value={query}
             onChange={handleInputChange}
-            placeholder="What are you trying to accomplish?"
-            autoFocus
+            placeholder="Inquire"
             disabled={needsMore}
             className={isTyping ? 'input-awake' : ''}
           />
