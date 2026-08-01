@@ -272,8 +272,9 @@ function App() {
     return () => clearTimeout(t)
   }, [])
 
-  // Canvas-based pixel formation: more efficient than many DOM nodes
-  function playPixelForm(selectors = ['.logo'], duration = 4000) {
+  // Pixel formation: try WebGL renderer first (faster for many particles).
+  // Throttles frame rate to reduce CPU/GPU load and reduces particle size slightly.
+  function playPixelForm(selectors = ['.logo'], duration = 4000, preferWebGL = true) {
     const nodes = []
     selectors.forEach(s => document.querySelectorAll(s).forEach(n => nodes.push(n)))
     if (!nodes.length) return
@@ -297,6 +298,7 @@ function App() {
 
     const particles = []
     const maxParticles = 1200
+    const sizeFactor = 0.88 // reduce size by ~12%
 
     for (const el of nodes) {
       const text = el.getAttribute('data-text') || el.textContent || ''
@@ -333,7 +335,7 @@ function App() {
           if (alpha > 60) {
             const tx = Math.round(rect.left + (x / sampleScale))
             const ty = Math.round(rect.top + (y / sampleScale))
-            particles.push({ tx, ty, color, size: Math.max(2, Math.round(2 / sampleScale)) })
+            particles.push({ tx, ty, color, size: Math.max(1, Math.round(2 / sampleScale * sizeFactor)) })
             if (particles.length >= maxParticles) break
           }
         }
@@ -344,39 +346,125 @@ function App() {
 
     if (!particles.length) { canvas.remove(); return }
 
-    // initialize particle animation state
-    const start = performance.now()
+    // assign starting/random positions and timing
     for (const p of particles) {
       p.sx = Math.random() * window.innerWidth
       p.sy = Math.random() * window.innerHeight
       p.delay = Math.random() * (duration * 0.5)
       p.dur = duration - p.delay
-      p.started = false
     }
 
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3) }
 
-    let rafId = null
-    function frame(now) {
-      ctx.clearRect(0, 0, canvas.width / DPR, canvas.height / DPR)
-      let remaining = 0
-      for (const p of particles) {
-        const t = (now - start - p.delay) / p.dur
-        if (t < 0) { remaining++; continue }
-        const tt = Math.min(1, Math.max(0, t))
-        const e = easeOutCubic(tt)
-        const x = p.sx + (p.tx - p.sx) * e
-        const y = p.sy + (p.ty - p.sy) * e
-        const size = Math.max(1, p.size * (0.3 + 0.7 * e))
-        ctx.fillStyle = p.color
-        ctx.fillRect(Math.round(x), Math.round(y), Math.round(size), Math.round(size))
-        if (tt < 1) remaining++
+    const FPS = 30
+    const frameInterval = 1000 / FPS
+
+    // WebGL renderer (preferred)
+    function webglRenderer(particlesList) {
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      if (!gl) return false
+
+      // simple shaders
+      const vs = `attribute vec2 a_pos; attribute float a_size; attribute vec3 a_col; uniform vec2 u_resolution; varying vec3 v_col; void main(){ vec2 zeroToOne = a_pos / u_resolution; vec2 clipSpace = zeroToOne * 2.0 - 1.0; gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1); gl_PointSize = a_size; v_col = a_col;} `
+      const fs = `precision mediump float; varying vec3 v_col; void main(){ gl_FragColor = vec4(v_col, 1.0); }`
+
+      function compileShader(type, src){ const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh); if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){ console.warn(gl.getShaderInfoLog(sh)); return null } return sh }
+      const vsh = compileShader(gl.VERTEX_SHADER, vs)
+      const fsh = compileShader(gl.FRAGMENT_SHADER, fs)
+      const prog = gl.createProgram()
+      gl.attachShader(prog, vsh); gl.attachShader(prog, fsh); gl.linkProgram(prog)
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false
+      gl.useProgram(prog)
+
+      const count = particlesList.length
+      const stride = 6 // x,y,size,r,g,b
+      const buffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+      const a_pos = gl.getAttribLocation(prog, 'a_pos')
+      const a_size = gl.getAttribLocation(prog, 'a_size')
+      const a_col = gl.getAttribLocation(prog, 'a_col')
+      const u_resolution = gl.getUniformLocation(prog, 'u_resolution')
+
+      gl.enableVertexAttribArray(a_pos)
+      gl.vertexAttribPointer(a_pos, 2, gl.FLOAT, false, stride * 4, 0)
+      gl.enableVertexAttribArray(a_size)
+      gl.vertexAttribPointer(a_size, 1, gl.FLOAT, false, stride * 4, 2 * 4)
+      gl.enableVertexAttribArray(a_col)
+      gl.vertexAttribPointer(a_col, 3, gl.FLOAT, false, stride * 4, 3 * 4)
+
+      gl.viewport(0, 0, canvas.width, canvas.height)
+      gl.clearColor(0,0,0,0)
+
+      const startTime = performance.now()
+      let lastRender = 0
+      function frameGL(now) {
+        const tNow = now
+        if (tNow - lastRender < frameInterval) { requestAnimationFrame(frameGL); return }
+        lastRender = tNow
+
+        const arr = new Float32Array(count * stride)
+        let i = 0
+        let remaining = 0
+        for (const p of particlesList) {
+          const tt = Math.min(1, Math.max(0, (now - startTime - p.delay) / p.dur))
+          const e = easeOutCubic(tt)
+          const x = p.sx + (p.tx - p.sx) * e
+          const y = p.sy + (p.ty - p.sy) * e
+          const size = Math.max(1, p.size * (0.3 + 0.7 * e)) * (window.devicePixelRatio || 1)
+          const col = (() => { try { const c = document.createElement('div'); c.style.color = p.color; document.body.appendChild(c); const rgb = getComputedStyle(c).color; document.body.removeChild(c); const m = rgb.match(/(\d+),\s*(\d+),\s*(\d+)/); if(m) return [m[1]/255, m[2]/255, m[3]/255]; } catch(e){} return [1,1,1] })()
+          arr[i++] = x
+          arr[i++] = y
+          arr[i++] = size
+          arr[i++] = col[0]
+          arr[i++] = col[1]
+          arr[i++] = col[2]
+          if (tt < 1) remaining++
+        }
+
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.uniform2f(u_resolution, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1))
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+        gl.bufferData(gl.ARRAY_BUFFER, arr, gl.DYNAMIC_DRAW)
+        gl.drawArrays(gl.POINTS, 0, count)
+
+        if (remaining > 0) requestAnimationFrame(frameGL)
+        else { canvas.remove() }
       }
-      if (remaining > 0) rafId = requestAnimationFrame(frame)
-      else { canvas.remove(); cancelAnimationFrame(rafId) }
+      requestAnimationFrame(frameGL)
+      return true
     }
 
-    rafId = requestAnimationFrame(frame)
+    function canvas2DRenderer(particlesList) {
+      let lastRender = 0
+      const start = performance.now()
+      let rafId = null
+      function frame(now) {
+        if (now - lastRender < frameInterval) { rafId = requestAnimationFrame(frame); return }
+        lastRender = now
+        ctx.clearRect(0, 0, canvas.width / DPR, canvas.height / DPR)
+        let remaining = 0
+        for (const p of particlesList) {
+          const t = (now - start - p.delay) / p.dur
+          if (t < 0) { remaining++; continue }
+          const tt = Math.min(1, Math.max(0, t))
+          const e = easeOutCubic(tt)
+          const x = p.sx + (p.tx - p.sx) * e
+          const y = p.sy + (p.ty - p.sy) * e
+          const size = Math.max(1, p.size * (0.3 + 0.7 * e))
+          ctx.fillStyle = p.color
+          ctx.fillRect(Math.round(x), Math.round(y), Math.round(size), Math.round(size))
+          if (tt < 1) remaining++
+        }
+        if (remaining > 0) rafId = requestAnimationFrame(frame)
+        else { canvas.remove(); cancelAnimationFrame(rafId) }
+      }
+      rafId = requestAnimationFrame(frame)
+    }
+
+    // choose renderer
+    let used = false
+    if (preferWebGL) used = webglRenderer(particles)
+    if (!used) canvas2DRenderer(particles)
   }
 
   useEffect(() => {
