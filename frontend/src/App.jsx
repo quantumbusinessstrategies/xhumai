@@ -100,6 +100,7 @@ function App() {
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
   const [animMode, setAnimMode] = useState('combo') // 'glitch' | 'pixel' | 'combo'
+  const [searchVisible, setSearchVisible] = useState(false)
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -269,11 +270,11 @@ function App() {
     if (!existing) {
       const be = document.createElement('div')
       be.className = 'sn-black-overlay'
-      // keep transparent by default so original background shows
-      be.style.opacity = '0'
+      // start black on load so intro animations run on black
+      be.style.opacity = '1'
       document.body.appendChild(be)
     } else {
-      existing.style.opacity = '0'
+      existing.style.opacity = '1'
     }
     return () => {}
   }, [])
@@ -592,8 +593,10 @@ function App() {
     // immediately hide scene layers/specials/clouds by storing original opacities
     try {
       for (const layer of layersRef.current) {
-        if (layer.mat) {
-          layer.mat.userData = layer.mat.userData || {}
+                  s.remove()
+                  halo.remove()
+                  // reveal search UI after supernova settle
+                  try { setSearchVisible(true) } catch (e) {}
           layer.mat.userData._origOpacity = layer.mat.opacity
           layer.mat.userData._origTransparent = layer.mat.transparent
           layer.mat.transparent = true
@@ -806,19 +809,21 @@ function App() {
     // remove any existing overlays/canvases
     document.querySelectorAll('.pixel-canvas, .sn-canvas, .sn-black-overlay, .sn-halo').forEach(el => el.remove())
 
-    // re-add initial black overlay (keep transparent so background remains visible)
+    // re-add initial black overlay so animations start on black again
     const existing = document.querySelector('.sn-black-overlay')
     if (!existing) {
       const be = document.createElement('div')
       be.className = 'sn-black-overlay'
-      be.style.opacity = '0'
+      be.style.opacity = '1'
       document.body.appendChild(be)
     } else {
-      existing.style.opacity = '0'
+      existing.style.opacity = '1'
     }
 
     // reset initialGlitch and re-run selected animation
     setInitialGlitch(true)
+    // hide the search UI until the supernova completes
+    setSearchVisible(false)
     // schedule clearing initialGlitch after 3s
     setTimeout(() => setInitialGlitch(false), 3000)
 

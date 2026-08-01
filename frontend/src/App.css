@@ -17,6 +17,9 @@ html, body, #root {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  transform-origin: center center;
+  /* zoom out 10% overall */
+  transform: scale(0.9);
 }
 
 .canvas-wrap {
@@ -97,26 +100,36 @@ html, body, #root {
 .search-form {
   width: 100%;
   max-width: 560px;
-  pointer-events: auto;
+  pointer-events: none;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 600ms ease, transform 560ms ease;
+}
+
+.search-form.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .search-form input {
   width: 100%;
   padding: 1.25rem 1.6rem;
-  font-size: 1.28rem;
+  font-size: 1.408rem; /* 10% larger */
+  font-weight: 700;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(28, 28, 36, 0.5);
+  border: none; /* borderless */
+  background: rgba(28, 28, 36, 0.4); /* 10% more transparent */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #e8e8f0;
   outline: none;
   transition: all 0.45s ease;
   text-align: center;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
 .search-form input::placeholder {
