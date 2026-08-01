@@ -98,6 +98,7 @@ function App() {
   const [morePrompt, setMorePrompt] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
+  const [initialGlitch, setInitialGlitch] = useState(true)
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -242,6 +243,14 @@ function App() {
   }
 
   useEffect(() => {
+    const g = setTimeout(() => setInitialGlitch(false), 3000)
+    return () => clearTimeout(g)
+  }, [])
+
+  useEffect(() => {
+    // keep previous background/data fetch effect intact
+  }, [])
+
     const t = setTimeout(() => {
       fetch(`${API}/api/stars`)
         .then(r => r.json())
@@ -882,11 +891,16 @@ function App() {
       <div className="canvas-wrap" ref={mountRef} />
 
       <div className="content">
-        <h1 className={`logo ${isActivating ? 'logo-activate' : ''}`}>XhumAI</h1>
-        <p className="tagline">WORK LESS. LIVE MORE.</p>
-        <p className="purpose">Intelligence that evolves with you</p>
+        <h1
+          className={`logo ${isActivating ? 'logo-activate' : ''} ${initialGlitch ? 'glitch' : ''}`}
+          data-text="XhumAI"
+        >
+          XhumAI
+        </h1>
+        <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
+        <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
 
-        <form onSubmit={handleSubmit} className="search-form">
+        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`} data-text="search-form">
           <input
             type="text"
             value={query}
@@ -911,8 +925,8 @@ function App() {
           <button type="submit" className="sr-only">Send</button>
         </form>
 
-        <p className="response" key={responseKey}>{response}</p>
-        {status && <p className="status">{status}</p>}
+        <p className={`response ${initialGlitch ? 'glitch' : ''}`} key={responseKey} data-text={response}>{response}</p>
+        {status && <p className={`status ${initialGlitch ? 'glitch' : ''}`} data-text={status}>{status}</p>}
       </div>
     </div>
   )
