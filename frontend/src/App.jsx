@@ -361,8 +361,21 @@ function App() {
     const FPS = 30
     const frameInterval = 1000 / FPS
 
+    // helper to ensure black overlay exists immediately when suck starts
+    let _blackEl = null
+    function ensureBlack() {
+      if (_blackEl) return _blackEl
+      const be = document.createElement('div')
+      be.className = 'sn-black-overlay'
+      document.body.appendChild(be)
+      // force paint then set opacity to 1
+      requestAnimationFrame(() => { be.style.opacity = '1' })
+      _blackEl = be
+      return be
+    }
+
     // WebGL renderer (preferred)
-    function webglRenderer(particlesList) {
+    function webglRenderer(particlesList, onComplete) {
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
       if (!gl) return false
 
@@ -426,9 +439,12 @@ function App() {
           if (p.phase === 'forming' && tt >= 1) {
             p.phase = 'sucking'
             p.phaseStart = now
-            p.suckDur = 700 + Math.random() * 500
+            // 1.5x faster suck
+            p.suckDur = (700 + Math.random() * 500) / 1.5
             p.hx = hx
             p.hy = hy
+            // ensure black overlay appears during suck
+            ensureBlack()
           }
 
           if (p.phase === 'forming') {
@@ -468,13 +484,17 @@ function App() {
         gl.drawArrays(gl.POINTS, 0, count)
 
         if (remaining > 0) requestAnimationFrame(frameGL)
-        else { canvas.remove() }
+        else {
+          // call onComplete to trigger supernova sequence, reusing existing black overlay
+          try { if (onComplete) onComplete() } catch (e) {}
+          canvas.remove()
+        }
       }
       requestAnimationFrame(frameGL)
       return true
     }
 
-    function canvas2DRenderer(particlesList) {
+    function canvas2DRenderer(particlesList, onComplete) {
       let lastRender = 0
       const start = performance.now()
       let rafId = null
@@ -503,9 +523,11 @@ function App() {
           if (p.phase === 'forming' && tt >= 1) {
             p.phase = 'sucking'
             p.phaseStart = now
-            p.suckDur = 700 + Math.random() * 500
+            // 1.5x faster suck
+            p.suckDur = (700 + Math.random() * 500) / 1.5
             p.hx = hx
             p.hy = hy
+            ensureBlack()
           }
 
           let x, y
@@ -530,7 +552,7 @@ function App() {
           if (p.phase !== 'done') remaining++
         }
         if (remaining > 0) rafId = requestAnimationFrame(frame)
-        else { canvas.remove(); cancelAnimationFrame(rafId) }
+        else { try { if (onComplete) onComplete() } catch(e){} ; canvas.remove(); cancelAnimationFrame(rafId) }
       }
       rafId = requestAnimationFrame(frame)
     }
@@ -550,7 +572,7 @@ function App() {
     let used = false
     const onComplete = () => {
       // small buffer then run supernova sequence
-      runSupernovaSequence(coreScreen.x, coreScreen.y)
+      setTimeout(() => runSupernovaSequence(coreScreen.x, coreScreen.y), 120)
     }
     if (preferWebGL) used = webglRenderer(particles, onComplete)
     if (!used) canvas2DRenderer(particles, onComplete)
