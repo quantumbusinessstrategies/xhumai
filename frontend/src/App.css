@@ -103,6 +103,9 @@ html, body, #root {
   gap: 0.9rem;
 }
 
+/* Hide search form during initial cinematic intro */
+.search-form { display: none !important; }
+
 .search-form input {
   width: 100%;
   padding: 1.25rem 1.6rem;
