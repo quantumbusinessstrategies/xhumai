@@ -535,10 +535,127 @@ function App() {
       rafId = requestAnimationFrame(frame)
     }
 
-    // choose renderer
+    // compute core screen position now so supernova can use it later
+    let coreScreen = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+    try {
+      if (coreRef.current && cameraRef.current) {
+        const v = coreRef.current.position.clone()
+        v.project(cameraRef.current)
+        coreScreen.x = (v.x * 0.5 + 0.5) * window.innerWidth
+        coreScreen.y = (-v.y * 0.5 + 0.5) * window.innerHeight
+      }
+    } catch (e) {}
+
+    // choose renderer and call onComplete to run supernova sequence
     let used = false
-    if (preferWebGL) used = webglRenderer(particles)
-    if (!used) canvas2DRenderer(particles)
+    const onComplete = () => {
+      // small buffer then run supernova sequence
+      runSupernovaSequence(coreScreen.x, coreScreen.y)
+    }
+    if (preferWebGL) used = webglRenderer(particles, onComplete)
+    if (!used) canvas2DRenderer(particles, onComplete)
+  }
+
+  // Supernova visual sequence triggered when pixel formation completes
+  function runSupernovaSequence(hx, hy) {
+    // 1) cover background with black immediately
+    const black = document.createElement('div')
+    black.className = 'sn-black-overlay'
+    document.body.appendChild(black)
+    // force paint then set opacity to 1
+    requestAnimationFrame(() => { black.style.opacity = '1' })
+
+    // 2) after 0.25s show halo (0.5s)
+    setTimeout(() => {
+      const halo = document.createElement('div')
+      halo.className = 'sn-halo'
+      halo.style.left = hx + 'px'
+      halo.style.top = hy + 'px'
+      document.body.appendChild(halo)
+      // animate in
+      requestAnimationFrame(() => {
+        halo.style.opacity = '1'
+        halo.style.transform = 'translate(-50%, -50%) scale(1)'
+        halo.style.boxShadow = '0 0 0 6px rgba(200,230,255,0.18), 0 0 28px 12px rgba(120,200,255,0.22)'
+      })
+
+      // 3) after halo in (0.5s) do instant BOOM supernova (2.5s)
+      setTimeout(() => {
+        // create supernova canvas
+        const s = document.createElement('canvas')
+        s.className = 'sn-canvas'
+        document.body.appendChild(s)
+        const DPR = window.devicePixelRatio || 1
+        s.width = Math.max(1, Math.floor(window.innerWidth * DPR))
+        s.height = Math.max(1, Math.floor(window.innerHeight * DPR))
+        const ctx = s.getContext('2d')
+        ctx.scale(DPR, DPR)
+
+        // generate colorful particles
+        const colors = ['#ff6b6b','#ffd93d','#7ee787','#6bd3ff','#d18bff','#ff9fd6','#ffd0a8']
+        const particles = []
+        const count = 1600
+        for (let i=0;i<count;i++) {
+          const angle = Math.random() * Math.PI * 2
+          const speed = 40 + Math.random() * 240
+          const vx = Math.cos(angle) * speed
+          const vy = Math.sin(angle) * speed
+          particles.push({ x: hx, y: hy, vx, vy, life: 2500 + Math.random()*800, age:0, size: 1 + Math.random()*3, color: colors[Math.floor(Math.random()*colors.length)] })
+        }
+
+        const boomStart = performance.now()
+        function step(now) {
+          const dt = now - boomStart
+          ctx.clearRect(0,0,s.width/DPR,s.height/DPR)
+          for (const p of particles) {
+            const t = Math.min(1, p.age / p.life)
+            // simple physics with slight drag
+            p.x += p.vx * (1/60)
+            p.y += p.vy * (1/60)
+            p.vx *= 0.995
+            p.vy *= 0.995
+            p.age += 1000/60
+            const alpha = 1 - t
+            ctx.fillStyle = p.color
+            ctx.globalAlpha = alpha
+            ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size)
+          }
+          ctx.globalAlpha = 1
+          if (now - boomStart < 2500) requestAnimationFrame(step)
+          else {
+            // 3) settle for ~3s: slow particles and fade
+            const settleStart = performance.now()
+            function settle(now2) {
+              const sdt = now2 - settleStart
+              const prog = Math.min(1, sdt / 3000)
+              ctx.clearRect(0,0,s.width/DPR,s.height/DPR)
+              for (const p of particles) {
+                // slow to a stop
+                p.x = p.x + p.vx * (1/60) * 0.2
+                p.y = p.y + p.vy * (1/60) * 0.2
+                p.vx *= 0.98
+                p.vy *= 0.98
+                const alpha = (1 - prog) * 0.8
+                ctx.globalAlpha = alpha
+                ctx.fillStyle = p.color
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size)
+              }
+              ctx.globalAlpha = 1
+              if (prog < 1) requestAnimationFrame(settle)
+              else {
+                // cleanup: remove supernova canvas and halo, fade black overlay out
+                s.remove()
+                halo.remove()
+                black.style.opacity = '0'
+                setTimeout(() => { black.remove() }, 600)
+              }
+            }
+            requestAnimationFrame(settle)
+          }
+        }
+        requestAnimationFrame(step)
+      }, 500)
+    }, 250)
   }
 
   useEffect(() => {
