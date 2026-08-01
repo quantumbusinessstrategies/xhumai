@@ -107,13 +107,28 @@ html, body, #root {
 /* keep search-form visible during intro */
 .search-form { display: flex !important; }
 
+/* Fade control for showing after the cinematic */
+.search-form.hidden {
+  opacity: 0;
+  transform: translateY(6px) scale(0.995);
+  pointer-events: none;
+  transition: opacity 900ms ease, transform 900ms ease;
+}
+.search-form.visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition: opacity 900ms ease, transform 900ms ease;
+}
+
 .search-form input {
   width: 100%;
   padding: 1.25rem 1.6rem;
-  font-size: 1.28rem;
+  font-size: 1.408rem; /* +10% */
+  font-weight: 700;
   border-radius: 8px;
   border: none;
-  background: rgba(28, 28, 36, 0.5);
+  background: rgba(28, 28, 36, 0.4); /* 20% more transparent */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #e8e8f0;

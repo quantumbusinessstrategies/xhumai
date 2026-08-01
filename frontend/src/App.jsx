@@ -100,6 +100,7 @@ function App() {
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
   const [animMode, setAnimMode] = useState('glitch') // 'glitch' | 'pixel' | 'combo'
+  const [searchVisible, setSearchVisible] = useState(false)
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -790,6 +791,7 @@ function App() {
                 // cleanup: remove supernova canvas and halo
                   s.remove()
                   halo.remove()
+                  try { setSearchVisible(true) } catch (e) {}
               }
             }
             requestAnimationFrame(settle)
@@ -818,6 +820,7 @@ function App() {
 
     // reset initialGlitch and re-run selected animation
     setInitialGlitch(true)
+    setSearchVisible(false)
     // schedule clearing initialGlitch after 3s
     setTimeout(() => setInitialGlitch(false), 3000)
 
@@ -1474,7 +1477,7 @@ function App() {
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
         <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
 
-        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`}>
+        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''} ${searchVisible ? 'visible' : 'hidden'}`}>
           <input
             type="text"
             value={query}
