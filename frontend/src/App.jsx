@@ -593,10 +593,7 @@ function App() {
     // immediately hide scene layers/specials/clouds by storing original opacities
     try {
       for (const layer of layersRef.current) {
-                  s.remove()
-                  halo.remove()
-                  // reveal search UI after supernova settle
-                  try { setSearchVisible(true) } catch (e) {}
+          layer.mat.userData = layer.mat.userData || {}
           layer.mat.userData._origOpacity = layer.mat.opacity
           layer.mat.userData._origTransparent = layer.mat.transparent
           layer.mat.transparent = true
