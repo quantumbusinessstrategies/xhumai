@@ -107,6 +107,8 @@ function App() {
   const gasRef = useRef([])
   const layersRef = useRef([]) // shape point layers
   const specialsRef = useRef([]) // mini BH, wireframes, etc.
+  const cameraRef = useRef(null)
+  const coreRef = useRef(null)
   const typingRef = useRef(0)
   const activateRef = useRef(0)
   const typingTimeout = useRef(null)
@@ -405,11 +407,45 @@ function App() {
         const arr = new Float32Array(count * stride)
         let i = 0
         let remaining = 0
+        // compute hole screen position
+        let hx = window.innerWidth / 2
+        let hy = window.innerHeight / 2
+        try {
+          if (coreRef.current && cameraRef.current) {
+            const v = coreRef.current.position.clone()
+            v.project(cameraRef.current)
+            hx = (v.x * 0.5 + 0.5) * window.innerWidth
+            hy = (-v.y * 0.5 + 0.5) * window.innerHeight
+          }
+        } catch (e) {}
+
         for (const p of particlesList) {
           const tt = Math.min(1, Math.max(0, (now - startTime - p.delay) / p.dur))
-          const e = easeOutCubic(tt)
-          const x = p.sx + (p.tx - p.sx) * e
-          const y = p.sy + (p.ty - p.sy) * e
+          let x, y
+          if (!p.phase) p.phase = 'forming'
+          if (p.phase === 'forming' && tt >= 1) {
+            p.phase = 'sucking'
+            p.phaseStart = now
+            p.suckDur = 700 + Math.random() * 500
+            p.hx = hx
+            p.hy = hy
+          }
+
+          if (p.phase === 'forming') {
+            const e = easeOutCubic(tt)
+            x = p.sx + (p.tx - p.sx) * e
+            y = p.sy + (p.ty - p.sy) * e
+          } else if (p.phase === 'sucking') {
+            const st = Math.min(1, (now - p.phaseStart) / p.suckDur)
+            const se = Math.pow(st, 2)
+            x = p.tx + (p.hx - p.tx) * se
+            y = p.ty + (p.hy - p.ty) * se
+          } else {
+            x = p.tx; y = p.ty
+          }
+
+          const progress = (p.phase === 'forming') ? tt : (p.phase === 'sucking' ? Math.min(1, (now - p.phaseStart) / p.suckDur) : 1)
+          const e = easeOutCubic(Math.min(1, progress))
           const size = Math.max(1, p.size * (0.3 + 0.7 * e)) * (window.devicePixelRatio || 1)
           const col = (() => { try { const c = document.createElement('div'); c.style.color = p.color; document.body.appendChild(c); const rgb = getComputedStyle(c).color; document.body.removeChild(c); const m = rgb.match(/(\d+),\s*(\d+),\s*(\d+)/); if(m) return [m[1]/255, m[2]/255, m[3]/255]; } catch(e){} return [1,1,1] })()
           arr[i++] = x
@@ -418,7 +454,11 @@ function App() {
           arr[i++] = col[0]
           arr[i++] = col[1]
           arr[i++] = col[2]
-          if (tt < 1) remaining++
+          if (!p.phase || p.phase !== 'done') {
+            if (p.phase === 'sucking' && (now - p.phaseStart) / p.suckDur >= 1) p.phase = 'done'
+            else if (p.phase === 'forming' && tt < 1) remaining++
+            else if (p.phase === 'sucking') remaining++
+          }
         }
 
         gl.clear(gl.COLOR_BUFFER_BIT)
@@ -443,17 +483,51 @@ function App() {
         lastRender = now
         ctx.clearRect(0, 0, canvas.width / DPR, canvas.height / DPR)
         let remaining = 0
+
+        // hole position
+        let hx = window.innerWidth / 2
+        let hy = window.innerHeight / 2
+        try {
+          if (coreRef.current && cameraRef.current) {
+            const v = coreRef.current.position.clone()
+            v.project(cameraRef.current)
+            hx = (v.x * 0.5 + 0.5) * window.innerWidth
+            hy = (-v.y * 0.5 + 0.5) * window.innerHeight
+          }
+        } catch (e) {}
+
         for (const p of particlesList) {
           const t = (now - start - p.delay) / p.dur
-          if (t < 0) { remaining++; continue }
           const tt = Math.min(1, Math.max(0, t))
-          const e = easeOutCubic(tt)
-          const x = p.sx + (p.tx - p.sx) * e
-          const y = p.sy + (p.ty - p.sy) * e
+          if (!p.phase) p.phase = 'forming'
+          if (p.phase === 'forming' && tt >= 1) {
+            p.phase = 'sucking'
+            p.phaseStart = now
+            p.suckDur = 700 + Math.random() * 500
+            p.hx = hx
+            p.hy = hy
+          }
+
+          let x, y
+          if (p.phase === 'forming') {
+            const e = easeOutCubic(tt)
+            x = p.sx + (p.tx - p.sx) * e
+            y = p.sy + (p.ty - p.sy) * e
+          } else if (p.phase === 'sucking') {
+            const st = Math.min(1, (now - p.phaseStart) / p.suckDur)
+            const se = Math.pow(st, 2)
+            x = p.tx + (p.hx - p.tx) * se
+            y = p.ty + (p.hy - p.ty) * se
+          } else { x = p.tx; y = p.ty }
+
+          const progress = (p.phase === 'forming') ? tt : (p.phase === 'sucking' ? Math.min(1, (now - p.phaseStart) / p.suckDur) : 1)
+          const e = easeOutCubic(Math.min(1, progress))
           const size = Math.max(1, p.size * (0.3 + 0.7 * e))
           ctx.fillStyle = p.color
           ctx.fillRect(Math.round(x), Math.round(y), Math.round(size), Math.round(size))
-          if (tt < 1) remaining++
+
+          if (p.phase === 'sucking' && (now - p.phaseStart) / p.suckDur >= 1) p.phase = 'done'
+          if (p.phase !== 'done') remaining++
         }
         if (remaining > 0) rafId = requestAnimationFrame(frame)
         else { canvas.remove(); cancelAnimationFrame(rafId) }
@@ -483,6 +557,7 @@ function App() {
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 200)
     camera.position.set(0, 0.5, 8.5)
     camera.lookAt(0, 0, 0)
+    cameraRef.current = camera
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setSize(width, height)
@@ -732,6 +807,7 @@ function App() {
       new THREE.MeshBasicMaterial({ color: 0x000000 })
     )
     scene.add(core)
+    coreRef.current = core
 
     const horizon = new THREE.Mesh(
       new THREE.RingGeometry(0.38, 0.55, 64),
