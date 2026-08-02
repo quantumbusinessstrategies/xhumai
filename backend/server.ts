@@ -8,6 +8,7 @@ import path from 'path';
 import capabilities from '../capabilities/registry';
 import { runTextSummarizer } from '../capabilities/text-summarizer';
 import { runActionExtractor } from '../capabilities/action-extractor';
+import { runDecisionExtractor } from '../capabilities/decision-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -100,7 +101,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'image', 'upscale', 'remove background', 'translate',
     'rewrite', 'edit', 'format', 'extract', 'analyze',
     'generate', 'create file', 'download', 'upload',
-    'action', 'todo', 'to-do', 'next steps', 'action items'
+    'action', 'todo', 'to-do', 'next steps', 'action items',
+    'decision', 'decisions', 'open questions', 'what was decided'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -149,6 +151,16 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('decision') ||
+      lower.includes('decisions') ||
+      lower.includes('open questions') ||
+      lower.includes('what was decided')
+    ) {
+      reply = 'I can surface the decisions and open questions. Paste the notes.';
+      status = 'capability: decision-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes or thread here...';
     } else if (
       lower.includes('action') ||
       lower.includes('todo') ||
@@ -220,6 +232,17 @@ app.post('/api/capabilities/action-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/decision-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runDecisionExtractor(text);
+    res.json({ capability: 'decision-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -237,5 +260,5 @@ app.post('/api/agents/:id/run', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 XhumAI Backend v0.9 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent classification + action-extractor live');
+  console.log('✨ Shared stars + intent + action-extractor + decision-extractor live');
 });

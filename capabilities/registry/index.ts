@@ -36,6 +36,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/action-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "list", items: "string" }
+  },
+  {
+    id: "decision-extractor",
+    name: "Decision Extractor",
+    description: "Surface explicit decisions and open questions from notes so meetings stop looping",
+    category: "productivity",
+    endpoint: "/api/capabilities/decision-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { decisions: "string[]", openQuestions: "string[]" } }
   }
 ];
 
