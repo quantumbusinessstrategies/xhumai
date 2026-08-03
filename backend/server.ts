@@ -9,6 +9,7 @@ import capabilities from '../capabilities/registry';
 import { runTextSummarizer } from '../capabilities/text-summarizer';
 import { runActionExtractor } from '../capabilities/action-extractor';
 import { runDecisionExtractor } from '../capabilities/decision-extractor';
+import { runFollowUpExtractor } from '../capabilities/follow-up-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -102,7 +103,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'rewrite', 'edit', 'format', 'extract', 'analyze',
     'generate', 'create file', 'download', 'upload',
     'action', 'todo', 'to-do', 'next steps', 'action items',
-    'decision', 'decisions', 'open questions', 'what was decided'
+    'decision', 'decisions', 'open questions', 'what was decided',
+    'follow-up', 'follow up', 'followup', 'circle back', 'check in', 'waiting on'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -151,6 +153,18 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('follow-up') ||
+      lower.includes('follow up') ||
+      lower.includes('followup') ||
+      lower.includes('circle back') ||
+      lower.includes('check in') ||
+      lower.includes('waiting on')
+    ) {
+      reply = 'I can surface the open follow-ups. Paste the notes or thread.';
+      status = 'capability: follow-up-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, email, or thread here...';
     } else if (
       lower.includes('decision') ||
       lower.includes('decisions') ||
@@ -243,6 +257,17 @@ app.post('/api/capabilities/decision-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/follow-up-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runFollowUpExtractor(text);
+    res.json({ capability: 'follow-up-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -260,5 +285,5 @@ app.post('/api/agents/:id/run', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 XhumAI Backend v0.9 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action-extractor + decision-extractor live');
+  console.log('✨ Shared stars + intent + action-extractor + decision-extractor + follow-up-extractor live');
 });

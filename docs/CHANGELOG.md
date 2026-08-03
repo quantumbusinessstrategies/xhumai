@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6 — 2026-08-02
+- Added **Follow-up Extractor** capability (productivity category)
+  - Surfaces who/what still needs a follow-up from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements Action + Decision extractors: actions = next steps; decisions = settled/open; follow-ups = open loops to close
+- Direct progress toward "Work Less. Live More." — nothing drifts
+
 ## v0.5 — 2026-08-02
 - Added **Decision Extractor** capability (productivity category)
   - Surfaces explicit decisions and open questions from free-form notes

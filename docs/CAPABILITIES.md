@@ -9,6 +9,7 @@ Every capability is an asset. Every asset compounds.
 | text-summarizer | Text Summarizer | writing | stub (logging live) |
 | action-extractor | Action Extractor | productivity | stub (logging live) |
 | decision-extractor | Decision Extractor | productivity | stub (logging live) |
+| follow-up-extractor | Follow-up Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -29,5 +30,6 @@ Every capability is an asset. Every asset compounds.
 - **Text Summarizer** → less reading
 - **Action Extractor** → less re-reading, more executing
 - **Decision Extractor** → less re-litigating, more clarity
+- **Follow-up Extractor** → fewer dropped loops, more closed loops
 
 Together they turn notes into leverage.

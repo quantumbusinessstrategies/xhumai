@@ -45,6 +45,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/decision-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { decisions: "string[]", openQuestions: "string[]" } }
+  },
+  {
+    id: "follow-up-extractor",
+    name: "Follow-up Extractor",
+    description: "Surface who/what still needs a follow-up from notes so open loops close and nothing drifts",
+    category: "productivity",
+    endpoint: "/api/capabilities/follow-up-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { followUps: "array" } }
   }
 ];
 
