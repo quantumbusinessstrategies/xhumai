@@ -54,6 +54,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/follow-up-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { followUps: "array" } }
+  },
+  {
+    id: "deadline-extractor",
+    name: "Deadline Extractor",
+    description: "Surface dates, deadlines, and time-bound items from notes so time pressure is visible and nothing slips",
+    category: "productivity",
+    endpoint: "/api/capabilities/deadline-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { deadlines: "array" } }
   }
 ];
 

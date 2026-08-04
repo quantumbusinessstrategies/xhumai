@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7 — 2026-08-04
+- Added **Deadline Extractor** capability (productivity category)
+  - Surfaces dates, deadlines, and time-bound items from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements Action + Decision + Follow-up extractors: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when it must happen
+- Direct progress toward "Work Less. Live More." — nothing slips
+
 ## v0.6 — 2026-08-02
 - Added **Follow-up Extractor** capability (productivity category)
   - Surfaces who/what still needs a follow-up from free-form notes
