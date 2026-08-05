@@ -63,6 +63,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/deadline-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { deadlines: "array" } }
+  },
+  {
+    id: "blocker-extractor",
+    name: "Blocker Extractor",
+    description: "Surface blockers, dependencies, and friction points from notes so work unblocks and nothing stalls",
+    category: "productivity",
+    endpoint: "/api/capabilities/blocker-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { blockers: "array" } }
   }
 ];
 

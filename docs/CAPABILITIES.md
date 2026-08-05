@@ -11,6 +11,7 @@ Every capability is an asset. Every asset compounds.
 | decision-extractor | Decision Extractor | productivity | stub (logging live) |
 | follow-up-extractor | Follow-up Extractor | productivity | stub (logging live) |
 | deadline-extractor | Deadline Extractor | productivity | stub (logging live) |
+| blocker-extractor | Blocker Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -33,5 +34,6 @@ Every capability is an asset. Every asset compounds.
 - **Decision Extractor** → less re-litigating, more clarity
 - **Follow-up Extractor** → fewer dropped loops, more closed loops
 - **Deadline Extractor** → time pressure visible, fewer slips
+- **Blocker Extractor** → friction visible, work unblocks, nothing stalls
 
 Together they turn notes into leverage.

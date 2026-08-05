@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8 — 2026-08-05
+- Added **Blocker Extractor** capability (productivity category)
+  - Surfaces blockers, dependencies, risks, and friction points from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when; blockers = what is in the way
+- Direct progress toward "Work Less. Live More." — friction becomes visible so work flows
+
 ## v0.7 — 2026-08-04
 - Added **Deadline Extractor** capability (productivity category)
   - Surfaces dates, deadlines, and time-bound items from free-form notes
