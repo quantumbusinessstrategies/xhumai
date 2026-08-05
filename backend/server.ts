@@ -11,6 +11,7 @@ import { runActionExtractor } from '../capabilities/action-extractor';
 import { runDecisionExtractor } from '../capabilities/decision-extractor';
 import { runFollowUpExtractor } from '../capabilities/follow-up-extractor';
 import { runDeadlineExtractor } from '../capabilities/deadline-extractor';
+import { runBlockerExtractor } from '../capabilities/blocker-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -52,7 +53,7 @@ function saveStars(stars: any[]) {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v0.9',
+    message: 'XhumAI Quantum Core API v1.0',
     status: 'alive',
     entity: 'listening',
     stars: loadStars().length,
@@ -106,7 +107,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'action', 'todo', 'to-do', 'next steps', 'action items',
     'decision', 'decisions', 'open questions', 'what was decided',
     'follow-up', 'follow up', 'followup', 'circle back', 'check in', 'waiting on',
-    'deadline', 'deadlines', 'due date', 'due by', 'by when', 'when is it due', 'eta', 'eod', 'eow'
+    'deadline', 'deadlines', 'due date', 'due by', 'by when', 'when is it due', 'eta', 'eod', 'eow',
+    'blocker', 'blockers', 'blocked', 'blocking', 'stuck', 'dependency', 'dependencies', 'risk', 'risks', 'bottleneck', 'friction'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -155,6 +157,22 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('blocker') ||
+      lower.includes('blockers') ||
+      lower.includes('blocked') ||
+      lower.includes('blocking') ||
+      lower.includes('stuck') ||
+      lower.includes('dependency') ||
+      lower.includes('dependencies') ||
+      lower.includes('bottleneck') ||
+      lower.includes('friction') ||
+      (lower.includes('risk') && !lower.includes('risky'))
+    ) {
+      reply = 'I can surface the blockers, dependencies, and friction. Paste the notes or plan.';
+      status = 'capability: blocker-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, email, or plan here...';
     } else if (
       lower.includes('deadline') ||
       lower.includes('deadlines') ||
@@ -296,6 +314,17 @@ app.post('/api/capabilities/deadline-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/blocker-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runBlockerExtractor(text);
+    res.json({ capability: 'blocker-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -312,6 +341,6 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v0.9 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action-extractor + decision-extractor + follow-up-extractor + deadline-extractor live');
+  console.log(`🚀 XhumAI Backend v1.0 on http://localhost:${PORT}`);
+  console.log('✨ Shared stars + intent + action-extractor + decision-extractor + follow-up-extractor + deadline-extractor + blocker-extractor live');
 });
