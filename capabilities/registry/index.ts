@@ -72,6 +72,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/blocker-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { blockers: "array" } }
+  },
+  {
+    id: "owner-extractor",
+    name: "Owner Extractor",
+    description: "Surface owners, assignees, and responsible parties from notes so accountability is clear and nothing floats",
+    category: "productivity",
+    endpoint: "/api/capabilities/owner-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { owners: "array" } }
   }
 ];
 

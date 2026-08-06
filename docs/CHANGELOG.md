@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9 — 2026-08-06
+- Added **Owner Extractor** capability (productivity category)
+  - Surfaces owners, assignees, and responsible parties from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when; blockers = what is in the way; owners = who owns it
+- Direct progress toward "Work Less. Live More." — accountability becomes visible so nothing floats
+
 ## v0.8 — 2026-08-05
 - Added **Blocker Extractor** capability (productivity category)
   - Surfaces blockers, dependencies, risks, and friction points from free-form notes
