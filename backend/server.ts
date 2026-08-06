@@ -12,6 +12,7 @@ import { runDecisionExtractor } from '../capabilities/decision-extractor';
 import { runFollowUpExtractor } from '../capabilities/follow-up-extractor';
 import { runDeadlineExtractor } from '../capabilities/deadline-extractor';
 import { runBlockerExtractor } from '../capabilities/blocker-extractor';
+import { runOwnerExtractor } from '../capabilities/owner-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -108,7 +109,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'decision', 'decisions', 'open questions', 'what was decided',
     'follow-up', 'follow up', 'followup', 'circle back', 'check in', 'waiting on',
     'deadline', 'deadlines', 'due date', 'due by', 'by when', 'when is it due', 'eta', 'eod', 'eow',
-    'blocker', 'blockers', 'blocked', 'blocking', 'stuck', 'dependency', 'dependencies', 'risk', 'risks', 'bottleneck', 'friction'
+    'blocker', 'blockers', 'blocked', 'blocking', 'stuck', 'dependency', 'dependencies', 'risk', 'risks', 'bottleneck', 'friction',
+    'owner', 'owners', 'assignee', 'assignees', 'assigned to', 'responsible for', 'who owns', 'who is responsible'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -157,6 +159,20 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('owner') ||
+      lower.includes('owners') ||
+      lower.includes('assignee') ||
+      lower.includes('assignees') ||
+      lower.includes('assigned to') ||
+      lower.includes('responsible for') ||
+      lower.includes('who owns') ||
+      lower.includes('who is responsible')
+    ) {
+      reply = 'I can surface the owners and assignees. Paste the notes or plan.';
+      status = 'capability: owner-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, email, or plan here...';
     } else if (
       lower.includes('blocker') ||
       lower.includes('blockers') ||
@@ -325,6 +341,17 @@ app.post('/api/capabilities/blocker-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/owner-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runOwnerExtractor(text);
+    res.json({ capability: 'owner-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -342,5 +369,5 @@ app.post('/api/agents/:id/run', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 XhumAI Backend v1.0 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action-extractor + decision-extractor + follow-up-extractor + deadline-extractor + blocker-extractor live');
+  console.log('✨ Shared stars + intent + action-extractor + decision-extractor + follow-up-extractor + deadline-extractor + blocker-extractor + owner-extractor live');
 });
