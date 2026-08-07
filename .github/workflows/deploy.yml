@@ -18,8 +18,53 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore full lander from history + force combo + remove UI
+        run: |
+          set -e
+          git show 1b1973d0befa241c32ef5d9936b2509fbf6b46ff:frontend/src/App.jsx > frontend/src/App.jsx
+          git show 1b1973d0befa241c32ef5d9936b2509fbf6b46ff:frontend/src/App.css > frontend/src/App.css
+
+          python3 << 'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("frontend/src/App.jsx")
+          c = p.read_text()
+          print("Restored App.jsx len:", len(c))
+
+          c = c.replace(
+              "const [animMode, setAnimMode] = useState('glitch') // 'glitch' | 'pixel' | 'combo'",
+              "const [animMode, setAnimMode] = useState('combo') // 'glitch' | 'pixel' | 'combo'"
+          )
+
+          start = c.find('      <div className="anim-controls" aria-hidden>')
+          end = c.find('      <div className="canvas-wrap" ref={mountRef} />')
+          if start == -1 or end == -1 or end <= start:
+              raise SystemExit(f"controls block not found: start={start} end={end}")
+          c = c[:start] + c[end:]
+          p.write_text(c)
+          print("App.jsx final len:", len(c))
+          assert "useState('combo')" in c
+          assert c.count("anim-controls") == 0
+          print("OK: combo default + no controls")
+
+          p = Path("frontend/src/App.css")
+          c = p.read_text()
+          c = re.sub(r"\.anim-controls\s*\{[^}]*\}", ".anim-controls {\n  display: none !important;\n}", c, count=1)
+          p.write_text(c)
+          print("CSS force-hide OK")
+          PY
+
+          echo "=== Verification ==="
+          grep -n "useState('combo')" frontend/src/App.jsx
+          wc -c frontend/src/App.jsx frontend/src/App.css
+          head -c 100 frontend/src/App.jsx
+          echo ""
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -33,6 +78,12 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npm run build
+
+      - name: Check dist size
+        run: |
+          ls -la frontend/dist/
+          ls -la frontend/dist/assets/ || true
+          find frontend/dist -type f -exec wc -c {} \; | sort -n
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
