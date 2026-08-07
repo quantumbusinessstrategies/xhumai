@@ -1,0 +1,29 @@
+# XhumAI Quantum Core — always-on
+app = "xhumai-core"
+primary_region = "iad"
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  HOST = "0.0.0.0"
+  PORT = "3001"
+  DATA_DIR = "/data"
+  CORE_BORN = "2026-08-07"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "xhumai_data"
+  destination = "/data"

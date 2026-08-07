@@ -7,7 +7,8 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "tsc",
-    "start": "node dist/backend/server.js"
+    "start": "node dist/backend/server.js",
+    "core": "ts-node backend/server.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

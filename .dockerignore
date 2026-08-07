@@ -1,0 +1,10 @@
+node_modules
+frontend
+dist
+logs
+.git
+.github
+docs
+*.md
+.env
+.env.*
