@@ -36,6 +36,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/action-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "list", items: "string" }
+  },
+  {
+    id: "priority-extractor",
+    name: "Priority Extractor",
+    description: "Surface priorities, urgencies, and ranked items from notes so the most important work rises and noise falls",
+    category: "productivity",
+    endpoint: "/api/capabilities/priority-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { priorities: "array" } }
   }
 ];
 
