@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10 — 2026-08-07
+- Added **Priority Extractor** capability (productivity category)
+  - Surfaces priorities, urgencies, and ranked items from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when; blockers = what is in the way; owners = who; priorities = what matters most
+- Direct progress toward "Work Less. Live More." — energy goes to the right work first
+
 ## v0.4 — 2026-08-01
 - Added **Action Extractor** capability (productivity category)
   - Pulls concrete next steps from free-form text
