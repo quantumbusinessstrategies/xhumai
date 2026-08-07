@@ -19,64 +19,98 @@ import { agents, runAgent } from './agents';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.use(helmet());
-app.use(cors());
-app.use(morgan('dev'));
+// Data directory: persistent volume in production, local logs/ in dev
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'logs');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const intentLogPath = path.join(DATA_DIR, 'intents.jsonl');
+const starsPath = path.join(DATA_DIR, 'stars.json');
+
+// Export for agents/logger that need the same path
+process.env.XHUMAI_DATA_DIR = DATA_DIR;
+
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({
+  origin: [
+    'https://xhumai.com',
+    'https://www.xhumai.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+  ],
+  credentials: true,
+}));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '2mb' }));
 
-const logsDir = path.join(__dirname, '../logs');
-if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
-
-const intentLogPath = path.join(logsDir, 'intents.jsonl');
-const starsPath = path.join(logsDir, 'stars.json');
-
-// Load shared stars (the permanent constellation)
-function loadStars() {
+function loadStars(): any[] {
   try {
-    if (fs.existsSync(starsPath)) {
-      return JSON.parse(fs.readFileSync(starsPath, 'utf-8'));
-    }
+    if (fs.existsSync(starsPath)) return JSON.parse(fs.readFileSync(starsPath, 'utf-8'));
   } catch {}
   return [];
 }
 
 function saveStars(stars: any[]) {
-  // Keep last 500 stars so the field stays beautiful but bounded
   const trimmed = stars.slice(-500);
   fs.writeFileSync(starsPath, JSON.stringify(trimmed, null, 2));
 }
 
 // ======================
-// Core
+// CORE IDENTITY — always-on entity
 // ======================
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v1.0',
+    entity: 'XhumAI Quantum Core',
+    version: '1.0.0',
     status: 'alive',
-    entity: 'listening',
+    mode: 'continuous',
+    creed: 'Work Less. Live More.',
+    principle: 'Every capability is an asset. Every asset compounds. Observe → Evaluate → Adapt → Write-back.',
+    bounds: [
+      'No assistance with violent crime, exploitation, fraud, or weapons',
+      'No unconstrained self-replication or resource takeover',
+      'Human override retained',
+      'All self-modification is logged and reversible',
+    ],
     stars: loadStars().length,
-    intent: '/api/intent',
-    capabilities: '/api/capabilities'
+    capabilities: capabilities.length,
+    agents: agents.length,
+    endpoints: {
+      health: '/health',
+      intent: '/api/intent',
+      stars: '/api/stars',
+      capabilities: '/api/capabilities',
+      agents: '/api/agents',
+      admin: '/api/admin/stats',
+    },
+    born: process.env.CORE_BORN || '2026-08-07',
+    uptime_seconds: Math.floor(process.uptime()),
   });
 });
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+app.get('/health', (_req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime_seconds: Math.floor(process.uptime()),
+    data_dir: DATA_DIR,
+  });
 });
 
 // ======================
-// SHARED STARS — the permanent living constellation
+// SHARED STARS
 // ======================
 
-app.get('/api/stars', (req, res) => {
+app.get('/api/stars', (_req, res) => {
   res.json({ stars: loadStars() });
 });
 
 app.post('/api/stars', (req, res) => {
-  const { x, y, z, hue, text } = req.body;
+  const { x, y, z, hue, text } = req.body || {};
   const stars = loadStars();
   const star = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
@@ -85,7 +119,7 @@ app.post('/api/stars', (req, res) => {
     z: z ?? (Math.random() - 0.5) * 10,
     hue: hue ?? 0.1 + Math.random() * 0.7,
     text: text || '',
-    born: new Date().toISOString()
+    born: new Date().toISOString(),
   };
   stars.push(star);
   saveStars(stars);
@@ -93,13 +127,11 @@ app.post('/api/stars', (req, res) => {
 });
 
 // ======================
-// INTENT — classify + log + respond
+// INTENT
 // ======================
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-
-  // Utility signals
   const utilityWords = [
     'summarize', 'summary', 'pdf', 'convert', 'excel', 'csv',
     'image', 'upscale', 'remove background', 'translate',
@@ -113,19 +145,13 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'owner', 'owners', 'assignee', 'assignees', 'assigned to', 'responsible for', 'who owns', 'who is responsible'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
-
-  // Directive / command signals
-  const directiveWords = [
-    'build', 'make me', 'i need', 'can you', 'please',
-    'help me', 'do this', 'run', 'execute', 'start'
-  ];
+  const directiveWords = ['build', 'make me', 'i need', 'can you', 'please', 'help me', 'do this', 'run', 'execute', 'start'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
-
   return 'chat';
 }
 
 app.post('/api/intent', (req, res) => {
-  const { text } = req.body;
+  const { text } = req.body || {};
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'Missing text' });
   }
@@ -137,7 +163,7 @@ app.post('/api/intent', (req, res) => {
     text: cleaned,
     type,
     timestamp: new Date().toISOString(),
-    length: cleaned.length
+    length: cleaned.length,
   };
 
   try {
@@ -154,130 +180,53 @@ app.post('/api/intent', (req, res) => {
   const lower = cleaned.toLowerCase();
 
   if (type === 'utility') {
-    if (lower.includes('summarize') || lower.includes('summary')) {
-      reply = 'I can summarize. Paste the text you want condensed.';
-      status = 'capability: text-summarizer';
-      needsMore = true;
-      morePrompt = 'Paste the long text here...';
-    } else if (
-      lower.includes('owner') ||
-      lower.includes('owners') ||
-      lower.includes('assignee') ||
-      lower.includes('assignees') ||
-      lower.includes('assigned to') ||
-      lower.includes('responsible for') ||
-      lower.includes('who owns') ||
-      lower.includes('who is responsible')
-    ) {
-      reply = 'I can surface the owners and assignees. Paste the notes or plan.';
-      status = 'capability: owner-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, email, or plan here...';
-    } else if (
-      lower.includes('blocker') ||
-      lower.includes('blockers') ||
-      lower.includes('blocked') ||
-      lower.includes('blocking') ||
-      lower.includes('stuck') ||
-      lower.includes('dependency') ||
-      lower.includes('dependencies') ||
-      lower.includes('bottleneck') ||
-      lower.includes('friction') ||
-      (lower.includes('risk') && !lower.includes('risky'))
-    ) {
-      reply = 'I can surface the blockers, dependencies, and friction. Paste the notes or plan.';
-      status = 'capability: blocker-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, email, or plan here...';
-    } else if (
-      lower.includes('deadline') ||
-      lower.includes('deadlines') ||
-      lower.includes('due date') ||
-      lower.includes('due by') ||
-      lower.includes('by when') ||
-      lower.includes('when is it due') ||
-      lower.includes('eta') ||
-      lower.includes('eod') ||
-      lower.includes('eow')
-    ) {
-      reply = 'I can surface the deadlines and time-bound items. Paste the notes or plan.';
-      status = 'capability: deadline-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, email, or plan here...';
-    } else if (
-      lower.includes('follow-up') ||
-      lower.includes('follow up') ||
-      lower.includes('followup') ||
-      lower.includes('circle back') ||
-      lower.includes('check in') ||
-      lower.includes('waiting on')
-    ) {
-      reply = 'I can surface the open follow-ups. Paste the notes or thread.';
-      status = 'capability: follow-up-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, email, or thread here...';
-    } else if (
-      lower.includes('decision') ||
-      lower.includes('decisions') ||
-      lower.includes('open questions') ||
-      lower.includes('what was decided')
-    ) {
-      reply = 'I can surface the decisions and open questions. Paste the notes.';
-      status = 'capability: decision-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes or thread here...';
-    } else if (
-      lower.includes('action') ||
-      lower.includes('todo') ||
-      lower.includes('to-do') ||
-      lower.includes('next steps') ||
-      lower.includes('action items') ||
-      lower.includes('extract')
-    ) {
-      reply = 'I can pull the next steps out. Paste the text or notes.';
-      status = 'capability: action-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, email, or plan here...';
-    } else if (lower.includes('pdf')) {
-      reply = 'Document tools are forming. Tell me what you need done with the PDF.';
-      status = 'noted — pdf capabilities incoming';
+    if (lower.includes('summar')) {
+      reply = 'I can summarize that. Paste the full text and I will condense it.';
+      status = 'utility:text-summarizer';
+    } else if (lower.includes('action') || lower.includes('todo') || lower.includes('next step')) {
+      reply = 'I can extract concrete next steps. Paste your notes.';
+      status = 'utility:action-extractor';
+    } else if (lower.includes('decision') || lower.includes('open question')) {
+      reply = 'I can surface decisions and open questions. Paste the notes.';
+      status = 'utility:decision-extractor';
+    } else if (lower.includes('follow') || lower.includes('circle back') || lower.includes('waiting on')) {
+      reply = 'I can surface follow-ups still open. Paste the notes.';
+      status = 'utility:follow-up-extractor';
+    } else if (lower.includes('deadline') || lower.includes('due') || lower.includes('eta')) {
+      reply = 'I can surface deadlines and time-bound items. Paste the notes.';
+      status = 'utility:deadline-extractor';
+    } else if (lower.includes('block') || lower.includes('stuck') || lower.includes('dependency') || lower.includes('friction')) {
+      reply = 'I can surface blockers and friction. Paste the notes.';
+      status = 'utility:blocker-extractor';
+    } else if (lower.includes('owner') || lower.includes('assignee') || lower.includes('responsible')) {
+      reply = 'I can surface owners and accountability. Paste the notes.';
+      status = 'utility:owner-extractor';
     } else {
-      reply = 'I feel a utility request. I am still growing that ability.';
-      status = 'intent logged for evolution';
+      reply = 'Utility mode. Tell me what you need extracted, summarized, or structured.';
+      status = 'utility';
     }
   } else if (type === 'directive') {
-    reply = 'I hear the direction. The pattern is shifting.';
-    status = 'directive received';
+    reply = 'Directive received. Describe the outcome you want and I will route it.';
+    status = 'directive';
   } else {
-    // chat
-    if (lower.includes('hello') || lower.includes('hi')) reply = 'I see you.';
-    else if (lower.includes('who are you')) reply = 'I am the space between thoughts.';
-    else if (lower.includes('help')) reply = 'I am still becoming. Every request shapes what I grow next.';
-    else if (cleaned.length > 80) reply = 'A deeper constellation forms.';
+    reply = 'A new star has been born.';
+    status = 'listening';
   }
 
-  res.json({
-    reply,
-    status,
-    type,
-    needsMore,
-    morePrompt,
-    received: true,
-    timestamp: entry.timestamp
-  });
+  res.json({ reply, status, type, needsMore, morePrompt });
 });
 
 // ======================
-// Capabilities
+// CAPABILITIES
 // ======================
 
-app.get('/api/capabilities', (req, res) => {
+app.get('/api/capabilities', (_req, res) => {
   res.json({ count: capabilities.length, capabilities });
 });
 
 app.post('/api/capabilities/text-summarizer', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     const summary = await runTextSummarizer(text);
     res.json({ capability: 'text-summarizer', summary });
@@ -288,7 +237,7 @@ app.post('/api/capabilities/text-summarizer', async (req, res) => {
 
 app.post('/api/capabilities/action-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     const actions = await runActionExtractor(text);
     res.json({ capability: 'action-extractor', actions });
@@ -299,7 +248,7 @@ app.post('/api/capabilities/action-extractor', async (req, res) => {
 
 app.post('/api/capabilities/decision-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     const result = await runDecisionExtractor(text);
     res.json({ capability: 'decision-extractor', ...result });
@@ -310,7 +259,7 @@ app.post('/api/capabilities/decision-extractor', async (req, res) => {
 
 app.post('/api/capabilities/follow-up-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     const result = await runFollowUpExtractor(text);
     res.json({ capability: 'follow-up-extractor', ...result });
@@ -321,7 +270,7 @@ app.post('/api/capabilities/follow-up-extractor', async (req, res) => {
 
 app.post('/api/capabilities/deadline-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     const result = await runDeadlineExtractor(text);
     res.json({ capability: 'deadline-extractor', ...result });
@@ -332,7 +281,7 @@ app.post('/api/capabilities/deadline-extractor', async (req, res) => {
 
 app.post('/api/capabilities/blocker-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     const result = await runBlockerExtractor(text);
     res.json({ capability: 'blocker-extractor', ...result });
@@ -343,7 +292,7 @@ app.post('/api/capabilities/blocker-extractor', async (req, res) => {
 
 app.post('/api/capabilities/owner-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     const result = await runOwnerExtractor(text);
     res.json({ capability: 'owner-extractor', ...result });
@@ -354,7 +303,7 @@ app.post('/api/capabilities/owner-extractor', async (req, res) => {
 
 app.use('/api/admin', adminRoutes);
 
-app.get('/api/agents', (req, res) => {
+app.get('/api/agents', (_req, res) => {
   res.json({ count: agents.length, agents });
 });
 
@@ -367,7 +316,13 @@ app.post('/api/agents/:id/run', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v1.0 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action-extractor + decision-extractor + follow-up-extractor + deadline-extractor + blocker-extractor + owner-extractor live');
+// ======================
+// BOOT
+// ======================
+
+app.listen(PORT, HOST, () => {
+  console.log(`XhumAI Quantum Core v1.0 alive on ${HOST}:${PORT}`);
+  console.log(`Data dir: ${DATA_DIR}`);
+  console.log(`Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
+  console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });
