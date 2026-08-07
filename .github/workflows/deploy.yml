@@ -21,45 +21,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Restore full lander and force combo default + no UI
-        run: |
-          set -e
-          curl -sL "https://raw.githubusercontent.com/quantumbusinessstrategies/xhumai/1b1973d0befa241c32ef5d9936b2509fbf6b46ff/frontend/src/App.jsx" -o frontend/src/App.jsx
-          curl -sL "https://raw.githubusercontent.com/quantumbusinessstrategies/xhumai/1b1973d0befa241c32ef5d9936b2509fbf6b46ff/frontend/src/App.css" -o frontend/src/App.css
-          python3 << 'PY'
-          from pathlib import Path
-          import re
-
-          # App.jsx
-          p = Path("frontend/src/App.jsx")
-          c = p.read_text()
-          c = c.replace(
-              "const [animMode, setAnimMode] = useState('glitch') // 'glitch' | 'pixel' | 'combo'",
-              "const [animMode, setAnimMode] = useState('combo') // 'glitch' | 'pixel' | 'combo'"
-          )
-          start = c.find('      <div className="anim-controls" aria-hidden>')
-          end = c.find('      <div className="canvas-wrap" ref={mountRef} />')
-          if start != -1 and end != -1 and end > start:
-              c = c[:start] + c[end:]
-              print("Removed anim-controls block")
-          else:
-              raise SystemExit("controls block not found")
-          p.write_text(c)
-          print("App.jsx updated, len=", len(c))
-          assert "useState('combo')" in c
-          assert c.count("anim-controls") == 0
-
-          # App.css
-          p = Path("frontend/src/App.css")
-          c = p.read_text()
-          c = re.sub(r"\.anim-controls\s*\{[^}]*\}", ".anim-controls {\n  display: none !important;\n}", c, count=1)
-          p.write_text(c)
-          print("App.css force-hide applied")
-          PY
-          echo "Verification:"
-          grep -n "useState('combo')" frontend/src/App.jsx
-          wc -c frontend/src/App.jsx frontend/src/App.css
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
