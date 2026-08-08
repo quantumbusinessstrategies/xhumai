@@ -15,6 +15,8 @@ import { runBlockerExtractor } from '../capabilities/blocker-extractor';
 import { runOwnerExtractor } from '../capabilities/owner-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
+import { notifyInquiry } from './utils/notify';
+import { runPrioritySorter } from '../capabilities/priority-sorter';
 
 dotenv.config();
 
@@ -22,14 +24,11 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Data directory: persistent volume in production, local logs/ in dev
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'logs');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const intentLogPath = path.join(DATA_DIR, 'intents.jsonl');
 const starsPath = path.join(DATA_DIR, 'stars.json');
-
-// Export for agents/logger that need the same path
 process.env.XHUMAI_DATA_DIR = DATA_DIR;
 
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -58,14 +57,10 @@ function saveStars(stars: any[]) {
   fs.writeFileSync(starsPath, JSON.stringify(trimmed, null, 2));
 }
 
-// ======================
-// CORE IDENTITY — always-on entity
-// ======================
-
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '1.0.0',
+    version: '1.1.0',
     status: 'alive',
     mode: 'continuous',
     creed: 'Work Less. Live More.',
@@ -101,10 +96,6 @@ app.get('/health', (_req, res) => {
   });
 });
 
-// ======================
-// SHARED STARS
-// ======================
-
 app.get('/api/stars', (_req, res) => {
   res.json({ stars: loadStars() });
 });
@@ -126,10 +117,6 @@ app.post('/api/stars', (req, res) => {
   res.json({ star, total: stars.length });
 });
 
-// ======================
-// INTENT
-// ======================
-
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
   const utilityWords = [
@@ -142,6 +129,7 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'follow-up', 'follow up', 'followup', 'circle back', 'check in', 'waiting on',
     'deadline', 'deadlines', 'due date', 'due by', 'by when', 'when is it due', 'eta', 'eod', 'eow',
     'blocker', 'blockers', 'blocked', 'blocking', 'stuck', 'dependency', 'dependencies', 'risk', 'risks', 'bottleneck', 'friction',
+    'priority', 'prioritize', 'p0', 'p1', 'p2', 'rank',
     'owner', 'owners', 'assignee', 'assignees', 'assigned to', 'responsible for', 'who owns', 'who is responsible'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
@@ -198,6 +186,9 @@ app.post('/api/intent', (req, res) => {
     } else if (lower.includes('block') || lower.includes('stuck') || lower.includes('dependency') || lower.includes('friction')) {
       reply = 'I can surface blockers and friction. Paste the notes.';
       status = 'utility:blocker-extractor';
+    } else if (lower.includes('priority') || lower.includes('prioritize') || lower.includes('p0') || lower.includes('rank')) {
+      reply = 'I can rank this into P0 / P1 / P2. Paste the full notes.';
+      status = 'utility:priority-sorter';
     } else if (lower.includes('owner') || lower.includes('assignee') || lower.includes('responsible')) {
       reply = 'I can surface owners and accountability. Paste the notes.';
       status = 'utility:owner-extractor';
@@ -213,12 +204,10 @@ app.post('/api/intent', (req, res) => {
     status = 'listening';
   }
 
+  notifyInquiry({ text: cleaned, type, reply, status }).catch(() => {});
+
   res.json({ reply, status, type, needsMore, morePrompt });
 });
-
-// ======================
-// CAPABILITIES
-// ======================
 
 app.get('/api/capabilities', (_req, res) => {
   res.json({ count: capabilities.length, capabilities });
@@ -301,6 +290,17 @@ app.post('/api/capabilities/owner-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/priority-sorter', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runPrioritySorter(text);
+    res.json({ capability: 'priority-sorter', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (_req, res) => {
@@ -316,12 +316,8 @@ app.post('/api/agents/:id/run', async (req, res) => {
   }
 });
 
-// ======================
-// BOOT
-// ======================
-
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v1.0 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v1.1 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR}`);
   console.log(`Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
