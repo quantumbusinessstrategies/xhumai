@@ -8,6 +8,11 @@ Every capability is an asset. Every asset compounds.
 |----|------|----------|--------|
 | text-summarizer | Text Summarizer | writing | stub (logging live) |
 | action-extractor | Action Extractor | productivity | stub (logging live) |
+| decision-extractor | Decision Extractor | productivity | stub (logging live) |
+| follow-up-extractor | Follow-up Extractor | productivity | stub (logging live) |
+| deadline-extractor | Deadline Extractor | productivity | stub (logging live) |
+| blocker-extractor | Blocker Extractor | productivity | stub (logging live) |
+| owner-extractor | Owner Extractor | productivity | stub (logging live) |
 | priority-extractor | Priority Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
@@ -28,6 +33,11 @@ Every capability is an asset. Every asset compounds.
 
 - **Text Summarizer** → less reading
 - **Action Extractor** → less re-reading, more executing
-- **Priority Extractor** → energy goes to the right work first; noise falls away
+- **Decision Extractor** → less re-litigating, more clarity
+- **Follow-up Extractor** → fewer dropped loops, more closed loops
+- **Deadline Extractor** → time pressure visible, fewer slips
+- **Blocker Extractor** → friction visible, work unblocks, nothing stalls
+- **Owner Extractor** → accountability visible, nothing floats without a name
+- **Priority Extractor** → highest-leverage work visible first; busywork shrinks
 
 Together they turn notes into leverage.
