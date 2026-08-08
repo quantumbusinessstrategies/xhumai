@@ -2,8 +2,8 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Priority Extractor Capability
- * Surfaces priorities, urgencies, and ranked items from free-form notes
- * so the most important work rises and noise falls.
+ * Surfaces priority signals (urgent / high / medium / low, P0–P3, must / should / nice)
+ * from free-form notes so the highest-leverage work is visible first and busywork shrinks.
  * Stub for now; later becomes real AI.
  *
  * Complements:
@@ -13,13 +13,13 @@ import { logUsage } from '../../backend/utils/logger';
  * - deadline-extractor   → when it must happen
  * - blocker-extractor    → what is in the way
  * - owner-extractor      → who owns it
- * - priority-extractor   → what matters most so energy goes to the right place
+ * - priority-extractor   → what matters most so effort compounds
  */
 
 export interface PriorityItem {
   item: string;
-  level?: 'critical' | 'high' | 'medium' | 'low';
-  reason?: string;
+  priority: 'critical' | 'high' | 'medium' | 'low' | 'unspecified';
+  signal?: string;
   context?: string;
 }
 
@@ -42,17 +42,17 @@ export async function runPriorityExtractor(input: string): Promise<PriorityResul
       .filter(s => s.length > 8);
 
     const priorityPatterns = [
-      /\b(priority|priorities|prioritize|urgent|urgency|critical|asap|immediately|top priority|must|highest|most important|P0|P1|P2)\b/i,
-      /\b(first|next|focus on|do this first|before anything|key|essential|non-negotiable)\b/i,
-      /\b(low priority|later|nice to have|whenever|if time|backlog)\b/i,
+      /\b(p0|p1|p2|p3|priority\s*[0-3]|sev[0-3]|severity)\b/i,
+      /\b(critical|urgent|asap|immediately|must|blocker|highest|top priority)\b/i,
+      /\b(high priority|important|key|core|essential|must-have|must have)\b/i,
+      /\b(medium|moderate|should|nice to have|nice-to-have|low priority|later|someday|optional)\b/i,
+      /\b(depriorit|not urgent|can wait|backlog|icebox)\b/i,
     ];
 
-    const levelPatterns: { pattern: RegExp; level: PriorityItem['level'] }[] = [
-      { pattern: /\b(critical|P0|asap|immediately|urgent|must|non-negotiable|highest)\b/i, level: 'critical' },
-      { pattern: /\b(high|P1|top priority|most important|key|essential|focus on)\b/i, level: 'high' },
-      { pattern: /\b(medium|P2|important|should)\b/i, level: 'medium' },
-      { pattern: /\b(low|later|nice to have|whenever|if time|backlog)\b/i, level: 'low' },
-    ];
+    const criticalPatterns = /\b(p0|sev0|critical|urgent|asap|immediately|highest|top priority|must)\b/i;
+    const highPatterns = /\b(p1|sev1|high priority|important|key|core|essential|must-have|must have)\b/i;
+    const lowPatterns = /\b(p3|sev3|low priority|later|someday|optional|nice to have|nice-to-have|depriorit|not urgent|can wait|backlog|icebox)\b/i;
+    const mediumPatterns = /\b(p2|sev2|medium|moderate|should)\b/i;
 
     const priorities: PriorityItem[] = [];
 
@@ -64,19 +64,28 @@ export async function runPriorityExtractor(input: string): Promise<PriorityResul
       if (cleaned.length < 10) continue;
 
       if (priorityPatterns.some(p => p.test(cleaned))) {
-        let level: PriorityItem['level'] = 'medium';
-        for (const lp of levelPatterns) {
-          if (lp.pattern.test(cleaned)) {
-            level = lp.level;
-            break;
-          }
+        let priority: PriorityItem['priority'] = 'unspecified';
+        let signal = '';
+
+        if (criticalPatterns.test(cleaned)) {
+          priority = 'critical';
+          signal = 'critical/urgent';
+        } else if (highPatterns.test(cleaned)) {
+          priority = 'high';
+          signal = 'high';
+        } else if (lowPatterns.test(cleaned)) {
+          priority = 'low';
+          signal = 'low / later';
+        } else if (mediumPatterns.test(cleaned)) {
+          priority = 'medium';
+          signal = 'medium';
         }
 
         if (!priorities.some(p => p.item === cleaned)) {
           priorities.push({
             item: cleaned,
-            level,
-            reason: level === 'critical' || level === 'high' ? 'explicit urgency signal' : undefined,
+            priority,
+            signal: signal || undefined,
             context: cleaned.length > 90 ? cleaned.slice(0, 90) + '…' : cleaned,
           });
         }
@@ -87,14 +96,14 @@ export async function runPriorityExtractor(input: string): Promise<PriorityResul
     if (priorities.length === 0) {
       for (const line of lines.slice(0, 3)) {
         if (line.length < 140) {
-          priorities.push({ item: line, level: 'medium', context: line });
+          priorities.push({
+            item: line,
+            priority: 'unspecified',
+            context: line,
+          });
         }
       }
     }
-
-    // Sort critical/high first
-    const order = { critical: 0, high: 1, medium: 2, low: 3 };
-    priorities.sort((a, b) => (order[a.level || 'medium'] - order[b.level || 'medium']));
     // ------------------------------------------------
 
     const duration = Date.now() - start;
