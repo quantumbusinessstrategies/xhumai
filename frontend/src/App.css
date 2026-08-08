@@ -26,7 +26,6 @@ html, body, #root {
   pointer-events: none;
 }
 
-/* initial background/canvas fade-in over 4s */
 .canvas-wrap {
   opacity: 0;
   animation: bgFade 4s ease forwards;
@@ -54,21 +53,31 @@ html, body, #root {
 
 .logo {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: clamp(4.2rem, 12vw, 7.2rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: clamp(4.6rem, 13vw, 8rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
   line-height: 1.08;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
   position: relative;
   z-index: 2;
   margin-bottom: 0.6rem;
-  background: linear-gradient(180deg, #ffffff 8%, #d8d0ec 100%);
+  background: linear-gradient(
+    120deg,
+    #ffb3d9 0%,
+    #c9b6ff 18%,
+    #a8e0ff 36%,
+    #b8f0d0 52%,
+    #ffe6a8 70%,
+    #ffc4e8 85%,
+    #ffb3d9 100%
+  );
+  background-size: 280% 280%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 0 40px rgba(180, 150, 230, 0.28));
-  animation: logoBreath 18s ease-in-out infinite;
+  filter: drop-shadow(0 0 36px rgba(200, 160, 255, 0.35));
+  animation: logoBreath 4.2s ease-in-out infinite, logoRainbow 14s linear infinite;
   transform-origin: center center;
 }
 
@@ -78,8 +87,18 @@ html, body, #root {
 }
 
 @keyframes logoBreath {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.015); opacity: 0.95; }
+  0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 28px rgba(200, 160, 255, 0.3)); }
+  15% { transform: scale(1.012); }
+  30% { transform: scale(1.028); opacity: 0.97; filter: drop-shadow(0 0 48px rgba(180, 200, 255, 0.45)); }
+  45% { transform: scale(1.01); }
+  60% { transform: scale(1.022); opacity: 0.98; filter: drop-shadow(0 0 40px rgba(255, 180, 220, 0.4)); }
+  80% { transform: scale(1.008); }
+}
+
+@keyframes logoRainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .tagline {
