@@ -9,6 +9,7 @@ import capabilities from '../capabilities/registry';
 import { runTextSummarizer } from '../capabilities/text-summarizer';
 import { runActionExtractor } from '../capabilities/action-extractor';
 import { runPriorityExtractor } from '../capabilities/priority-extractor';
+import { runRiskExtractor } from '../capabilities/risk-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -50,12 +51,14 @@ function saveStars(stars: any[]) {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v0.10',
+    message: 'XhumAI Quantum Core API v1.0',
     status: 'alive',
     entity: 'listening',
+    creed: 'Work Less. Live More.',
     stars: loadStars().length,
+    capabilities: capabilities.length,
     intent: '/api/intent',
-    capabilities: '/api/capabilities'
+    capabilitiesList: '/api/capabilities'
   });
 });
 
@@ -102,7 +105,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'rewrite', 'edit', 'format', 'extract', 'analyze',
     'generate', 'create file', 'download', 'upload',
     'action', 'todo', 'to-do', 'next steps', 'action items',
-    'priority', 'priorities', 'prioritize', 'urgent', 'urgency', 'critical', 'asap', 'most important', 'P0', 'P1'
+    'priority', 'priorities', 'prioritize', 'urgent', 'urgency', 'critical', 'asap', 'most important', 'P0', 'P1',
+    'risk', 'risks', 'at risk', 'jeopardy', 'threat', 'uncertainty', 'what if', 'failure mode'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -151,6 +155,18 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('risk') ||
+      lower.includes('jeopardy') ||
+      lower.includes('threat') ||
+      lower.includes('uncertainty') ||
+      lower.includes('what if') ||
+      lower.includes('failure mode')
+    ) {
+      reply = 'I can surface risks and potential failure modes. Paste the notes.';
+      status = 'capability: risk-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, plan, or risks discussion here...';
     } else if (
       lower.includes('priority') ||
       lower.includes('priorities') ||
@@ -249,6 +265,17 @@ app.post('/api/capabilities/priority-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/risk-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runRiskExtractor(text);
+    res.json({ capability: 'risk-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -265,6 +292,7 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v0.10 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action-extractor + priority-extractor live');
+  console.log(`🚀 XhumAI Backend v1.0 on http://localhost:${PORT}`);
+  console.log('✨ Shared stars + intent + action-extractor + priority-extractor + risk-extractor live');
+  console.log('Work Less. Live More.');
 });
