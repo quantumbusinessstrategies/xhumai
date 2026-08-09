@@ -1,12 +1,14 @@
 # Changelog
 
 ## v1.0 — 2026-08-08
-- Added **Priority Extractor** capability (productivity category)
-  - Surfaces priority signals (critical / high / medium / low, P0–P3, urgent / must / later) from free-form notes
+- Added **Risk Extractor** capability (productivity category)
+  - Surfaces risks, uncertainties, and potential failure modes from free-form notes
+  - Severity (high/medium/low) + category (delivery/technical/people/external)
   - Full usage logging for self-improvement loop
   - Wired into capability registry + API route + intent classifier
-  - Complements the extractor suite: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when; blockers = what is in the way; owners = who; priorities = what matters most
-- Direct progress toward "Work Less. Live More." — focus compounds; busywork shrinks
+  - Complements the extractor suite: blockers = current friction; risks = forward-looking failure modes
+- Also registered **Priority Sorter** in the formal capability registry (was live in API, now first-class)
+- Direct progress toward "Work Less. Live More." — foresight becomes an asset
 
 ## v0.9 — 2026-08-06
 - Added **Owner Extractor** capability (productivity category)

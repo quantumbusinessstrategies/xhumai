@@ -83,13 +83,22 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { owners: "array" } }
   },
   {
-    id: "priority-extractor",
-    name: "Priority Extractor",
-    description: "Surface priority signals (critical/high/medium/low, P0–P3) from notes so high-leverage work is visible first and busywork shrinks",
+    id: "priority-sorter",
+    name: "Priority Sorter",
+    description: "Rank messy notes into P0 / P1 / P2 so attention goes where it compounds",
     category: "productivity",
-    endpoint: "/api/capabilities/priority-extractor",
+    endpoint: "/api/capabilities/priority-sorter",
     inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { priorities: "array" } }
+    outputSchema: { type: "object", properties: { p0: "string[]", p1: "string[]", p2: "string[]" } }
+  },
+  {
+    id: "risk-extractor",
+    name: "Risk Extractor",
+    description: "Surface risks, uncertainties, and potential failure modes from notes so foresight is visible and work stays ahead of surprises",
+    category: "productivity",
+    endpoint: "/api/capabilities/risk-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { risks: "array" } }
   }
 ];
 
