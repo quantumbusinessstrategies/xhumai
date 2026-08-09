@@ -8,7 +8,9 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "tsc",
     "start": "node dist/backend/server.js",
-    "core": "ts-node backend/server.ts"
+    "core": "ts-node backend/server.ts",
+    "restore": "node scripts/restore-app.mjs",
+    "postinstall": "node scripts/restore-app.mjs || true"
   },
   "dependencies": {
     "cors": "^2.8.5",
