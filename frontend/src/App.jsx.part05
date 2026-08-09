@@ -1,0 +1,157 @@
+         s.angle = s.warpFrom.angle + (s.warpTo.angle - s.warpFrom.angle) * (0.5 + q * 0.5)
+            }
+
+            s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
+            s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
+            s.mesh.position.y = s.yBase + Math.sin(t * 0.5 + s.angle) * 0.2
+
+            // stretch glow during warp for speed feel
+            s.glow.scale.setScalar(0.7 + Math.sin(p * Math.PI) * 1.2)
+
+            if (p >= 1) {
+              s.warping = false
+              s.orbitRadius = Math.sqrt(
+                s.mesh.position.x ** 2 + s.mesh.position.z ** 2
+              )
+              s.glow.scale.setScalar(0.7)
+            }
+          } else {
+            s.angle += s.orbitSpeed
+            s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius
+            s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius
+            s.mesh.position.y = s.yBase + Math.sin(t * 0.35 + s.angle) * 0.12
+          }
+        }
+      }
+
+      camera.position.x = Math.sin(t * 0.045) * 0.22
+      camera.position.y = 0.5 + Math.sin(t * 0.08) * 0.12
+      camera.lookAt(0, 0, 0)
+
+      renderer.render(scene, camera)
+    }
+    animate()
+
+    const onResize = () => {
+      width = window.innerWidth
+      height = window.innerHeight
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      renderer.setSize(width, height)
+    }
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      cancelAnimationFrame(frameId)
+      window.removeEventListener('resize', onResize)
+      if (container && renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement)
+      }
+      renderer.dispose()
+    }
+  }, [])
+
+  const handleInputChange = (e) => {
+    setQuery(e.target.value)
+    typingRef.current = 1
+    setIsTyping(true)
+    if (typingTimeout.current) clearTimeout(typingTimeout.current)
+    typingTimeout.current = setTimeout(() => {
+      typingRef.current = 0
+      setIsTyping(false)
+    }, 1200)
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const text = (needsMore ? moreText : query).trim()
+    if (!text) return
+
+    const hue = Math.random()
+    const x = (Math.random() - 0.5) * 8
+    const y = (Math.random() - 0.5) * 4
+    const z = (Math.random() - 0.5) * 5 - 0.5
+    birthStar({ x, y, z, hue })
+
+    fetch(`${API}/api/stars`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ x, y, z, hue, text })
+    }).catch(() => {})
+
+    setResponse('A new star has been born.')
+    setResponseKey(k => k + 1)
+    setStatus('listening...')
+
+    try {
+      const res = await fetch(`${API}/api/intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      })
+      const data = await res.json()
+
+      if (data.reply) {
+        setResponse(data.reply)
+        setResponseKey(k => k + 1)
+      }
+      setStatus(data.status || '')
+      setNeedsMore(!!data.needsMore)
+      setMorePrompt(data.morePrompt || '')
+      if (!data.needsMore) {
+        setQuery('')
+        setMoreText('')
+      }
+    } catch {
+      setStatus('')
+      setQuery('')
+    }
+  }
+
+  return (
+    <div className="landing">
+      <div className="canvas-wrap" ref={mountRef} />
+
+      <div className="content">
+        <h1
+          className={`logo ${isActivating ? 'logo-activate' : ''} ${initialGlitch ? 'glitch' : ''}`}
+          data-text="XhumAI"
+        >
+          XhumAI
+        </h1>
+        <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
+        <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
+
+        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`} data-text="search-form">
+          <input
+            type="text"
+            value={query}
+            onChange={handleInputChange}
+            placeholder="What are you trying to accomplish?"
+            autoFocus
+            disabled={needsMore}
+            className={isTyping ? 'input-awake' : ''}
+          />
+
+          {needsMore && (
+            <textarea
+              className="more-input"
+              value={moreText}
+              onChange={(e) => setMoreText(e.target.value)}
+              placeholder={morePrompt || 'Provide more details...'}
+              rows={4}
+              autoFocus
+            />
+          )}
+
+          <button type="submit" className="sr-only">Send</button>
+        </form>
+
+        <p className={`response ${initialGlitch ? 'glitch' : ''}`} key={responseKey} data-text={response}>{response}</p>
+        {status && <p className={`status ${initialGlitch ? 'glitch' : ''}`} data-text={status}>{status}</p>}
+      </div>
+    </div>
+  )
+}
+
+export default App
