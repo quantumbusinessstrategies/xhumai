@@ -14,7 +14,6 @@ Every capability is an asset. Every asset compounds.
 | blocker-extractor | Blocker Extractor | productivity | stub (logging live) |
 | owner-extractor | Owner Extractor | productivity | stub (logging live) |
 | priority-sorter | Priority Sorter | productivity | stub (logging live) |
-| risk-extractor | Risk Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -39,7 +38,6 @@ Every capability is an asset. Every asset compounds.
 - **Deadline Extractor** → time pressure visible, fewer slips
 - **Blocker Extractor** → friction visible, work unblocks, nothing stalls
 - **Owner Extractor** → accountability visible, nothing floats without a name
-- **Priority Sorter** → attention ranked, focus compounds
-- **Risk Extractor** → foresight visible, surprises shrink
+- **Priority Sorter** → attention ranked (P0/P1/P2), focus compounds on what matters most
 
 Together they turn notes into leverage.

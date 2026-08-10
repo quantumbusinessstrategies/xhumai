@@ -1,14 +1,11 @@
 # Changelog
 
-## v1.0 — 2026-08-08
-- Added **Risk Extractor** capability (productivity category)
-  - Surfaces risks, uncertainties, and potential failure modes from free-form notes
-  - Severity (high/medium/low) + category (delivery/technical/people/external)
-  - Full usage logging for self-improvement loop
-  - Wired into capability registry + API route + intent classifier
-  - Complements the extractor suite: blockers = current friction; risks = forward-looking failure modes
-- Also registered **Priority Sorter** in the formal capability registry (was live in API, now first-class)
-- Direct progress toward "Work Less. Live More." — foresight becomes an asset
+## v0.10 — 2026-08-10
+- Registered **Priority Sorter** capability (productivity category)
+  - Ranks messy notes into P0 / P1 / P2 so attention goes where it compounds
+  - Already implemented + wired in backend; now fully visible in registry + docs
+  - Completes the core extractor suite: actions, decisions, follow-ups, deadlines, blockers, owners, **and priority**
+- Direct progress toward "Work Less. Live More." — focus becomes explicit so energy is not wasted
 
 ## v0.9 — 2026-08-06
 - Added **Owner Extractor** capability (productivity category)
