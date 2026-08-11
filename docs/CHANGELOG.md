@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0 — 2026-08-10
+- Added **Risk Extractor** capability (productivity category)
+  - Surfaces risks, threats, exposure points, and potential downsides from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when; blockers = what is in the way; owners = who owns it; priority = where attention goes; risks = what could go wrong
+- Registered **Priority Sorter** in the formal capability registry (was already live in routes)
+- Direct progress toward "Work Less. Live More." — downside becomes visible so nothing blindsides
+
 ## v0.9 — 2026-08-06
 - Added **Owner Extractor** capability (productivity category)
   - Surfaces owners, assignees, and responsible parties from free-form notes
