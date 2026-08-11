@@ -17,6 +17,7 @@ import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 import { notifyInquiry } from './utils/notify';
 import { runPrioritySorter } from '../capabilities/priority-sorter';
+import { runRiskExtractor } from '../capabilities/risk-extractor';
 
 dotenv.config();
 
@@ -60,7 +61,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '1.1.0',
+    version: '1.2.0',
     status: 'alive',
     mode: 'continuous',
     creed: 'Work Less. Live More.',
@@ -128,9 +129,10 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'decision', 'decisions', 'open questions', 'what was decided',
     'follow-up', 'follow up', 'followup', 'circle back', 'check in', 'waiting on',
     'deadline', 'deadlines', 'due date', 'due by', 'by when', 'when is it due', 'eta', 'eod', 'eow',
-    'blocker', 'blockers', 'blocked', 'blocking', 'stuck', 'dependency', 'dependencies', 'risk', 'risks', 'bottleneck', 'friction',
+    'blocker', 'blockers', 'blocked', 'blocking', 'stuck', 'dependency', 'dependencies', 'bottleneck', 'friction',
     'priority', 'prioritize', 'p0', 'p1', 'p2', 'rank',
-    'owner', 'owners', 'assignee', 'assignees', 'assigned to', 'responsible for', 'who owns', 'who is responsible'
+    'owner', 'owners', 'assignee', 'assignees', 'assigned to', 'responsible for', 'who owns', 'who is responsible',
+    'risk', 'risks', 'threat', 'threats', 'exposure', 'downside', 'what if', 'worst case'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build', 'make me', 'i need', 'can you', 'please', 'help me', 'do this', 'run', 'execute', 'start'];
@@ -192,6 +194,9 @@ app.post('/api/intent', (req, res) => {
     } else if (lower.includes('owner') || lower.includes('assignee') || lower.includes('responsible')) {
       reply = 'I can surface owners and accountability. Paste the notes.';
       status = 'utility:owner-extractor';
+    } else if (lower.includes('risk') || lower.includes('threat') || lower.includes('exposure') || lower.includes('downside') || lower.includes('what if') || lower.includes('worst case')) {
+      reply = 'I can surface risks and exposure points. Paste the notes.';
+      status = 'utility:risk-extractor';
     } else {
       reply = 'Utility mode. Tell me what you need extracted, summarized, or structured.';
       status = 'utility';
@@ -301,6 +306,17 @@ app.post('/api/capabilities/priority-sorter', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/risk-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runRiskExtractor(text);
+    res.json({ capability: 'risk-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (_req, res) => {
@@ -317,7 +333,7 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v1.1 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v1.2 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR}`);
   console.log(`Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
