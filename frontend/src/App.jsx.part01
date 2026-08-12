@@ -1,0 +1,82 @@
+seRef([]) // mini BH, wireframes, etc.
+  const cameraRef = useRef(null)
+  const coreRef = useRef(null)
+  const warpRingsRef = useRef([])
+  const horizonRef = useRef(null)
+  const photonRef = useRef(null)
+  const auraRef = useRef(null)
+  const typingRef = useRef(0)
+  const activateRef = useRef(0)
+  const typingTimeout = useRef(null)
+
+  const birthStar = (data = {}) => {
+    if (!sceneRef.current) return
+
+    // Individual stellar / planetary archetypes
+    const types = [
+      { id: 'pinpoint', w: 22, size: [0.02, 0.04], sat: 0.35, lit: 0.95, sparks: 12, cloud: 20, pulse: 0 },
+      { id: 'main', w: 28, size: [0.05, 0.09], sat: 0.55, lit: 0.82, sparks: 40, cloud: 70, pulse: 0.15 },
+      { id: 'redgiant', w: 12, size: [0.12, 0.22], sat: 0.85, lit: 0.55, sparks: 28, cloud: 90, pulse: 0.35, hueBias: 0.02 },
+      { id: 'bluegiant', w: 8, size: [0.1, 0.18], sat: 0.7, lit: 0.75, sparks: 50, cloud: 80, pulse: 0.25, hueBias: 0.58 },
+      { id: 'gasgiant', w: 10, size: [0.09, 0.16], sat: 0.65, lit: 0.6, sparks: 20, cloud: 110, pulse: 0.1, bands: true },
+      { id: 'icegiant', w: 8, size: [0.07, 0.13], sat: 0.55, lit: 0.7, sparks: 18, cloud: 60, pulse: 0.08, hueBias: 0.52 },
+      { id: 'quasar', w: 7, size: [0.04, 0.07], sat: 0.9, lit: 0.95, sparks: 80, cloud: 40, pulse: 0.9, jet: true },
+      { id: 'neutron', w: 5, size: [0.025, 0.04], sat: 0.4, lit: 0.98, sparks: 60, cloud: 15, pulse: 1.2 },
+    ]
+    const totalW = types.reduce((s, t) => s + t.w, 0)
+    let roll = Math.random() * totalW
+    let type = types[0]
+    for (const t of types) {
+      roll -= t.w
+      if (roll <= 0) { type = t; break }
+    }
+
+    const hue = data.hue ?? (type.hueBias != null
+      ? (type.hueBias + (Math.random() - 0.5) * 0.08 + 1) % 1
+      : Math.random())
+    const finalSize = type.size[0] + Math.random() * (type.size[1] - type.size[0])
+
+    const starGeo = new THREE.SphereGeometry(1, type.bands ? 24 : 16, type.bands ? 24 : 16)
+    const starMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color().setHSL(hue, type.sat, type.lit),
+      transparent: true,
+      opacity: 0
+    })
+    const star = new THREE.Mesh(starGeo, starMat)
+    star.scale.setScalar(0.02)
+    star.userData.starType = type.id
+    star.userData.pulse = type.pulse
+    star.userData.baseHue = hue
+
+    const x = data.x ?? (Math.random() - 0.5) * 9
+    const y = data.y ?? (Math.random() - 0.5) * 3.8
+    const z = data.z ?? (Math.random() - 0.5) * 9
+    star.position.set(x, y, z)
+
+    // Gas-giant band texture (canvas)
+    if (type.bands) {
+      const c = document.createElement('canvas')
+      c.width = 64; c.height = 64
+      const cx = c.getContext('2d')
+      for (let row = 0; row < 64; row++) {
+        const f = row / 64
+        const band = Math.sin(f * Math.PI * 6 + hue * 10) * 0.5 + 0.5
+        const col = new THREE.Color().setHSL(hue + band * 0.08, type.sat, type.lit * (0.75 + band * 0.25))
+        cx.fillStyle = `#${col.getHexString()}`
+        cx.fillRect(0, row, 64, 1)
+      }
+      starMat.map = new THREE.CanvasTexture(c)
+      starMat.needsUpdate = true
+    }
+
+    const sparkCount = type.sparks
+    const sparkGeo = new THREE.BufferGeometry()
+    const sparkPos = new Float32Array(sparkCount * 3)
+    const sparkVel = []
+    for (let i = 0; i < sparkCount; i++) {
+      sparkPos[i * 3] = 0
+      sparkPos[i * 3 + 1] = 0
+      sparkPos[i * 3 + 2] = 0
+      const speed = (type.id === 'quasar' ? 0.12 : 0.05) + Math.random() * 0.1
+      const theta = Math.random() * Math.PI * 2
+   
