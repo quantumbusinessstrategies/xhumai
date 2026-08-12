@@ -47,6 +47,7 @@ export async function notifyInquiry(payload: {
     payload.meta ? `meta: ${JSON.stringify(payload.meta)}` : '',
   ].join('\n');
 
+  // Resend API (preferred if key present)
   if (process.env.RESEND_API_KEY) {
     try {
       const res = await fetch('https://api.resend.com/emails', {
@@ -70,9 +71,11 @@ export async function notifyInquiry(payload: {
     }
   }
 
+  // Optional SMTP — dynamic load so core runs without nodemailer installed
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     try {
-      const nodemailer = await import('nodemailer');
+      const dynImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>;
+      const nodemailer = await dynImport('nodemailer');
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587', 10),
