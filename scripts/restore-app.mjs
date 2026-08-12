@@ -6,6 +6,12 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dir = path.join(root, 'frontend', 'src')
 const out = path.join(dir, 'App.jsx')
 const cssOut = path.join(dir, 'App.css')
+const MIN_LANDER_BYTES = 50000
+
+if (fs.existsSync(out) && fs.statSync(out).size > MIN_LANDER_BYTES) {
+  console.log('App.jsx already present →', fs.statSync(out).size, 'bytes')
+  process.exit(0)
+}
 
 const srcParts = fs.readdirSync(dir)
   .filter(f => /^App\.jsx\.part\d+$/.test(f))
