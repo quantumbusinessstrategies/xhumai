@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1 — 2026-08-11
+- Added **Opportunity Extractor** capability (productivity category)
+  - Surfaces opportunities, upside, potential wins, and leverage points from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements Risk Extractor: risks = what could go wrong; opportunities = what could compound
+- Direct progress toward "Work Less. Live More." — leverage becomes visible so energy multiplies
+
 ## v0.10 — 2026-08-10
 - Registered **Priority Sorter** capability (productivity category)
   - Ranks messy notes into P0 / P1 / P2 so attention goes where it compounds

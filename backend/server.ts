@@ -10,6 +10,7 @@ import { runTextSummarizer } from '../capabilities/text-summarizer';
 import { runActionExtractor } from '../capabilities/action-extractor';
 import { runPriorityExtractor } from '../capabilities/priority-extractor';
 import { runRiskExtractor } from '../capabilities/risk-extractor';
+import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -51,7 +52,7 @@ function saveStars(stars: any[]) {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v1.0',
+    message: 'XhumAI Quantum Core API v1.1',
     status: 'alive',
     entity: 'listening',
     creed: 'Work Less. Live More.',
@@ -106,7 +107,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'generate', 'create file', 'download', 'upload',
     'action', 'todo', 'to-do', 'next steps', 'action items',
     'priority', 'priorities', 'prioritize', 'urgent', 'urgency', 'critical', 'asap', 'most important', 'P0', 'P1',
-    'risk', 'risks', 'at risk', 'jeopardy', 'threat', 'uncertainty', 'what if', 'failure mode'
+    'risk', 'risks', 'at risk', 'jeopardy', 'threat', 'uncertainty', 'what if', 'failure mode',
+    'opportunity', 'opportunities', 'upside', 'leverage', 'potential win', 'growth', 'advantage', 'untapped'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -155,6 +157,18 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('opportunity') ||
+      lower.includes('upside') ||
+      lower.includes('leverage') ||
+      lower.includes('potential win') ||
+      lower.includes('untapped') ||
+      lower.includes('advantage')
+    ) {
+      reply = 'I can surface opportunities and upside. Paste the notes.';
+      status = 'capability: opportunity-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, plan, or brainstorm here...';
     } else if (
       lower.includes('risk') ||
       lower.includes('jeopardy') ||
@@ -276,6 +290,17 @@ app.post('/api/capabilities/risk-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/opportunity-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runOpportunityExtractor(text);
+    res.json({ capability: 'opportunity-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -292,7 +317,7 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v1.0 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action-extractor + priority-extractor + risk-extractor live');
+  console.log(`🚀 XhumAI Backend v1.1 on http://localhost:${PORT}`);
+  console.log('✨ Shared stars + intent + action + priority + risk + opportunity extractors live');
   console.log('Work Less. Live More.');
 });
