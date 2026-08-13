@@ -108,6 +108,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/opportunity-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { opportunities: "array" } }
+  },
+  {
+    id: "assumption-extractor",
+    name: "Assumption Extractor",
+    description: "Surface implicit assumptions, beliefs, and unstated premises from notes so they can be tested and less work is wasted on unexamined foundations",
+    category: "productivity",
+    endpoint: "/api/capabilities/assumption-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { assumptions: "array" } }
   }
 ];
 

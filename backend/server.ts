@@ -11,6 +11,7 @@ import { runActionExtractor } from '../capabilities/action-extractor';
 import { runPriorityExtractor } from '../capabilities/priority-extractor';
 import { runRiskExtractor } from '../capabilities/risk-extractor';
 import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
+import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -52,7 +53,7 @@ function saveStars(stars: any[]) {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v1.1',
+    message: 'XhumAI Quantum Core API v1.2',
     status: 'alive',
     entity: 'listening',
     creed: 'Work Less. Live More.',
@@ -108,7 +109,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'action', 'todo', 'to-do', 'next steps', 'action items',
     'priority', 'priorities', 'prioritize', 'urgent', 'urgency', 'critical', 'asap', 'most important', 'P0', 'P1',
     'risk', 'risks', 'at risk', 'jeopardy', 'threat', 'uncertainty', 'what if', 'failure mode',
-    'opportunity', 'opportunities', 'upside', 'leverage', 'potential win', 'growth', 'advantage', 'untapped'
+    'opportunity', 'opportunities', 'upside', 'leverage', 'potential win', 'growth', 'advantage', 'untapped',
+    'assumption', 'assumptions', 'assume', 'assuming', 'presume', 'belief', 'implicit', 'unstated', 'take for granted'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -157,6 +159,19 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('assumption') ||
+      lower.includes('assume') ||
+      lower.includes('presume') ||
+      lower.includes('belief') ||
+      lower.includes('implicit') ||
+      lower.includes('unstated') ||
+      lower.includes('take for granted')
+    ) {
+      reply = 'I can surface implicit assumptions and unstated premises. Paste the notes.';
+      status = 'capability: assumption-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, plan, or document here...';
     } else if (
       lower.includes('opportunity') ||
       lower.includes('upside') ||
@@ -301,6 +316,17 @@ app.post('/api/capabilities/opportunity-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/assumption-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runAssumptionExtractor(text);
+    res.json({ capability: 'assumption-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -317,7 +343,7 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v1.1 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action + priority + risk + opportunity extractors live');
+  console.log(`🚀 XhumAI Backend v1.2 on http://localhost:${PORT}`);
+  console.log('✨ Shared stars + intent + action + priority + risk + opportunity + assumption extractors live');
   console.log('Work Less. Live More.');
 });
