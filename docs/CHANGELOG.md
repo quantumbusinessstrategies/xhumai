@@ -1,19 +1,21 @@
 # Changelog
 
-## v1.1 — 2026-08-11
-- Added **Opportunity Extractor** capability (productivity category)
-  - Surfaces opportunities, upside, potential wins, and leverage points from free-form notes
+## v1.1 — 2026-08-13
+- Added **Assumption Extractor** capability (productivity category)
+  - Surfaces implicit assumptions, beliefs, and unstated premises from free-form notes
   - Full usage logging for self-improvement loop
   - Wired into capability registry + API route + intent classifier
-  - Complements Risk Extractor: risks = what could go wrong; opportunities = what could compound
-- Direct progress toward "Work Less. Live More." — leverage becomes visible so energy multiplies
+  - Complements the extractor suite: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when; blockers = what is in the way; owners = who owns it; priority = where attention goes; risks = what could go wrong; assumptions = what we are taking for granted
+- Direct progress toward "Work Less. Live More." — unexamined premises become visible so less work is wasted
 
-## v0.10 — 2026-08-10
-- Registered **Priority Sorter** capability (productivity category)
-  - Ranks messy notes into P0 / P1 / P2 so attention goes where it compounds
-  - Already implemented + wired in backend; now fully visible in registry + docs
-  - Completes the core extractor suite: actions, decisions, follow-ups, deadlines, blockers, owners, **and priority**
-- Direct progress toward "Work Less. Live More." — focus becomes explicit so energy is not wasted
+## v1.0 — 2026-08-10
+- Added **Risk Extractor** capability (productivity category)
+  - Surfaces risks, threats, exposure points, and potential downsides from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: actions = next steps; decisions = settled/open; follow-ups = open loops; deadlines = when; blockers = what is in the way; owners = who owns it; priority = where attention goes; risks = what could go wrong
+- Registered **Priority Sorter** in the formal capability registry (was already live in routes)
+- Direct progress toward "Work Less. Live More." — downside becomes visible so nothing blindsides
 
 ## v0.9 — 2026-08-06
 - Added **Owner Extractor** capability (productivity category)
