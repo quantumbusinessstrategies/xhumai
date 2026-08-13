@@ -6,19 +6,21 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dir = path.join(root, 'frontend', 'src')
 const out = path.join(dir, 'App.jsx')
 const cssOut = path.join(dir, 'App.css')
+const cssFull = path.join(dir, 'App.css.full')
+const MIN_APP_BYTES = 50000
 
-const srcParts = fs.readdirSync(dir)
-  .filter(f => /^App\.jsx\.part\d+$/.test(f))
-  .sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10))
-if (srcParts.length) {
-  const text = srcParts.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('')
-  fs.writeFileSync(out, text)
-  console.log('Restored App.jsx from', srcParts.length, 'parts →', fs.statSync(out).size, 'bytes')
-  const cssFull = path.join(dir, 'App.css.full')
+const maybeRestoreFullCss = () => {
   if (fs.existsSync(cssFull)) {
     fs.copyFileSync(cssFull, cssOut)
     console.log('Restored App.css from App.css.full →', fs.statSync(cssOut).size, 'bytes')
   }
+}
+
+const hasFullApp = () => fs.existsSync(out) && fs.statSync(out).size > MIN_APP_BYTES
+
+if (hasFullApp()) {
+  console.log('Using existing App.jsx →', fs.statSync(out).size, 'bytes')
+  maybeRestoreFullCss()
   process.exit(0)
 }
 
@@ -39,8 +41,28 @@ if (packParts.length) {
     }
   }
   try { fs.unlinkSync(zipPath) } catch {}
-  console.log('Restored from lander.pack →', fs.statSync(out).size, 'bytes')
+  if (hasFullApp()) {
+    console.log('Restored from lander.pack →', fs.statSync(out).size, 'bytes')
+    maybeRestoreFullCss()
+    process.exit(0)
+  }
+  console.warn('lander.pack restore did not produce a full App.jsx, falling back to split parts')
+}
+
+const srcParts = fs.readdirSync(dir)
+  .filter(f => /^App\.jsx\.part\d+$/.test(f))
+  .sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10))
+if (srcParts.length) {
+  const text = srcParts.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('')
+  if (Buffer.byteLength(text, 'utf8') <= MIN_APP_BYTES) {
+    console.error('Split App.jsx parts are too small to be a full lander build')
+    process.exit(1)
+  }
+  fs.writeFileSync(out, text)
+  console.log('Restored App.jsx from', srcParts.length, 'parts →', fs.statSync(out).size, 'bytes')
+  maybeRestoreFullCss()
   process.exit(0)
 }
+
 console.error('No App.jsx parts or lander pack found')
 process.exit(1)
