@@ -38,58 +38,13 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "list", items: "string" }
   },
   {
-    id: "decision-extractor",
-    name: "Decision Extractor",
-    description: "Surface explicit decisions and open questions from notes so meetings stop looping",
+    id: "priority-extractor",
+    name: "Priority Extractor",
+    description: "Surface the priorities and urgencies from notes so attention goes where it compounds",
     category: "productivity",
-    endpoint: "/api/capabilities/decision-extractor",
+    endpoint: "/api/capabilities/priority-extractor",
     inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { decisions: "string[]", openQuestions: "string[]" } }
-  },
-  {
-    id: "follow-up-extractor",
-    name: "Follow-up Extractor",
-    description: "Surface who/what still needs a follow-up from notes so open loops close and nothing drifts",
-    category: "productivity",
-    endpoint: "/api/capabilities/follow-up-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { followUps: "array" } }
-  },
-  {
-    id: "deadline-extractor",
-    name: "Deadline Extractor",
-    description: "Surface dates, deadlines, and time-bound items from notes so time pressure is visible and nothing slips",
-    category: "productivity",
-    endpoint: "/api/capabilities/deadline-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { deadlines: "array" } }
-  },
-  {
-    id: "blocker-extractor",
-    name: "Blocker Extractor",
-    description: "Surface blockers, dependencies, and friction points from notes so work unblocks and nothing stalls",
-    category: "productivity",
-    endpoint: "/api/capabilities/blocker-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { blockers: "array" } }
-  },
-  {
-    id: "owner-extractor",
-    name: "Owner Extractor",
-    description: "Surface owners, assignees, and responsible parties from notes so accountability is clear and nothing floats",
-    category: "productivity",
-    endpoint: "/api/capabilities/owner-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { owners: "array" } }
-  },
-  {
-    id: "priority-sorter",
-    name: "Priority Sorter",
-    description: "Rank messy notes into P0 / P1 / P2 so attention goes where it compounds",
-    category: "productivity",
-    endpoint: "/api/capabilities/priority-sorter",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { p0: "string[]", p1: "string[]", p2: "string[]" } }
+    outputSchema: { type: "object", properties: { priorities: "array" } }
   },
   {
     id: "risk-extractor",
@@ -99,6 +54,33 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/risk-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { risks: "array" } }
+  },
+  {
+    id: "opportunity-extractor",
+    name: "Opportunity Extractor",
+    description: "Surface opportunities and upside from notes so leverage becomes visible",
+    category: "productivity",
+    endpoint: "/api/capabilities/opportunity-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { opportunities: "array" } }
+  },
+  {
+    id: "assumption-extractor",
+    name: "Assumption Extractor",
+    description: "Surface implicit assumptions and unstated premises from notes so they can be validated or challenged",
+    category: "productivity",
+    endpoint: "/api/capabilities/assumption-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { assumptions: "array" } }
+  },
+  {
+    id: "constraint-extractor",
+    name: "Constraint Extractor",
+    description: "Surface constraints, limits, and hard boundaries from notes so the real playing field is visible",
+    category: "productivity",
+    endpoint: "/api/capabilities/constraint-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { constraints: "array" } }
   },
   {
     id: "dependency-extractor",
