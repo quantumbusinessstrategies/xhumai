@@ -101,31 +101,13 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { risks: "array" } }
   },
   {
-    id: "opportunity-extractor",
-    name: "Opportunity Extractor",
-    description: "Surface opportunities, upside, and potential wins from notes so leverage is visible and nothing is left on the table",
+    id: "dependency-extractor",
+    name: "Dependency Extractor",
+    description: "Surface dependencies, prerequisites, and sequential requirements from notes so sequencing is clear and hidden prerequisites never stall work",
     category: "productivity",
-    endpoint: "/api/capabilities/opportunity-extractor",
+    endpoint: "/api/capabilities/dependency-extractor",
     inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { opportunities: "array" } }
-  },
-  {
-    id: "assumption-extractor",
-    name: "Assumption Extractor",
-    description: "Surface implicit assumptions, beliefs, and unstated premises from notes so they can be tested and less work is wasted on unexamined foundations",
-    category: "productivity",
-    endpoint: "/api/capabilities/assumption-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { assumptions: "array" } }
-  },
-  {
-    id: "constraint-extractor",
-    name: "Constraint Extractor",
-    description: "Surface constraints, limits, hard boundaries, and non-negotiables from notes so work stays inside reality and less effort is wasted fighting the impossible",
-    category: "productivity",
-    endpoint: "/api/capabilities/constraint-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { constraints: "array" } }
+    outputSchema: { type: "object", properties: { dependencies: "array" } }
   }
 ];
 
