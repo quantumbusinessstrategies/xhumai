@@ -13,6 +13,7 @@ import { runRiskExtractor } from '../capabilities/risk-extractor';
 import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
 import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
 import { runConstraintExtractor } from '../capabilities/constraint-extractor';
+import { runDependencyExtractor } from '../capabilities/dependency-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -54,7 +55,7 @@ function saveStars(stars: any[]) {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v1.2',
+    message: 'XhumAI Quantum Core API v1.3',
     status: 'alive',
     entity: 'listening',
     creed: 'Work Less. Live More.',
@@ -112,7 +113,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'risk', 'risks', 'at risk', 'jeopardy', 'threat', 'uncertainty', 'what if', 'failure mode',
     'opportunity', 'opportunities', 'upside', 'leverage', 'potential win', 'growth', 'advantage', 'untapped',
     'assumption', 'assumptions', 'assume', 'assuming', 'presume', 'belief', 'implicit', 'unstated', 'take for granted',
-    'constraint', 'constraints', 'limit', 'limits', 'limited by', 'non-negotiable', 'hard limit', 'boundary', 'boundaries', 'ceiling', 'cap', 'cannot', "can't"
+    'constraint', 'constraints', 'limit', 'limits', 'limited by', 'non-negotiable', 'hard limit', 'boundary', 'boundaries', 'ceiling', 'cap', 'cannot', "can't",
+    'dependency', 'dependencies', 'depends on', 'prerequisite', 'prerequisites', 'requires', 'required', 'blocked by', 'waiting on', 'before we can'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -161,6 +163,22 @@ app.post('/api/intent', (req, res) => {
       status = 'capability: text-summarizer';
       needsMore = true;
       morePrompt = 'Paste the long text here...';
+    } else if (
+      lower.includes('dependency') ||
+      lower.includes('dependencies') ||
+      lower.includes('depends on') ||
+      lower.includes('prerequisite') ||
+      lower.includes('prerequisites') ||
+      lower.includes('requires') ||
+      lower.includes('required') ||
+      lower.includes('blocked by') ||
+      lower.includes('waiting on') ||
+      lower.includes('before we can')
+    ) {
+      reply = 'I can surface dependencies and prerequisites. Paste the notes.';
+      status = 'capability: dependency-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, plan, or requirements here...';
     } else if (
       lower.includes('constraint') ||
       lower.includes('limit') ||
@@ -354,6 +372,17 @@ app.post('/api/capabilities/constraint-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/dependency-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runDependencyExtractor(text);
+    res.json({ capability: 'dependency-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -370,7 +399,7 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v1.2 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action + priority + risk + opportunity + assumption + constraint extractors live');
+  console.log(`🚀 XhumAI Backend v1.3 on http://localhost:${PORT}`);
+  console.log('✨ Shared stars + intent + action + priority + risk + opportunity + assumption + constraint + dependency extractors live');
   console.log('Work Less. Live More.');
 });
