@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2 — 2026-08-16
+- Added **Leverage Extractor** capability (productivity category)
+  - Surfaces high-leverage systems, automations, playbooks, templates, and compounding opportunities from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: opportunities = upside; leverage = where small effort creates ongoing advantage (systems, automation, reusable assets)
+- Direct progress toward "Work Less. Live More." — every capability is an asset that compounds; this one explicitly finds the compounding moves
+
 ## v1.1 — 2026-08-15
 - Added **Dependency Extractor** capability (productivity category)
   - Surfaces dependencies, prerequisites, and sequential requirements from free-form notes
