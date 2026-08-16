@@ -14,6 +14,7 @@ Every capability is an asset. Every asset compounds.
 | assumption-extractor | Assumption Extractor | productivity | stub (logging live) |
 | constraint-extractor | Constraint Extractor | productivity | stub (logging live) |
 | dependency-extractor | Dependency Extractor | productivity | stub (logging live) |
+| leverage-extractor | Leverage Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -39,5 +40,6 @@ Every capability is an asset. Every asset compounds.
 - **Assumption Extractor** → implicit premises surface so they can be tested
 - **Constraint Extractor** → hard limits become explicit, better decisions
 - **Dependency Extractor** → sequencing visible, hidden prerequisites never stall work
+- **Leverage Extractor** → high-leverage systems and compounding actions surface so small effort creates ongoing advantage
 
 Together they turn notes into leverage.
