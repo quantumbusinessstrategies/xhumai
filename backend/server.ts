@@ -14,6 +14,7 @@ import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
 import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
 import { runConstraintExtractor } from '../capabilities/constraint-extractor';
 import { runDependencyExtractor } from '../capabilities/dependency-extractor';
+import { runLeverageExtractor } from '../capabilities/leverage-extractor';
 import adminRoutes from './routes/admin';
 import { agents, runAgent } from './agents';
 
@@ -114,7 +115,8 @@ function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
     'opportunity', 'opportunities', 'upside', 'leverage', 'potential win', 'growth', 'advantage', 'untapped',
     'assumption', 'assumptions', 'assume', 'assuming', 'presume', 'belief', 'implicit', 'unstated', 'take for granted',
     'constraint', 'constraints', 'limit', 'limits', 'limited by', 'non-negotiable', 'hard limit', 'boundary', 'boundaries', 'ceiling', 'cap', 'cannot', "can't",
-    'dependency', 'dependencies', 'depends on', 'prerequisite', 'prerequisites', 'requires', 'required', 'blocked by', 'waiting on', 'before we can'
+    'dependency', 'dependencies', 'depends on', 'prerequisite', 'prerequisites', 'requires', 'required', 'blocked by', 'waiting on', 'before we can',
+    'compound', 'automation', 'system', 'playbook', 'template', 'reusable', 'repeatable'
   ];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
 
@@ -164,6 +166,19 @@ app.post('/api/intent', (req, res) => {
       needsMore = true;
       morePrompt = 'Paste the long text here...';
     } else if (
+      lower.includes('leverage') ||
+      lower.includes('compound') ||
+      lower.includes('automation') ||
+      lower.includes('playbook') ||
+      lower.includes('reusable') ||
+      lower.includes('repeatable') ||
+      (lower.includes('system') && (lower.includes('build') || lower.includes('create') || lower.includes('extract')))
+    ) {
+      reply = 'I can surface high-leverage systems and compounding opportunities. Paste the notes.';
+      status = 'capability: leverage-extractor';
+      needsMore = true;
+      morePrompt = 'Paste the meeting notes, plan, or brainstorm here...';
+    } else if (
       lower.includes('dependency') ||
       lower.includes('dependencies') ||
       lower.includes('depends on') ||
@@ -209,7 +224,6 @@ app.post('/api/intent', (req, res) => {
     } else if (
       lower.includes('opportunity') ||
       lower.includes('upside') ||
-      lower.includes('leverage') ||
       lower.includes('potential win') ||
       lower.includes('untapped') ||
       lower.includes('advantage')
@@ -383,6 +397,17 @@ app.post('/api/capabilities/dependency-extractor', async (req, res) => {
   }
 });
 
+app.post('/api/capabilities/leverage-extractor', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await runLeverageExtractor(text);
+    res.json({ capability: 'leverage-extractor', ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+});
+
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/agents', (req, res) => {
@@ -400,6 +425,6 @@ app.post('/api/agents/:id/run', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 XhumAI Backend v1.3 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action + priority + risk + opportunity + assumption + constraint + dependency extractors live');
+  console.log('✨ Shared stars + intent + action + priority + risk + opportunity + assumption + constraint + dependency + leverage extractors live');
   console.log('Work Less. Live More.');
 });
