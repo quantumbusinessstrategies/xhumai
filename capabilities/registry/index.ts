@@ -90,6 +90,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/dependency-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { dependencies: "array" } }
+  },
+  {
+    id: "leverage-extractor",
+    name: "Leverage Extractor",
+    description: "Surface high-leverage systems, automations, and compounding opportunities from notes so small effort creates ongoing advantage",
+    category: "productivity",
+    endpoint: "/api/capabilities/leverage-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { leverage: "array" } }
   }
 ];
 
