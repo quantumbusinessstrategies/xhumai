@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1 — 2026-08-17
+- Added **Opportunity Extractor** capability (productivity category)
+  - Surfaces opportunities, upsides, leverage points, and positive openings from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: risk = what could go wrong; opportunity = what could go right so we capture it early
+- Direct progress toward "Work Less. Live More." — attention and energy go where they compound
+
 ## v1.0 — 2026-08-10
 - Added **Risk Extractor** capability (productivity category)
   - Surfaces risks, threats, exposure points, and potential downsides from free-form notes
