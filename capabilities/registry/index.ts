@@ -99,6 +99,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/risk-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { risks: "array" } }
+  },
+  {
+    id: "opportunity-extractor",
+    name: "Opportunity Extractor",
+    description: "Surface opportunities, upsides, and leverage points from notes so attention goes where it compounds and high-value openings are not missed",
+    category: "productivity",
+    endpoint: "/api/capabilities/opportunity-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { opportunities: "array" } }
   }
 ];
 
