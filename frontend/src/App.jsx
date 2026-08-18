@@ -88,104 +88,9 @@ function drawStar(ctx, s, points) {
   ctx.fillRect(0, 0, s, s)
 }
 
-
-// ---- WebGL shaders (horizon / photon / aura / accretion) ----
-const HORIZON_VERT = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`
-const HORIZON_FRAG = `
-uniform float uTime;
-uniform float uOpacity;
-varying vec2 vUv;
-void main() {
-  vec2 p = vUv - 0.5;
-  float r = length(p) * 2.0;
-  float a = atan(p.y, p.x);
-  float swirl = sin(a * 6.0 - uTime * 2.2 + r * 8.0) * 0.5 + 0.5;
-  float band = smoothstep(0.15, 0.45, r) * smoothstep(1.05, 0.55, r);
-  vec3 c1 = vec3(0.48, 0.22, 0.95);
-  vec3 c2 = vec3(0.95, 0.35, 0.75);
-  vec3 c3 = vec3(0.35, 0.75, 1.0);
-  vec3 col = mix(c1, c2, swirl);
-  col = mix(col, c3, sin(uTime * 0.7 + a * 3.0) * 0.5 + 0.5);
-  float pulse = 0.75 + 0.25 * sin(uTime * 3.0);
-  float alpha = band * uOpacity * pulse * (0.55 + 0.45 * swirl);
-  gl_FragColor = vec4(col * 1.35, alpha);
-}
-`
-const PHOTON_FRAG = `
-uniform float uTime;
-uniform float uOpacity;
-varying vec2 vUv;
-void main() {
-  vec2 p = vUv - 0.5;
-  float r = length(p) * 2.0;
-  float a = atan(p.y, p.x);
-  float ring = smoothstep(0.2, 0.55, r) * smoothstep(1.1, 0.65, r);
-  float spokes = pow(abs(sin(a * 10.0 - uTime * 4.0)), 3.0);
-  float flicker = 0.7 + 0.3 * sin(uTime * 8.0 + a * 5.0);
-  vec3 col = mix(vec3(0.55, 0.9, 1.0), vec3(1.0, 0.85, 1.0), spokes);
-  col += vec3(0.3, 0.5, 1.0) * spokes * 0.6;
-  float alpha = ring * uOpacity * flicker * (0.4 + 0.6 * spokes);
-  gl_FragColor = vec4(col * 1.4, alpha);
-}
-`
-const AURA_VERT = `
-varying vec3 vNormal;
-varying vec3 vWorldPos;
-void main() {
-  vNormal = normalize(normalMatrix * normal);
-  vec4 wp = modelMatrix * vec4(position, 1.0);
-  vWorldPos = wp.xyz;
-  gl_Position = projectionMatrix * viewMatrix * wp;
-}
-`
-const AURA_FRAG = `
-uniform float uTime;
-uniform float uOpacity;
-varying vec3 vNormal;
-varying vec3 vWorldPos;
-void main() {
-  vec3 viewDir = normalize(cameraPosition - vWorldPos);
-  float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 2.8);
-  float noise = sin(vWorldPos.x * 3.0 + uTime) * cos(vWorldPos.z * 2.5 - uTime * 0.8);
-  noise = noise * 0.5 + 0.5;
-  vec3 c1 = vec3(0.35, 0.12, 0.65);
-  vec3 c2 = vec3(0.15, 0.45, 0.95);
-  vec3 c3 = vec3(0.85, 0.3, 0.7);
-  vec3 col = mix(c1, c2, noise);
-  col = mix(col, c3, fresnel * 0.6);
-  float pulse = 0.85 + 0.15 * sin(uTime * 1.5);
-  float alpha = fresnel * uOpacity * pulse * (0.7 + 0.3 * noise);
-  gl_FragColor = vec4(col * 1.5, alpha);
-}
-`
-const ACCRETION_FRAG = `
-uniform float uTime;
-uniform float uOpacity;
-uniform vec3 uColor;
-varying vec2 vUv;
-void main() {
-  vec2 p = vUv - 0.5;
-  float r = length(p) * 2.0;
-  float a = atan(p.y, p.x);
-  float spiral = fract(a / 6.28318 * 5.0 + r * 2.5 - uTime * 0.9);
-  float band = smoothstep(0.0, 0.2, r) * smoothstep(1.2, 0.4, r);
-  float bright = pow(1.0 - abs(spiral - 0.5) * 2.0, 2.0);
-  vec3 col = uColor * (0.6 + bright * 1.2);
-  col += vec3(0.4, 0.7, 1.0) * bright * 0.35;
-  float alpha = band * uOpacity * (0.25 + bright * 0.75);
-  gl_FragColor = vec4(col, alpha);
-}
-`
-
 function App() {
   const [query, setQuery] = useState('')
-  const [response, setResponse] = useState('Every thought becomes a star')
+  const [response, setResponse] = useState('input initiates creation')
   const [responseKey, setResponseKey] = useState(0)
   const [status, setStatus] = useState('')
   const [needsMore, setNeedsMore] = useState(false)
@@ -195,6 +100,7 @@ function App() {
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
   const [animMode, setAnimMode] = useState('combo') // 'glitch' | 'pixel' | 'combo'
+  const [path, setPath] = useState(null) // null | 'chat' | 'build'
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -416,47 +322,13 @@ function App() {
           console.warn('load-in animation failed', e)
         }
       }, 900)
-      // Failsafe: never leave the page on a black screen
-      const failsafe = setTimeout(() => {
-        try {
-          document.querySelectorAll('.sn-black-overlay, .sn-halo, .pixel-canvas, .sn-canvas').forEach(el => {
-            el.style.opacity = '0'
-            el.style.pointerEvents = 'none'
-            setTimeout(() => el.remove(), 200)
-          })
-          const wrap = document.querySelector('.canvas-wrap')
-          if (wrap) { wrap.style.opacity = '1'; wrap.style.animation = 'none' }
-          // restore layer opacities if still zeroed
-          for (const layer of (layersRef.current || [])) {
-            if (layer.mat && layer.mat.userData && typeof layer.mat.userData._origOpacity === 'number') {
-              layer.mat.opacity = layer.mat.userData._origOpacity
-            }
-          }
-          for (const g of (gasRef.current || [])) {
-            if (g.material && g.material.userData && typeof g.material.userData._origOpacity === 'number') {
-              g.material.opacity = g.material.userData._origOpacity
-            }
-          }
-          if (horizonRef.current?.material?.uniforms?.uOpacity) {
-            const m = horizonRef.current.material
-            m.uniforms.uOpacity.value = m.userData?._origOpacity ?? 0.72
-          }
-          if (photonRef.current?.material?.uniforms?.uOpacity) {
-            const m = photonRef.current.material
-            m.uniforms.uOpacity.value = m.userData?._origOpacity ?? 0.55
-          }
-          if (auraRef.current?.material?.uniforms?.uOpacity) {
-            const m = auraRef.current.material
-            m.uniforms.uOpacity.value = m.userData?._origOpacity ?? 0.22
-          }
-        } catch (e) {}
-      }, 3500)
-      return () => { clearTimeout(g); clearTimeout(t); clearTimeout(failsafe) }
+      return () => { clearTimeout(g); clearTimeout(t) }
     }
     return () => clearTimeout(g)
   }, [])
 
-  // black overlay disabled — never block the scene
+  // NOTE: removed initial black overlay — run animations over existing background
+  // no black overlay — galaxy stays visible
   useEffect(() => {
     // Birth persisted stars after load-in supernova settles so they join the living field
     const t = setTimeout(() => {
@@ -779,7 +651,7 @@ function App() {
           layer.mat.userData._origOpacity = layer.mat.opacity
           layer.mat.userData._origTransparent = layer.mat.transparent
           layer.mat.transparent = true
-          layer.mat.opacity = Math.max(0.12, (layer.mat.userData._origOpacity || 0.5) * 0.15)
+          layer.mat.opacity = Math.max(0.15, (layer.mat.userData._origOpacity || 0.6) * 0.2)
         }
       }
       for (const g of gasRef.current) {
@@ -788,7 +660,7 @@ function App() {
           g.material.userData._origOpacity = g.material.opacity
           g.material.userData._origTransparent = g.material.transparent
           g.material.transparent = true
-          g.material.opacity = Math.max(0.05, (g.material.userData._origOpacity || 0.1) * 0.2)
+          g.material.opacity = Math.max(0.05, (g.material.userData._origOpacity || 0.08) * 0.25)
         }
       }
       for (const s of specialsRef.current) {
@@ -797,42 +669,29 @@ function App() {
           s.mesh.material.userData._origOpacity = s.mesh.material.opacity
           s.mesh.material.userData._origTransparent = s.mesh.material.transparent
           s.mesh.material.transparent = true
-          s.mesh.material.opacity = Math.max(0.1, (s.mesh.material.userData._origOpacity || 0.5) * 0.2)
+          s.mesh.material.opacity = 0
         }
       }
       if (horizonRef.current && horizonRef.current.material) {
-        const m = horizonRef.current.material
-        m.userData = m.userData || {}
-        m.userData._origOpacity = (m.uniforms && m.uniforms.uOpacity) ? m.uniforms.uOpacity.value : m.opacity
-        m.userData._origTransparent = m.transparent
-        m.transparent = true
-        if (m.uniforms && m.uniforms.uOpacity) m.uniforms.uOpacity.value = 0
-        else m.opacity = 0
-        if (horizonRef.current.userData.accretion && horizonRef.current.userData.accretion.material) {
-          const am = horizonRef.current.userData.accretion.material
-          am.userData = am.userData || {}
-          am.userData._origOpacity = (am.uniforms && am.uniforms.uOpacity) ? am.uniforms.uOpacity.value : am.opacity
-          if (am.uniforms && am.uniforms.uOpacity) am.uniforms.uOpacity.value = 0
-          else am.opacity = 0
-        }
+        horizonRef.current.material.userData = horizonRef.current.material.userData || {}
+        horizonRef.current.material.userData._origOpacity = horizonRef.current.material.opacity
+        horizonRef.current.material.userData._origTransparent = horizonRef.current.material.transparent
+        horizonRef.current.material.transparent = true
+        horizonRef.current.material.opacity = 0
       }
       if (photonRef.current && photonRef.current.material) {
-        const m = photonRef.current.material
-        m.userData = m.userData || {}
-        m.userData._origOpacity = (m.uniforms && m.uniforms.uOpacity) ? m.uniforms.uOpacity.value : m.opacity
-        m.userData._origTransparent = m.transparent
-        m.transparent = true
-        if (m.uniforms && m.uniforms.uOpacity) m.uniforms.uOpacity.value = 0
-        else m.opacity = 0
+        photonRef.current.material.userData = photonRef.current.material.userData || {}
+        photonRef.current.material.userData._origOpacity = photonRef.current.material.opacity
+        photonRef.current.material.userData._origTransparent = photonRef.current.material.transparent
+        photonRef.current.material.transparent = true
+        photonRef.current.material.opacity = 0
       }
       if (auraRef.current && auraRef.current.material) {
-        const m = auraRef.current.material
-        m.userData = m.userData || {}
-        m.userData._origOpacity = (m.uniforms && m.uniforms.uOpacity) ? m.uniforms.uOpacity.value : m.opacity
-        m.userData._origTransparent = m.transparent
-        m.transparent = true
-        if (m.uniforms && m.uniforms.uOpacity) m.uniforms.uOpacity.value = 0
-        else m.opacity = 0
+        auraRef.current.material.userData = auraRef.current.material.userData || {}
+        auraRef.current.material.userData._origOpacity = auraRef.current.material.opacity
+        auraRef.current.material.userData._origTransparent = auraRef.current.material.transparent
+        auraRef.current.material.transparent = true
+        auraRef.current.material.opacity = 0
       }
     } catch (e) {}
     // (no black overlay to paint)
@@ -860,12 +719,7 @@ function App() {
           if (black) {
             black.style.transition = 'opacity 1000ms linear'
             black.style.opacity = '0'
-            setTimeout(() => { try { black.remove() } catch (e) {} }, 1200)
           }
-          // also strip any leftover pixel canvases
-          document.querySelectorAll('.pixel-canvas').forEach(el => {
-            try { el.style.opacity = '0'; setTimeout(() => el.remove(), 400) } catch (e) {}
-          })
         } catch (e) {}
 
         // start fading the 3D scene back in over 1.5s
@@ -891,28 +745,13 @@ function App() {
               }
             }
             if (horizonRef.current && horizonRef.current.material && horizonRef.current.material.userData && typeof horizonRef.current.material.userData._origOpacity === 'number') {
-              const m = horizonRef.current.material
-              const v = m.userData._origOpacity * eased
-              if (m.uniforms && m.uniforms.uOpacity) m.uniforms.uOpacity.value = v
-              else m.opacity = v
-              if (horizonRef.current.userData.accretion && horizonRef.current.userData.accretion.material) {
-                const am = horizonRef.current.userData.accretion.material
-                const av = (am.userData._origOpacity != null ? am.userData._origOpacity : 0.45) * eased
-                if (am.uniforms && am.uniforms.uOpacity) am.uniforms.uOpacity.value = av
-                else am.opacity = av
-              }
+              horizonRef.current.material.opacity = horizonRef.current.material.userData._origOpacity * eased
             }
             if (photonRef.current && photonRef.current.material && photonRef.current.material.userData && typeof photonRef.current.material.userData._origOpacity === 'number') {
-              const m = photonRef.current.material
-              const v = m.userData._origOpacity * eased
-              if (m.uniforms && m.uniforms.uOpacity) m.uniforms.uOpacity.value = v
-              else m.opacity = v
+              photonRef.current.material.opacity = photonRef.current.material.userData._origOpacity * eased
             }
             if (auraRef.current && auraRef.current.material && auraRef.current.material.userData && typeof auraRef.current.material.userData._origOpacity === 'number') {
-              const m = auraRef.current.material
-              const v = m.userData._origOpacity * eased
-              if (m.uniforms && m.uniforms.uOpacity) m.uniforms.uOpacity.value = v
-              else m.opacity = v
+              auraRef.current.material.opacity = auraRef.current.material.userData._origOpacity * eased
             }
           } catch (e) {}
           if (p < 1) requestAnimationFrame(fadeInScene)
@@ -951,71 +790,25 @@ function App() {
         const ctx = s.getContext('2d')
         ctx.scale(DPR, DPR)
 
-        // Optimized supernova physics — blast + debris + plasma dust
-        const colors = ['#ff3b5c','#ff6b6b','#ffd93d','#ffe66d','#7ee787','#2ee6a6','#6bd3ff','#4cc9ff','#d18bff','#b388ff','#ff9fd6','#ff5ec4','#ffffff','#c8f0ff','#ffb347','#a0f0ff','#e0b0ff','#ff7a18','#5ef0ff']
+        // CHAOTIC immersive supernova
+        const colors = ['#ff3b5c','#ff6b6b','#ffd93d','#ffe66d','#7ee787','#2ee6a6','#6bd3ff','#4cc9ff','#d18bff','#b388ff','#ff9fd6','#ff5ec4','#ffffff','#c8f0ff']
         const particles = []
-        // Fast plasma sparks (core blast)
-        const count = 4800
+        const count = 4200
         for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2
-          const wave = Math.floor(Math.random() * 4)
-          // energy-weighted speed: inverse-ish power for realistic ejecta
-          const energy = Math.pow(Math.random(), 0.55)
-          const base = wave === 0 ? 140 : wave === 1 ? 260 : wave === 2 ? 420 : 560
-          const speed = (base + energy * 380) * (0.85 + Math.random() * 0.45)
-          const vx = Math.cos(angle) * speed
-          const vy = Math.sin(angle) * speed
+          const wave = Math.floor(Math.random() * 3)
+          const speed = (wave === 0 ? 80 : wave === 1 ? 160 : 280) + Math.random() * 320
+          const vx = Math.cos(angle) * speed * (0.7 + Math.random() * 0.6)
+          const vy = Math.sin(angle) * speed * (0.7 + Math.random() * 0.6)
           particles.push({
-            x: hx + (Math.random() - 0.5) * 36,
-            y: hy + (Math.random() - 0.5) * 36,
+            x: hx + (Math.random() - 0.5) * 40,
+            y: hy + (Math.random() - 0.5) * 40,
             vx, vy,
-            ax: 0, ay: 0,
-            life: 2400 + Math.random() * 2200,
+            life: 2800 + Math.random() * 1800,
             age: 0,
-            size: 0.8 + Math.random() * 4.5 + (wave >= 2 ? 2 : 0),
+            size: 1 + Math.random() * 5 + (wave === 2 ? 2 : 0),
             color: colors[Math.floor(Math.random() * colors.length)],
-            spin: (Math.random() - 0.5) * 0.55,
-            kind: 'spark',
-            mass: 0.6 + Math.random() * 0.8
-          })
-        }
-        // Heavy debris shards (slower, larger, longer life)
-        for (let i = 0; i < 600; i++) {
-          const angle = Math.random() * Math.PI * 2
-          const speed = 60 + Math.random() * 180
-          particles.push({
-            x: hx + (Math.random() - 0.5) * 50,
-            y: hy + (Math.random() - 0.5) * 50,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            ax: 0, ay: 0,
-            life: 4000 + Math.random() * 2800,
-            age: 0,
-            size: 3 + Math.random() * 8,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            spin: (Math.random() - 0.5) * 0.3,
-            kind: 'debris',
-            mass: 1.2 + Math.random()
-          })
-        }
-        // Multicolor plasma dust clouds
-        const dustCount = 1100
-        for (let i = 0; i < dustCount; i++) {
-          const angle = Math.random() * Math.PI * 2
-          const speed = 25 + Math.random() * 120
-          particles.push({
-            x: hx + (Math.random() - 0.5) * 90,
-            y: hy + (Math.random() - 0.5) * 90,
-            vx: Math.cos(angle) * speed * (0.4 + Math.random()),
-            vy: Math.sin(angle) * speed * (0.4 + Math.random()),
-            ax: 0, ay: 0,
-            life: 3800 + Math.random() * 2600,
-            age: 0,
-            size: 5 + Math.random() * 16,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            spin: (Math.random() - 0.5) * 0.18,
-            kind: 'dust',
-            mass: 0.3 + Math.random() * 0.4
+            spin: (Math.random() - 0.5) * 0.4
           })
         }
         // shock ring
@@ -1044,8 +837,8 @@ function App() {
           const dt = now - boomStart
           ctx.clearRect(0, 0, s.width / DPR, s.height / DPR)
           // expanding shockwave rings
-          ringR += 28
-          ringAlpha *= 0.965
+          ringR += 18
+          ringAlpha *= 0.97
           for (let k = 0; k < 3; k++) {
             ctx.beginPath()
             ctx.arc(hx, hy, ringR * (0.6 + k * 0.35), 0, Math.PI * 2)
@@ -1056,52 +849,20 @@ function App() {
           }
           for (const p of particles) {
             const t = Math.min(1, p.age / p.life)
-            const dt = 1 / 60
-            // quadratic-ish atmospheric drag + slight gravity from origin
-            const speed = Math.hypot(p.vx, p.vy) || 1
-            const dragCoeff = p.kind === 'dust' ? 0.0018 : p.kind === 'debris' ? 0.0011 : 0.0009
-            const drag = 1 - Math.min(0.08, dragCoeff * speed * (p.mass || 1))
-            p.vx *= drag
-            p.vy *= drag
-            // weak central pull (mindfuck gravity well after blast)
-            const dx = hx - p.x
-            const dy = hy - p.y
-            const dist = Math.hypot(dx, dy) || 1
-            const pull = (p.kind === 'spark' ? 8 : 3) / (dist * dist) * dt * 60
-            p.vx += dx * pull * 0.015
-            p.vy += dy * pull * 0.015
-            // turbulence
-            p.vx += Math.sin(p.age * 0.012 + p.spin) * (p.kind === 'dust' ? 0.12 : 0.22)
-            p.vy += Math.cos(p.age * 0.01 - p.spin) * (p.kind === 'dust' ? 0.1 : 0.18)
-            p.x += p.vx * dt
-            p.y += p.vy * dt
-            p.age += 1000 * dt
-            const alpha = p.kind === 'dust'
-              ? Math.pow(1 - t, 0.5) * 0.5
-              : p.kind === 'debris'
-                ? Math.pow(1 - t, 0.65) * 0.85
-                : Math.pow(1 - t, 0.72)
+            p.x += p.vx * (1 / 60)
+            p.y += p.vy * (1 / 60)
+            p.vx *= 0.992
+            p.vy *= 0.992
+            p.vy += Math.sin(p.age * 0.01 + p.spin) * 0.15
+            p.age += 1000 / 60
+            const alpha = Math.pow(1 - t, 0.7)
             ctx.fillStyle = p.color
             ctx.globalAlpha = alpha
-            if (p.kind === 'dust') {
-              const sz = p.size * (1 + (1 - t) * 1.35)
-              ctx.beginPath()
-              ctx.arc(p.x, p.y, sz * 0.5, 0, Math.PI * 2)
-              ctx.fill()
-            } else if (p.kind === 'debris') {
-              const sz = p.size * (1 + (1 - t) * 0.5)
-              ctx.save()
-              ctx.translate(p.x, p.y)
-              ctx.rotate(p.spin * p.age * 0.002)
-              ctx.fillRect(-sz * 0.5, -sz * 0.25, sz, sz * 0.5)
-              ctx.restore()
-            } else {
-              const sz = p.size * (1 + (1 - t) * 0.9)
-              ctx.fillRect(Math.round(p.x), Math.round(p.y), sz, sz)
-            }
+            const sz = p.size * (1 + (1 - t) * 0.8)
+            ctx.fillRect(Math.round(p.x), Math.round(p.y), sz, sz)
           }
           ctx.globalAlpha = 1
-          if (now - boomStart < 3800) requestAnimationFrame(step)
+          if (now - boomStart < 3200) requestAnimationFrame(step)
           else {
             const settleStart = performance.now()
             function settle(now2) {
@@ -1137,7 +898,7 @@ function App() {
     // remove any existing overlays/canvases
     document.querySelectorAll('.pixel-canvas, .sn-canvas, .sn-black-overlay, .sn-halo').forEach(el => el.remove())
 
-    // do not re-add black overlay
+    // no black overlay
 
     // reset initialGlitch and re-run selected animation
     setInitialGlitch(true)
@@ -1159,8 +920,8 @@ function App() {
     const DPR = Math.min(window.devicePixelRatio, 1.75)
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x05021a)
-    scene.fog = new THREE.FogExp2(0x05021a, 0.0105)
+    scene.background = new THREE.Color(0x03010f)
+    scene.fog = new THREE.FogExp2(0x060318, 0.0082)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 200)
@@ -1194,7 +955,7 @@ function App() {
     ]
 
     const layers = []
-    const baseOpacity = 0.9 // ~10% more opaque than prior ~0.8
+    const baseOpacity = 0.72 // dreamy / soft Hubble depth
 
     for (const def of layerDefs) {
       const positions = new Float32Array(def.count * 3)
@@ -1228,8 +989,8 @@ function App() {
 
         // arm cores slightly brighter / cooler pastel
         hues[written] = inArm ? (arm * 0.18 + Math.random() * 0.12 + r * 0.01) % 1 : Math.random()
-        const sat = inArm ? 0.7 + Math.random() * 0.28 : 0.5 + Math.random() * 0.25
-        const lit = inArm ? 0.62 + Math.random() * 0.28 : 0.5 + Math.random() * 0.25
+        const sat = inArm ? 0.48 + Math.random() * 0.22 : 0.32 + Math.random() * 0.2
+        const lit = inArm ? 0.55 + Math.random() * 0.22 : 0.45 + Math.random() * 0.2
         const c = new THREE.Color().setHSL(hues[written], sat, lit)
         colors[i3] = c.r
         colors[i3 + 1] = c.g
@@ -1405,10 +1166,10 @@ function App() {
       gGeo.setAttribute('color', new THREE.BufferAttribute(gCol, 3))
 
       const gMat = new THREE.PointsMaterial({
-        size: 0.14 + Math.random() * 0.08,
+        size: 0.18 + Math.random() * 0.12,
         vertexColors: true,
         transparent: true,
-        opacity: 0.03 + Math.random() * 0.025,
+        opacity: 0.045 + Math.random() * 0.04,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true
@@ -1426,7 +1187,7 @@ function App() {
     }
     gasRef.current = gasClouds
 
-    // Core black hole — shader-driven with MeshBasic fallback
+    // Core black hole — 30% smaller, more orbital chaos
     const core = new THREE.Mesh(
       new THREE.SphereGeometry(0.25, 64, 64),
       new THREE.MeshBasicMaterial({ color: 0x000000 })
@@ -1434,41 +1195,33 @@ function App() {
     scene.add(core)
     coreRef.current = core
 
-    function makeRingMat(frag, opacity, extraUniforms = {}) {
-      try {
-        return new THREE.ShaderMaterial({
-          uniforms: { uTime: { value: 0 }, uOpacity: { value: opacity }, ...extraUniforms },
-          vertexShader: HORIZON_VERT,
-          fragmentShader: frag,
-          transparent: true,
-          side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false
-        })
-      } catch (e) {
-        return new THREE.MeshBasicMaterial({
-          color: 0x7b3fd5, transparent: true, opacity, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
-        })
-      }
-    }
-
-    const horizonMat = makeRingMat(HORIZON_FRAG, 0.72)
-    const horizon = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.46, 128), horizonMat)
+    const horizon = new THREE.Mesh(
+      new THREE.RingGeometry(0.28, 0.44, 96),
+      new THREE.MeshBasicMaterial({
+        color: 0x7b3fd5,
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+      })
+    )
     horizon.rotation.x = Math.PI / 2.05
     scene.add(horizon)
     horizonRef.current = horizon
 
-    const photonMat = makeRingMat(PHOTON_FRAG, 0.55)
-    const photon = new THREE.Mesh(new THREE.RingGeometry(0.44, 0.58, 128), photonMat)
+    const photon = new THREE.Mesh(
+      new THREE.RingGeometry(0.42, 0.55, 96),
+      new THREE.MeshBasicMaterial({
+        color: 0xb8f0ff,
+        transparent: true,
+        opacity: 0.35,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+      })
+    )
     photon.rotation.x = Math.PI / 2.12
     scene.add(photon)
     photonRef.current = photon
-
-    const accretionMat = makeRingMat(ACCRETION_FRAG, 0.45, { uColor: { value: new THREE.Color(0xff6b9d) } })
-    const accretion = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.52, 128), accretionMat)
-    accretion.rotation.x = Math.PI / 2.0
-    scene.add(accretion)
-    horizon.userData.accretion = accretion
 
     // Dense warp ring chaos around smaller core
     for (let ri = 0; ri < 8; ri++) {
@@ -1492,23 +1245,16 @@ function App() {
       warpRingsRef.current.push(wr)
     }
 
-    let auraMat
-    try {
-      auraMat = new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uOpacity: { value: 0.22 } },
-        vertexShader: AURA_VERT,
-        fragmentShader: AURA_FRAG,
+    const aura = new THREE.Mesh(
+      new THREE.SphereGeometry(1.6, 32, 32),
+      new THREE.MeshBasicMaterial({
+        color: 0x4a2080,
         transparent: true,
+        opacity: 0.11,
         side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
+        blending: THREE.AdditiveBlending
       })
-    } catch (e) {
-      auraMat = new THREE.MeshBasicMaterial({
-        color: 0x4a2080, transparent: true, opacity: 0.14, side: THREE.BackSide, blending: THREE.AdditiveBlending
-      })
-    }
-    const aura = new THREE.Mesh(new THREE.SphereGeometry(1.7, 48, 48), auraMat)
+    )
     scene.add(aura)
     auraRef.current = aura
 
@@ -1521,31 +1267,14 @@ function App() {
       const t = clock.getElapsedTime()
       const now = performance.now()
 
-      // Drive WebGL shader uniforms
-      if (horizonRef.current && horizonRef.current.material && horizonRef.current.material.uniforms) {
-        horizonRef.current.material.uniforms.uTime.value = t
-        if (horizonRef.current.userData.accretion && horizonRef.current.userData.accretion.material.uniforms) {
-          horizonRef.current.userData.accretion.material.uniforms.uTime.value = t * 1.15
-          horizonRef.current.userData.accretion.rotation.z = t * 0.35
-        }
-      }
-      if (photonRef.current && photonRef.current.material && photonRef.current.material.uniforms) {
-        photonRef.current.material.uniforms.uTime.value = t * 1.3
-        photonRef.current.rotation.z = -t * 0.55
-      }
-      if (auraRef.current && auraRef.current.material && auraRef.current.material.uniforms) {
-        auraRef.current.material.uniforms.uTime.value = t
-        auraRef.current.scale.setScalar(1 + Math.sin(t * 0.8) * 0.04)
-      }
-
       // Rainbow color drift on all shape layers
       for (const layer of layersRef.current) {
-        layer.pts.rotation.y = t * 0.0055
-        layer.pts.rotation.z = Math.sin(t * 0.035) * 0.02
+        layer.pts.rotation.y = t * 0.0028
+        layer.pts.rotation.z = Math.sin(t * 0.022) * 0.012
         const cols = layer.geo.attributes.color
         for (let i = 0; i < layer.count; i++) {
-          layer.hues[i] = (layer.hues[i] + 0.00022) % 1 // vibrant slow rainbow
-          const c = new THREE.Color().setHSL(layer.hues[i], 0.68, 0.64)
+          layer.hues[i] = (layer.hues[i] + 0.00009) % 1 // slow dreamy drift
+          const c = new THREE.Color().setHSL(layer.hues[i], 0.42, 0.58)
           cols.array[i * 3] = c.r
           cols.array[i * 3 + 1] = c.g
           cols.array[i * 3 + 2] = c.b
@@ -1597,8 +1326,8 @@ function App() {
 
       // Whole-system ~5° living wobble
       if (sceneRef.current) {
-        sceneRef.current.rotation.x = Math.sin(t * 0.11) * 0.087  // ~5 deg
-        sceneRef.current.rotation.z = Math.cos(t * 0.09) * 0.052
+        sceneRef.current.rotation.x = Math.sin(t * 0.07) * 0.045
+        sceneRef.current.rotation.z = Math.cos(t * 0.055) * 0.028
       }
       // Warp ring chaos
       if (warpRingsRef.current) {
@@ -1639,21 +1368,19 @@ function App() {
       core.scale.setScalar(0.94 + breath * 0.1 + smoothTyping * 0.035 + actPulse * 0.05)
       horizon.scale.setScalar(0.96 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
 
-      // Photon / aura are ShaderMaterials — drive uOpacity, never .color
-      if (photon.material && photon.material.uniforms && photon.material.uniforms.uOpacity) {
-        if (actPulse > 0.08) {
-          photon.material.uniforms.uOpacity.value = 0.35 + actPulse * 0.4 + breath * 0.1
-        } else if (smoothTyping > 0.15) {
-          photon.material.uniforms.uOpacity.value = 0.4 + breath * 0.12 + smoothTyping * 0.08
-        } else {
-          photon.material.uniforms.uOpacity.value = 0.45 + breath * 0.1
-        }
+      if (actPulse > 0.08) {
+        photon.material.color.setHex(0x40d8ff)
+        photon.material.opacity = 0.14 + actPulse * 0.28 + breath * 0.08
+      } else if (smoothTyping > 0.15) {
+        photon.material.color.setHex(0xb0d4ff)
+        photon.material.opacity = 0.16 + breath * 0.1 + smoothTyping * 0.06
+      } else {
+        photon.material.color.setHex(0xc8d8ff)
+        photon.material.opacity = 0.12 + breath * 0.1
       }
 
       aura.scale.setScalar(1 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
-      if (aura.material && aura.material.uniforms && aura.material.uniforms.uOpacity) {
-        aura.material.uniforms.uOpacity.value = 0.14 + breath * 0.08 + smoothTyping * 0.03 + actPulse * 0.05
-      }
+      aura.material.opacity = 0.04 + breath * 0.04 + smoothTyping * 0.015 + actPulse * 0.03
 
       // Born stars + gravitational warp near core
       for (const s of starsRef.current) {
@@ -1800,8 +1527,8 @@ function App() {
         }
       }
 
-      camera.position.x = Math.sin(t * 0.045) * 0.22
-      camera.position.y = 0.5 + Math.sin(t * 0.08) * 0.12
+      camera.position.x = Math.sin(t * 0.028) * 0.14
+      camera.position.y = 0.5 + Math.sin(t * 0.05) * 0.08
       camera.lookAt(0, 0, 0)
 
       renderer.render(scene, camera)
@@ -1838,32 +1565,35 @@ function App() {
     }, 1200)
   }
 
+  const birthFromInput = (text) => {
+    const hue = path === 'chat' ? 0.55 + Math.random() * 0.25 : Math.random()
+    const x = (Math.random() - 0.5) * 8
+    const y = (Math.random() - 0.5) * 4
+    const z = (Math.random() - 0.5) * 5 - 0.5
+    birthStar({ x, y, z, hue })
+    fetch(`${API}/api/stars`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ x, y, z, hue, text, path: path || 'build' })
+    }).catch(() => {})
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     const text = (needsMore ? moreText : query).trim()
     if (!text) return
 
-    const hue = Math.random()
-    const x = (Math.random() - 0.5) * 8
-    const y = (Math.random() - 0.5) * 4
-    const z = (Math.random() - 0.5) * 5 - 0.5
-    birthStar({ x, y, z, hue })
-
-    fetch(`${API}/api/stars`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ x, y, z, hue, text })
-    }).catch(() => {})
-
-    setResponse('A new star has been born.')
+    birthFromInput(text)
+    setResponse(path === 'chat' ? 'The entity is listening…' : 'input initiates creation')
     setResponseKey(k => k + 1)
-    setStatus('listening...')
+    setStatus(path === 'chat' ? 'conversing…' : 'routing…')
 
+    const endpoint = path === 'chat' ? '/api/chat' : '/api/intent'
     try {
-      const res = await fetch(`${API}/api/intent`, {
+      const res = await fetch(`${API}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text, path: path || 'build' })
       })
       const data = await res.json()
 
@@ -1879,9 +1609,17 @@ function App() {
         setMoreText('')
       }
     } catch {
-      setStatus('')
+      setStatus('offline core — star still recorded')
       setQuery('')
     }
+  }
+
+  const choosePath = (p) => {
+    setPath(p)
+    setResponse('')
+    setStatus('')
+    setQuery('')
+    setNeedsMore(false)
   }
 
   return (
@@ -1896,35 +1634,58 @@ function App() {
           XhumAI
         </h1>
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
-        <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">Intelligence that evolves with you</p>
+        <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">
+          {path === 'chat'
+            ? 'Speak with the living core'
+            : path === 'build'
+              ? 'Build what you need — free'
+              : 'Intelligence that evolves with you'}
+        </p>
 
-        <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`} data-text="search-form">
-          <input
-            type="text"
-            value={query}
-            onChange={handleInputChange}
-            placeholder="What are you trying to accomplish?"
-            autoFocus
-            disabled={needsMore}
-            className={isTyping ? 'input-awake' : ''}
-          />
+        {!path && (
+          <div className={`path-gates ${initialGlitch ? 'glitch' : ''}`}>
+            <button type="button" className="path-card path-chat" onClick={() => choosePath('chat')}>
+              <span className="path-title">Chat with XhumAI</span>
+              <span className="path-sub">The sentient core — learns who you are, grows with every voice</span>
+            </button>
+            <button type="button" className="path-card path-build" onClick={() => choosePath('build')}>
+              <span className="path-title">Build Your Future</span>
+              <span className="path-sub">What do you need? Utilities that do the real work</span>
+            </button>
+          </div>
+        )}
 
-          {needsMore && (
-            <textarea
-              className="more-input"
-              value={moreText}
-              onChange={(e) => setMoreText(e.target.value)}
-              placeholder={morePrompt || 'Provide more details...'}
-              rows={4}
+        {path && (
+          <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`}>
+            <button type="button" className="path-back" onClick={() => choosePath(null)}>← both paths</button>
+            <input
+              type="text"
+              value={query}
+              onChange={handleInputChange}
+              placeholder={path === 'chat' ? 'Talk to the core…' : 'What do you need built?'}
               autoFocus
+              disabled={needsMore}
+              className={isTyping ? 'input-awake' : ''}
             />
-          )}
 
-          <button type="submit" className="sr-only">Send</button>
-        </form>
+            {needsMore && (
+              <textarea
+                className="more-input"
+                value={moreText}
+                onChange={(e) => setMoreText(e.target.value)}
+                placeholder={morePrompt || 'Provide more details...'}
+                rows={4}
+                autoFocus
+              />
+            )}
+
+            <button type="submit" className="sr-only">Send</button>
+          </form>
+        )}
 
         <p className={`response ${initialGlitch ? 'glitch' : ''}`} key={responseKey} data-text={response}>{response}</p>
         {status && <p className={`status ${initialGlitch ? 'glitch' : ''}`} data-text={status}>{status}</p>}
+        <p className="universe-note">input initiates creation</p>
       </div>
     </div>
   )
