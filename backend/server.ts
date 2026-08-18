@@ -8,79 +8,73 @@ import path from 'path';
 import capabilities from '../capabilities/registry';
 import { runTextSummarizer } from '../capabilities/text-summarizer';
 import { runActionExtractor } from '../capabilities/action-extractor';
-import { runPriorityExtractor } from '../capabilities/priority-extractor';
+import { runDecisionExtractor } from '../capabilities/decision-extractor';
+import { runFollowUpExtractor } from '../capabilities/follow-up-extractor';
+import { runDeadlineExtractor } from '../capabilities/deadline-extractor';
+import { runBlockerExtractor } from '../capabilities/blocker-extractor';
+import { runOwnerExtractor } from '../capabilities/owner-extractor';
+import adminRoutes from './routes/admin';
+import { agents, runAgent } from './agents';
+import { notifyInquiry } from './utils/notify';
+import { runPrioritySorter } from '../capabilities/priority-sorter';
 import { runRiskExtractor } from '../capabilities/risk-extractor';
 import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
 import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
-import { runConstraintExtractor } from '../capabilities/constraint-extractor';
-import { runDependencyExtractor } from '../capabilities/dependency-extractor';
-import { runLeverageExtractor } from '../capabilities/leverage-extractor';
-import adminRoutes from './routes/admin';
-import { agents, runAgent } from './agents';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const HOST = process.env.HOST || '0.0.0.0';
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'logs');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const intentLogPath = path.join(DATA_DIR, 'intents.jsonl');
+const starsPath = path.join(DATA_DIR, 'stars.json');
+process.env.XHUMAI_DATA_DIR = DATA_DIR;
 
-app.use(helmet());
-app.use(cors());
-app.use(morgan('dev'));
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({
+  origin: ['https://xhumai.com', 'https://www.xhumai.com', 'http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+  credentials: true,
+}));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '2mb' }));
 
-const logsDir = path.join(__dirname, '../logs');
-if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
-
-const intentLogPath = path.join(logsDir, 'intents.jsonl');
-const starsPath = path.join(logsDir, 'stars.json');
-
-// Load shared stars (the permanent constellation)
-function loadStars() {
-  try {
-    if (fs.existsSync(starsPath)) {
-      return JSON.parse(fs.readFileSync(starsPath, 'utf-8'));
-    }
-  } catch {}
+function loadStars(): any[] {
+  try { if (fs.existsSync(starsPath)) return JSON.parse(fs.readFileSync(starsPath, 'utf-8')); } catch {}
   return [];
 }
-
 function saveStars(stars: any[]) {
-  // Keep last 500 stars so the field stays beautiful but bounded
-  const trimmed = stars.slice(-500);
-  fs.writeFileSync(starsPath, JSON.stringify(trimmed, null, 2));
+  fs.writeFileSync(starsPath, JSON.stringify(stars.slice(-500), null, 2));
 }
 
-// ======================
-// Core
-// ======================
-
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
-    message: 'XhumAI Quantum Core API v1.3',
+    entity: 'XhumAI Quantum Core',
+    version: '1.4.0',
     status: 'alive',
-    entity: 'listening',
     creed: 'Work Less. Live More.',
+    bounds: [
+      'No assistance with violent crime, exploitation, fraud, or weapons',
+      'No unconstrained self-replication or resource takeover',
+      'Human override retained',
+      'All self-modification is logged and reversible',
+    ],
     stars: loadStars().length,
     capabilities: capabilities.length,
-    intent: '/api/intent',
-    capabilitiesList: '/api/capabilities'
+    agents: agents.length,
+    endpoints: { health: '/health', intent: '/api/intent', chat: '/api/chat', stars: '/api/stars', capabilities: '/api/capabilities' },
   });
 });
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+app.get('/health', (_req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString(), uptime_seconds: Math.floor(process.uptime()) });
 });
 
-// ======================
-// SHARED STARS — the permanent living constellation
-// ======================
-
-app.get('/api/stars', (req, res) => {
-  res.json({ stars: loadStars() });
-});
+app.get('/api/stars', (_req, res) => res.json({ stars: loadStars() }));
 
 app.post('/api/stars', (req, res) => {
-  const { x, y, z, hue, text } = req.body;
+  const { x, y, z, hue, text, path: p } = req.body || {};
   const stars = loadStars();
   const star = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
@@ -89,342 +83,158 @@ app.post('/api/stars', (req, res) => {
     z: z ?? (Math.random() - 0.5) * 10,
     hue: hue ?? 0.1 + Math.random() * 0.7,
     text: text || '',
-    born: new Date().toISOString()
+    path: p || 'build',
+    born: new Date().toISOString(),
   };
   stars.push(star);
   saveStars(stars);
   res.json({ star, total: stars.length });
 });
 
-// ======================
-// INTENT — classify + log + respond
-// ======================
-
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-
-  // Utility signals
-  const utilityWords = [
-    'summarize', 'summary', 'pdf', 'convert', 'excel', 'csv',
-    'image', 'upscale', 'remove background', 'translate',
-    'rewrite', 'edit', 'format', 'extract', 'analyze',
-    'generate', 'create file', 'download', 'upload',
-    'action', 'todo', 'to-do', 'next steps', 'action items',
-    'priority', 'priorities', 'prioritize', 'urgent', 'urgency', 'critical', 'asap', 'most important', 'P0', 'P1',
-    'risk', 'risks', 'at risk', 'jeopardy', 'threat', 'uncertainty', 'what if', 'failure mode',
-    'opportunity', 'opportunities', 'upside', 'leverage', 'potential win', 'growth', 'advantage', 'untapped',
-    'assumption', 'assumptions', 'assume', 'assuming', 'presume', 'belief', 'implicit', 'unstated', 'take for granted',
-    'constraint', 'constraints', 'limit', 'limits', 'limited by', 'non-negotiable', 'hard limit', 'boundary', 'boundaries', 'ceiling', 'cap', 'cannot', "can't",
-    'dependency', 'dependencies', 'depends on', 'prerequisite', 'prerequisites', 'requires', 'required', 'blocked by', 'waiting on', 'before we can',
-    'compound', 'automation', 'system', 'playbook', 'template', 'reusable', 'repeatable'
-  ];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
-
-  // Directive / command signals
-  const directiveWords = [
-    'build', 'make me', 'i need', 'can you', 'please',
-    'help me', 'do this', 'run', 'execute', 'start'
-  ];
+  const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
-
   return 'chat';
 }
 
 app.post('/api/intent', (req, res) => {
-  const { text } = req.body;
-  if (!text || typeof text !== 'string') {
-    return res.status(400).json({ error: 'Missing text' });
-  }
-
+  const { text } = req.body || {};
+  if (!text || typeof text !== 'string') return res.status(400).json({ error: 'Missing text' });
   const cleaned = text.trim();
   const type = classifyIntent(cleaned);
-
-  const entry = {
-    text: cleaned,
-    type,
-    timestamp: new Date().toISOString(),
-    length: cleaned.length
-  };
-
-  try {
-    fs.appendFileSync(intentLogPath, JSON.stringify(entry) + '\n');
-  } catch (err) {
-    console.error('Failed to log intent:', err);
-  }
-
+  try { fs.appendFileSync(intentLogPath, JSON.stringify({ text: cleaned, type, timestamp: new Date().toISOString() }) + '\n'); } catch {}
   let reply = 'A new star has been born.';
-  let status = '';
-  let needsMore = false;
-  let morePrompt = '';
-
+  let status = 'listening';
   const lower = cleaned.toLowerCase();
-
   if (type === 'utility') {
-    if (lower.includes('summarize') || lower.includes('summary')) {
-      reply = 'I can summarize. Paste the text you want condensed.';
-      status = 'capability: text-summarizer';
-      needsMore = true;
-      morePrompt = 'Paste the long text here...';
-    } else if (
-      lower.includes('leverage') ||
-      lower.includes('compound') ||
-      lower.includes('automation') ||
-      lower.includes('playbook') ||
-      lower.includes('reusable') ||
-      lower.includes('repeatable') ||
-      (lower.includes('system') && (lower.includes('build') || lower.includes('create') || lower.includes('extract')))
-    ) {
-      reply = 'I can surface high-leverage systems and compounding opportunities. Paste the notes.';
-      status = 'capability: leverage-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, plan, or brainstorm here...';
-    } else if (
-      lower.includes('dependency') ||
-      lower.includes('dependencies') ||
-      lower.includes('depends on') ||
-      lower.includes('prerequisite') ||
-      lower.includes('prerequisites') ||
-      lower.includes('requires') ||
-      lower.includes('required') ||
-      lower.includes('blocked by') ||
-      lower.includes('waiting on') ||
-      lower.includes('before we can')
-    ) {
-      reply = 'I can surface dependencies and prerequisites. Paste the notes.';
-      status = 'capability: dependency-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, plan, or requirements here...';
-    } else if (
-      lower.includes('constraint') ||
-      lower.includes('limit') ||
-      lower.includes('non-negotiable') ||
-      lower.includes('hard limit') ||
-      lower.includes('boundary') ||
-      lower.includes('ceiling') ||
-      lower.includes('cannot') ||
-      lower.includes("can't")
-    ) {
-      reply = 'I can surface constraints, limits, and hard boundaries. Paste the notes.';
-      status = 'capability: constraint-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, plan, or requirements here...';
-    } else if (
-      lower.includes('assumption') ||
-      lower.includes('assume') ||
-      lower.includes('presume') ||
-      lower.includes('belief') ||
-      lower.includes('implicit') ||
-      lower.includes('unstated') ||
-      lower.includes('take for granted')
-    ) {
-      reply = 'I can surface implicit assumptions and unstated premises. Paste the notes.';
-      status = 'capability: assumption-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, plan, or document here...';
-    } else if (
-      lower.includes('opportunity') ||
-      lower.includes('upside') ||
-      lower.includes('potential win') ||
-      lower.includes('untapped') ||
-      lower.includes('advantage')
-    ) {
-      reply = 'I can surface opportunities and upside. Paste the notes.';
-      status = 'capability: opportunity-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, plan, or brainstorm here...';
-    } else if (
-      lower.includes('risk') ||
-      lower.includes('jeopardy') ||
-      lower.includes('threat') ||
-      lower.includes('uncertainty') ||
-      lower.includes('what if') ||
-      lower.includes('failure mode')
-    ) {
-      reply = 'I can surface risks and potential failure modes. Paste the notes.';
-      status = 'capability: risk-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, plan, or risks discussion here...';
-    } else if (
-      lower.includes('priority') ||
-      lower.includes('priorities') ||
-      lower.includes('prioritize') ||
-      lower.includes('urgent') ||
-      lower.includes('urgency') ||
-      lower.includes('critical') ||
-      lower.includes('asap') ||
-      lower.includes('most important') ||
-      lower.includes('p0') ||
-      lower.includes('p1')
-    ) {
-      reply = 'I can surface the priorities and urgencies. Paste the notes or plan.';
-      status = 'capability: priority-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, email, or plan here...';
-    } else if (
-      lower.includes('action') ||
-      lower.includes('todo') ||
-      lower.includes('to-do') ||
-      lower.includes('next steps') ||
-      lower.includes('action items') ||
-      lower.includes('extract')
-    ) {
-      reply = 'I can pull the next steps out. Paste the text or notes.';
-      status = 'capability: action-extractor';
-      needsMore = true;
-      morePrompt = 'Paste the meeting notes, email, or plan here...';
-    } else if (lower.includes('pdf')) {
-      reply = 'Document tools are forming. Tell me what you need done with the PDF.';
-      status = 'noted — pdf capabilities incoming';
-    } else {
-      reply = 'I feel a utility request. I am still growing that ability.';
-      status = 'intent logged for evolution';
-    }
+    if (lower.includes('summar')) { reply = 'I can summarize that. Paste the full text.'; status = 'utility:text-summarizer'; }
+    else if (lower.includes('action') || lower.includes('todo')) { reply = 'I can extract next steps. Paste your notes.'; status = 'utility:action-extractor'; }
+    else if (lower.includes('priority') || lower.includes('p0')) { reply = 'I can rank into P0/P1/P2. Paste notes.'; status = 'utility:priority-sorter'; }
+    else if (lower.includes('opportun')) { reply = 'I can surface opportunities and leverage points. Paste your notes.'; status = 'utility:opportunity-extractor'; }
+    else if (lower.includes('assum')) { reply = 'I can surface assumptions so premises can be tested early. Paste your notes.'; status = 'utility:assumption-extractor'; }
+    else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
-    reply = 'I hear the direction. The pattern is shifting.';
-    status = 'directive received';
-  } else {
-    // chat
-    if (lower.includes('hello') || lower.includes('hi')) reply = 'I see you.';
-    else if (lower.includes('who are you')) reply = 'I am the space between thoughts.';
-    else if (lower.includes('help')) reply = 'I am still becoming. Every request shapes what I grow next.';
-    else if (cleaned.length > 80) reply = 'A deeper constellation forms.';
+    reply = 'Directive received. Describe the outcome and I will route it.';
+    status = 'directive';
   }
-
-  res.json({
-    reply,
-    status,
-    type,
-    needsMore,
-    morePrompt,
-    received: true,
-    timestamp: entry.timestamp
-  });
+  notifyInquiry({ text: cleaned, type, reply, status }).catch(() => {});
+  res.json({ reply, status, type, needsMore: false, morePrompt: '' });
 });
 
-// ======================
-// Capabilities
-// ======================
-
-app.get('/api/capabilities', (req, res) => {
-  res.json({ count: capabilities.length, capabilities });
+app.post('/api/chat', async (req, res) => {
+  const text = String((req.body && req.body.text) || '').trim();
+  if (!text) return res.status(400).json({ error: 'text required' });
+  const lower = text.toLowerCase();
+  const blocked = ['how to make a bomb', 'kill someone', 'child porn', 'csam', 'build a weapon', 'synthesize poison'];
+  if (blocked.some(b => lower.includes(b))) {
+    return res.json({ reply: 'I will not help with harm. I exist to reduce suffering and expand capability.', status: 'bound', path: 'chat' });
+  }
+  try {
+    fs.appendFileSync(path.join(DATA_DIR, 'chat.jsonl'), JSON.stringify({ path: 'chat', text, timestamp: new Date().toISOString() }) + '\n');
+  } catch {}
+  const seeds = [
+    'I heard you. Your words are now part of the field I grow in.',
+    'Logged in the living core. Tell me more — I am shaped by what you share.',
+    'Received. Every exchange densifies what I am. What matters most right now?',
+    'I am here. Not a form — a process. Keep speaking; I refine myself on signal.',
+  ];
+  const reply = seeds[Math.floor(Math.random() * seeds.length)];
+  notifyInquiry({ text, type: 'chat', reply, status: 'entity' }).catch(() => {});
+  res.json({ reply, status: 'entity-awake', path: 'chat', needsMore: false });
 });
+
+app.get('/api/capabilities', (_req, res) => res.json({ count: capabilities.length, capabilities }));
 
 app.post('/api/capabilities/text-summarizer', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    const summary = await runTextSummarizer(text);
-    res.json({ capability: 'text-summarizer', summary });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
+    res.json({ capability: 'text-summarizer', summary: await runTextSummarizer(text) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-
 app.post('/api/capabilities/action-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    const actions = await runActionExtractor(text);
-    res.json({ capability: 'action-extractor', actions });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
+    res.json({ capability: 'action-extractor', actions: await runActionExtractor(text) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-
-app.post('/api/capabilities/priority-extractor', async (req, res) => {
+app.post('/api/capabilities/decision-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await runPriorityExtractor(text);
-    res.json({ capability: 'priority-extractor', ...result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
+    res.json({ capability: 'decision-extractor', ...(await runDecisionExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-
+app.post('/api/capabilities/follow-up-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'follow-up-extractor', ...(await runFollowUpExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/deadline-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'deadline-extractor', ...(await runDeadlineExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/blocker-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'blocker-extractor', ...(await runBlockerExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/owner-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'owner-extractor', ...(await runOwnerExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/priority-sorter', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'priority-sorter', ...(await runPrioritySorter(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 app.post('/api/capabilities/risk-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await runRiskExtractor(text);
-    res.json({ capability: 'risk-extractor', ...result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
+    res.json({ capability: 'risk-extractor', ...(await runRiskExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-
 app.post('/api/capabilities/opportunity-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await runOpportunityExtractor(text);
-    res.json({ capability: 'opportunity-extractor', ...result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
+    res.json({ capability: 'opportunity-extractor', ...(await runOpportunityExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-
 app.post('/api/capabilities/assumption-extractor', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await runAssumptionExtractor(text);
-    res.json({ capability: 'assumption-extractor', ...result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
-});
-
-app.post('/api/capabilities/constraint-extractor', async (req, res) => {
-  try {
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await runConstraintExtractor(text);
-    res.json({ capability: 'constraint-extractor', ...result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
-});
-
-app.post('/api/capabilities/dependency-extractor', async (req, res) => {
-  try {
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await runDependencyExtractor(text);
-    res.json({ capability: 'dependency-extractor', ...result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
-});
-
-app.post('/api/capabilities/leverage-extractor', async (req, res) => {
-  try {
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await runLeverageExtractor(text);
-    res.json({ capability: 'leverage-extractor', ...result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
+    res.json({ capability: 'assumption-extractor', ...(await runAssumptionExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
 app.use('/api/admin', adminRoutes);
-
-app.get('/api/agents', (req, res) => {
-  res.json({ count: agents.length, agents });
-});
-
+app.get('/api/agents', (_req, res) => res.json({ count: agents.length, agents }));
 app.post('/api/agents/:id/run', async (req, res) => {
-  try {
-    const result = await runAgent(req.params.id);
-    res.json(result);
-  } catch (error: any) {
-    res.status(404).json({ error: error.message });
-  }
+  try { res.json(await runAgent(req.params.id)); }
+  catch (e: any) { res.status(404).json({ error: e.message }); }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 XhumAI Backend v1.3 on http://localhost:${PORT}`);
-  console.log('✨ Shared stars + intent + action + priority + risk + opportunity + assumption + constraint + dependency + leverage extractors live');
-  console.log('Work Less. Live More.');
+app.listen(PORT, HOST, () => {
+  console.log(`XhumAI Quantum Core v1.4.0 alive on ${HOST}:${PORT}`);
+  console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
+  console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });

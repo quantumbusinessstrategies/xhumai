@@ -8,13 +8,15 @@ Every capability is an asset. Every asset compounds.
 |----|------|----------|--------|
 | text-summarizer | Text Summarizer | writing | stub (logging live) |
 | action-extractor | Action Extractor | productivity | stub (logging live) |
-| priority-extractor | Priority Extractor | productivity | stub (logging live) |
+| decision-extractor | Decision Extractor | productivity | stub (logging live) |
+| follow-up-extractor | Follow-up Extractor | productivity | stub (logging live) |
+| deadline-extractor | Deadline Extractor | productivity | stub (logging live) |
+| blocker-extractor | Blocker Extractor | productivity | stub (logging live) |
+| owner-extractor | Owner Extractor | productivity | stub (logging live) |
+| priority-sorter | Priority Sorter | productivity | stub (logging live) |
 | risk-extractor | Risk Extractor | productivity | stub (logging live) |
 | opportunity-extractor | Opportunity Extractor | productivity | stub (logging live) |
 | assumption-extractor | Assumption Extractor | productivity | stub (logging live) |
-| constraint-extractor | Constraint Extractor | productivity | stub (logging live) |
-| dependency-extractor | Dependency Extractor | productivity | stub (logging live) |
-| leverage-extractor | Leverage Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -34,12 +36,14 @@ Every capability is an asset. Every asset compounds.
 
 - **Text Summarizer** → less reading
 - **Action Extractor** → less re-reading, more executing
-- **Priority Extractor** → attention goes where it compounds
+- **Decision Extractor** → less re-litigating, more clarity
+- **Follow-up Extractor** → fewer dropped loops, more closed loops
+- **Deadline Extractor** → time pressure visible, fewer slips
+- **Blocker Extractor** → friction visible, work unblocks, nothing stalls
+- **Owner Extractor** → accountability visible, nothing floats without a name
+- **Priority Sorter** → attention goes where it compounds
 - **Risk Extractor** → downside visible early, fewer blindsides
-- **Opportunity Extractor** → upside and leverage become visible
-- **Assumption Extractor** → implicit premises surface so they can be tested
-- **Constraint Extractor** → hard limits become explicit, better decisions
-- **Dependency Extractor** → sequencing visible, hidden prerequisites never stall work
-- **Leverage Extractor** → high-leverage systems and compounding actions surface so small effort creates ongoing advantage
+- **Opportunity Extractor** → upside and leverage visible early, high-value openings captured
+- **Assumption Extractor** → premises visible early, false foundations challenged before they waste work
 
 Together they turn notes into leverage.
