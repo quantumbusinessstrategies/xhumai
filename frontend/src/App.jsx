@@ -1672,7 +1672,7 @@ function App() {
               type="text"
               value={queryBuild}
               onChange={handleBuildChange}
-              placeholder="Build Your Future"
+              placeholder="build your future"
               disabled={needsMore}
               className={isTyping && path === 'build' ? 'input-awake' : ''}
             />
