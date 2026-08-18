@@ -956,8 +956,10 @@ function App() {
     const DPR = Math.min(window.devicePixelRatio, 1.75)
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x010008)
-    scene.fog = new THREE.FogExp2(0x040214, 0.0042)
+    scene.background = new THREE.Color(0x000006)
+    // Pastel-shifting fog (hue drifts in animate loop via fog.color)
+    scene.fog = new THREE.FogExp2(0xc8b0e8, 0.0035)
+    scene.fog.color.setHSL(0.72, 0.35, 0.12)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 200)
@@ -1037,9 +1039,9 @@ function App() {
         hues[written] = inArm
           ? (arm * 0.14 + Math.random() * 0.55 + r * 0.008) % 1
           : Math.random()
-        // Crab / Hubble pastel filaments — full-spectrum soft rainbow
-        const sat = inArm ? 0.55 + Math.random() * 0.35 : 0.4 + Math.random() * 0.35
-        const lit = inArm ? 0.62 + Math.random() * 0.28 : 0.55 + Math.random() * 0.3
+        // Gram-style contrast: structured arms bright, inter-arm darker; pastel spectrum
+        const sat = inArm ? 0.62 + Math.random() * 0.32 : 0.45 + Math.random() * 0.35
+        const lit = inArm ? 0.68 + Math.random() * 0.28 : 0.38 + Math.random() * 0.28
         const c = new THREE.Color().setHSL(hues[written], sat, lit)
         colors[i3] = c.r
         colors[i3 + 1] = c.g
@@ -1203,8 +1205,8 @@ function App() {
         gPos[i3] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 7
         gPos[i3 + 1] = (Math.random() - 0.5) * (spread * 0.38)
         gPos[i3 + 2] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 7
-        const h = (baseHue + (Math.random() - 0.5) * 0.22 + Math.random() * 0.15 + 1) % 1
-        const col = new THREE.Color().setHSL(h, 0.45 + Math.random() * 0.4, 0.58 + Math.random() * 0.28)
+        const h = (baseHue + (Math.random() - 0.5) * 0.35 + Math.random() * 0.25 + 1) % 1
+        const col = new THREE.Color().setHSL(h, 0.35 + Math.random() * 0.45, 0.62 + Math.random() * 0.28)
         gCol[i3] = col.r
         gCol[i3 + 1] = col.g
         gCol[i3 + 2] = col.b
@@ -1332,9 +1334,9 @@ function App() {
     const aura = new THREE.Mesh(
       new THREE.SphereGeometry(2.1, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x3a1860,
+        color: 0x6a40a0,
         transparent: true,
-        opacity: 0.09,
+        opacity: 0.1,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending
       })
@@ -1358,7 +1360,11 @@ function App() {
         const cols = layer.geo.attributes.color
         for (let i = 0; i < layer.count; i++) {
           layer.hues[i] = (layer.hues[i] + 0.00014) % 1 // pastel rainbow drift
-          const c = new THREE.Color().setHSL(layer.hues[i], 0.55, 0.68)
+          const c = new THREE.Color().setHSL(
+            layer.hues[i],
+            0.58 + 0.12 * Math.sin(t * 0.15 + layer.hues[i] * 6.28),
+            0.52 + 0.28 * (layer.hues[i] % 0.2 > 0.1 ? 1 : 0.55)
+          )
           cols.array[i * 3] = c.r
           cols.array[i * 3 + 1] = c.g
           cols.array[i * 3 + 2] = c.b
@@ -1393,6 +1399,25 @@ function App() {
         cloud.rotation.z += cloud.userData.rotZ
         cloud.position.x = Math.sin(t * cloud.userData.drift + cloud.userData.phase) * 1.4
         cloud.position.y = Math.cos(t * cloud.userData.drift * 0.7 + cloud.userData.phase) * 0.7
+        // pastel fog-element color shift (Gram-style style channel drift)
+        if (cloud.material && cloud.geometry?.attributes?.color) {
+          const cols = cloud.geometry.attributes.color
+          const n = Math.min(80, cols.count || (cols.array.length / 3))
+          for (let i = 0; i < n; i++) {
+            const i3 = ((i * 17) % (cols.array.length / 3)) * 3
+            const h = (t * 0.02 + i * 0.07 + cloud.userData.phase) % 1
+            const c = new THREE.Color().setHSL(h, 0.4, 0.7)
+            cols.array[i3] += (c.r - cols.array[i3]) * 0.02
+            cols.array[i3 + 1] += (c.g - cols.array[i3 + 1]) * 0.02
+            cols.array[i3 + 2] += (c.b - cols.array[i3 + 2]) * 0.02
+          }
+          cols.needsUpdate = true
+        }
+      }
+      // Pastel-shifting atmospheric fog
+      if (scene.fog && scene.fog.color) {
+        const fh = (t * 0.018) % 1
+        scene.fog.color.setHSL(fh, 0.32, 0.11 + 0.04 * Math.sin(t * 0.11))
       }
 
       // Specials orbit + spin
