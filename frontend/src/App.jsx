@@ -1651,8 +1651,8 @@ function App() {
           XhumAI
         </h1>
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
-        <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">
-          Intelligence that evolves with you
+        <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence That Evolves With You">
+          Intelligence That Evolves With You
         </p>
 
         <div className={`dual-fields ${initialGlitch ? 'glitch' : ''}`}>
