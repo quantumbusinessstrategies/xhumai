@@ -921,8 +921,8 @@ function App() {
     const DPR = Math.min(window.devicePixelRatio, 1.75)
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x03010f)
-    scene.fog = new THREE.FogExp2(0x060318, 0.0082)
+    scene.background = new THREE.Color(0x02000c)
+    scene.fog = new THREE.FogExp2(0x050218, 0.0068)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 200)
@@ -947,16 +947,16 @@ function App() {
     // square 30%, circle 30%, hex 15%, pent 5%, star6 5%, star7 4% ≈ 89%
     // remaining ~11% reserved conceptually for specials (we spawn fewer 3D specials)
     const layerDefs = [
-      { tex: texSquare, count: 3800, size: 0.055 },
-      { tex: texCircle, count: 3800, size: 0.05 },
-      { tex: texHex, count: 2000, size: 0.052 },
-      { tex: texPent, count: 550, size: 0.05 },
-      { tex: texStar6, count: 550, size: 0.058 },
-      { tex: texStar7, count: 440, size: 0.056 }
+      { tex: texSquare, count: 4200, size: 0.048 },
+      { tex: texCircle, count: 4600, size: 0.042 },
+      { tex: texHex, count: 2400, size: 0.046 },
+      { tex: texPent, count: 700, size: 0.044 },
+      { tex: texStar6, count: 650, size: 0.052 },
+      { tex: texStar7, count: 520, size: 0.05 }
     ]
 
     const layers = []
-    const baseOpacity = 0.72 // dreamy / soft Hubble depth
+    const baseOpacity = 0.78 // denser Hubble field, still soft
 
     for (const def of layerDefs) {
       const positions = new Float32Array(def.count * 3)
@@ -966,20 +966,22 @@ function App() {
 
       let written = 0
       const target = Math.floor(def.count * 1.08) // denser spiral arms
-      const ARM_COUNT = 4
-      const SPIRAL = 0.62
+      const ARM_COUNT = 5
+      const SPIRAL = 0.58
       for (let attempt = 0; written < Math.min(target, def.count) && attempt < def.count * 4; attempt++) {
         const u = Math.random()
-        // bias mass into arms: mix spiral + soft disk fill
-        const inArm = Math.random() < 0.78
-        const r = Math.pow(u, inArm ? 1.35 : 1.85) * 14.5
-        if (r > 12.5 && Math.random() < 0.5) continue
+        // bias mass into arms + dust lanes (hyperreal disk)
+        const inArm = Math.random() < 0.82
+        const r = Math.pow(u, inArm ? 1.28 : 1.95) * 15.2
+        if (r > 13.2 && Math.random() < 0.45) continue
         const arm = Math.floor(Math.random() * ARM_COUNT)
         const armBase = (arm / ARM_COUNT) * Math.PI * 2
-        const spread = inArm ? (Math.random() - 0.5) * 0.42 : Math.random() * Math.PI * 2
+        const spread = inArm ? (Math.random() - 0.5) * 0.34 : Math.random() * Math.PI * 2
         const theta = inArm ? (armBase + r * SPIRAL + spread) : spread
         const i3 = written * 3
-        const y = (Math.random() - 0.5) * (1.15 + r * 0.22) * 0.93
+        // thinner disk near core, thicker halo outward (real spiral galaxies)
+        const diskH = (0.55 + r * 0.18) * (inArm ? 0.85 : 1.15)
+        const y = (Math.random() - 0.5) * diskH
 
         positions[i3] = Math.cos(theta) * r
         positions[i3 + 1] = y
@@ -990,8 +992,8 @@ function App() {
 
         // arm cores slightly brighter / cooler pastel
         hues[written] = inArm ? (arm * 0.18 + Math.random() * 0.12 + r * 0.01) % 1 : Math.random()
-        const sat = inArm ? 0.48 + Math.random() * 0.22 : 0.32 + Math.random() * 0.2
-        const lit = inArm ? 0.55 + Math.random() * 0.22 : 0.45 + Math.random() * 0.2
+        const sat = inArm ? 0.52 + Math.random() * 0.28 : 0.28 + Math.random() * 0.22
+        const lit = inArm ? 0.58 + Math.random() * 0.28 : 0.42 + Math.random() * 0.22
         const c = new THREE.Color().setHSL(hues[written], sat, lit)
         colors[i3] = c.r
         colors[i3 + 1] = c.g
@@ -1143,20 +1145,20 @@ function App() {
     // Translucent rainbow freeform clouds
     const gasClouds = []
     const cloudHues = [0.0, 0.12, 0.28, 0.45, 0.58, 0.72, 0.88]
-    for (let c = 0; c < 7; c++) {
-      const gCount = 900
+    for (let c = 0; c < 11; c++) {
+      const gCount = 1400
       const gPos = new Float32Array(gCount * 3)
       const gCol = new Float32Array(gCount * 3)
       const baseHue = cloudHues[c]
 
       for (let i = 0; i < gCount; i++) {
         const i3 = i * 3
-        const spread = 8 + Math.random() * 14
-        gPos[i3] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 6
-        gPos[i3 + 1] = (Math.random() - 0.5) * (spread * 0.45)
-        gPos[i3 + 2] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 6
-        const h = (baseHue + (Math.random() - 0.5) * 0.08 + 1) % 1
-        const col = new THREE.Color().setHSL(h, 0.45 + Math.random() * 0.25, 0.55 + Math.random() * 0.2)
+        const spread = 9 + Math.random() * 16
+        gPos[i3] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 7
+        gPos[i3 + 1] = (Math.random() - 0.5) * (spread * 0.38)
+        gPos[i3 + 2] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 7
+        const h = (baseHue + (Math.random() - 0.5) * 0.1 + 1) % 1
+        const col = new THREE.Color().setHSL(h, 0.38 + Math.random() * 0.32, 0.48 + Math.random() * 0.28)
         gCol[i3] = col.r
         gCol[i3 + 1] = col.g
         gCol[i3 + 2] = col.b
@@ -1167,10 +1169,10 @@ function App() {
       gGeo.setAttribute('color', new THREE.BufferAttribute(gCol, 3))
 
       const gMat = new THREE.PointsMaterial({
-        size: 0.18 + Math.random() * 0.12,
+        size: 0.22 + Math.random() * 0.16,
         vertexColors: true,
         transparent: true,
-        opacity: 0.045 + Math.random() * 0.04,
+        opacity: 0.055 + Math.random() * 0.05,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true
@@ -1187,6 +1189,42 @@ function App() {
       gasClouds.push(cloud)
     }
     gasRef.current = gasClouds
+
+    // Distant hyperreal star field (background depth)
+    {
+      const n = 2800
+      const pos = new Float32Array(n * 3)
+      const col = new Float32Array(n * 3)
+      for (let i = 0; i < n; i++) {
+        const i3 = i * 3
+        const r = 18 + Math.random() * 40
+        const theta = Math.random() * Math.PI * 2
+        const phi = Math.acos(2 * Math.random() - 1)
+        pos[i3] = r * Math.sin(phi) * Math.cos(theta)
+        pos[i3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.55
+        pos[i3 + 2] = r * Math.cos(phi)
+        const temp = Math.random()
+        const c = new THREE.Color().setHSL(
+          temp > 0.7 ? 0.08 + Math.random() * 0.05 : temp > 0.4 ? 0.55 + Math.random() * 0.1 : 0.62,
+          0.25 + Math.random() * 0.35,
+          0.7 + Math.random() * 0.25
+        )
+        col[i3] = c.r; col[i3 + 1] = c.g; col[i3 + 2] = c.b
+      }
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3))
+      const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+        size: 0.035,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true
+      }))
+      scene.add(pts)
+    }
 
     // Core black hole — 30% smaller, more orbital chaos
     const core = new THREE.Mesh(
@@ -1247,11 +1285,11 @@ function App() {
     }
 
     const aura = new THREE.Mesh(
-      new THREE.SphereGeometry(1.6, 32, 32),
+      new THREE.SphereGeometry(2.1, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x4a2080,
+        color: 0x3a1860,
         transparent: true,
-        opacity: 0.11,
+        opacity: 0.09,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending
       })
@@ -1275,7 +1313,7 @@ function App() {
         const cols = layer.geo.attributes.color
         for (let i = 0; i < layer.count; i++) {
           layer.hues[i] = (layer.hues[i] + 0.00009) % 1 // slow dreamy drift
-          const c = new THREE.Color().setHSL(layer.hues[i], 0.42, 0.58)
+          const c = new THREE.Color().setHSL(layer.hues[i], 0.48, 0.62)
           cols.array[i * 3] = c.r
           cols.array[i * 3 + 1] = c.g
           cols.array[i * 3 + 2] = c.b

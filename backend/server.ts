@@ -21,6 +21,7 @@ import { runRiskExtractor } from '../capabilities/risk-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
+import { runEvolution } from './entity/evolve';
 
 dotenv.config();
 
@@ -52,7 +53,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '1.4.0',
+    version: '1.5.0',
     status: 'alive',
     creed: 'Work Less. Live More.',
     bounds: [
@@ -233,6 +234,16 @@ app.post('/api/agents/:id/run', async (req, res) => {
 });
 
 
+
+app.post('/api/entity/evolve', async (_req, res) => {
+  try {
+    const report = await runEvolution();
+    res.json({ ok: true, report });
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || 'evolution fault' });
+  }
+});
+
 app.get('/api/entity', async (_req, res) => {
   const mem = loadMemory();
   const ollama = await ollamaHealth();
@@ -249,7 +260,7 @@ app.get('/api/entity', async (_req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v1.4 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v1.5 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });

@@ -4,6 +4,7 @@
  */
 import { loadMemory, buildContextBlock, writeExchange } from './memory';
 import { ollamaChat } from './ollama';
+import { maybeAutoEvolve } from './evolve';
 
 const BLOCKED = [
   'how to make a bomb',
@@ -76,6 +77,8 @@ export async function runEntityChat(userText: string): Promise<{
   }
 
   const after = writeExchange(text, reply);
+  // Evolutionary pulse every few exchanges (non-blocking)
+  maybeAutoEvolve(5).catch(() => {});
   return {
     reply,
     status,
