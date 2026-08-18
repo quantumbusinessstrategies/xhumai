@@ -88,6 +88,41 @@ function drawStar(ctx, s, points) {
   ctx.fillRect(0, 0, s, s)
 }
 
+function drawDiamond(ctx, s) {
+  const c = s / 2
+  const r = s * 0.36
+  ctx.beginPath()
+  ctx.moveTo(c, c - r)
+  ctx.lineTo(c + r * 0.7, c)
+  ctx.lineTo(c, c + r)
+  ctx.lineTo(c - r * 0.7, c)
+  ctx.closePath()
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  ctx.fill()
+  ctx.globalCompositeOperation = 'destination-in'
+  const g = ctx.createRadialGradient(c, c, r * 0.2, c, c, r * 1.15)
+  g.addColorStop(0, 'rgba(0,0,0,1)')
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, s, s)
+}
+
+function drawCross(ctx, s) {
+  const c = s / 2
+  const arm = s * 0.12
+  const len = s * 0.38
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  ctx.fillRect(c - arm, c - len, arm * 2, len * 2)
+  ctx.fillRect(c - len, c - arm, len * 2, arm * 2)
+  ctx.globalCompositeOperation = 'destination-in'
+  const g = ctx.createRadialGradient(c, c, s * 0.08, c, c, s * 0.45)
+  g.addColorStop(0, 'rgba(0,0,0,1)')
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, s, s)
+}
+
+
 function App() {
   const [query, setQuery] = useState('')
   const [response, setResponse] = useState('input initiates creation')
@@ -921,8 +956,8 @@ function App() {
     const DPR = Math.min(window.devicePixelRatio, 1.75)
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x02000c)
-    scene.fog = new THREE.FogExp2(0x050218, 0.0068)
+    scene.background = new THREE.Color(0x010008)
+    scene.fog = new THREE.FogExp2(0x040214, 0.0042)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 200)
@@ -942,21 +977,28 @@ function App() {
     const texPent = makeShapeTexture((ctx, s) => drawPolygon(ctx, s, 5))
     const texStar6 = makeShapeTexture((ctx, s) => drawStar(ctx, s, 6))
     const texStar7 = makeShapeTexture((ctx, s) => drawStar(ctx, s, 7))
+    const texDiamond = makeShapeTexture(drawDiamond)
+    const texCross = makeShapeTexture(drawCross)
+    const texTri = makeShapeTexture((ctx, s) => drawPolygon(ctx, s, 3))
 
     // Distribution of 2D shape layers (of ~11k point particles)
     // square 30%, circle 30%, hex 15%, pent 5%, star6 5%, star7 4% ≈ 89%
     // remaining ~11% reserved conceptually for specials (we spawn fewer 3D specials)
     const layerDefs = [
-      { tex: texSquare, count: 4200, size: 0.048 },
-      { tex: texCircle, count: 4600, size: 0.042 },
-      { tex: texHex, count: 2400, size: 0.046 },
-      { tex: texPent, count: 700, size: 0.044 },
-      { tex: texStar6, count: 650, size: 0.052 },
-      { tex: texStar7, count: 520, size: 0.05 }
+      { tex: texCircle, count: 3200, size: 0.018 },
+      { tex: texSquare, count: 2400, size: 0.022 },
+      { tex: texHex, count: 1800, size: 0.02 },
+      { tex: texPent, count: 1400, size: 0.024 },
+      { tex: texTri, count: 1600, size: 0.021 },
+      { tex: texDiamond, count: 1500, size: 0.019 },
+      { tex: texCross, count: 1200, size: 0.026 },
+      { tex: texStar6, count: 1100, size: 0.028 },
+      { tex: texStar7, count: 900, size: 0.032 }
     ]
 
     const layers = []
-    const baseOpacity = 0.78 // denser Hubble field, still soft
+    // 20% less transparent than prior ~0.78 → ~0.936
+    const baseOpacity = 0.94
 
     for (const def of layerDefs) {
       const positions = new Float32Array(def.count * 3)
@@ -991,9 +1033,13 @@ function App() {
         basePositions[i3 + 2] = positions[i3 + 2]
 
         // arm cores slightly brighter / cooler pastel
-        hues[written] = inArm ? (arm * 0.18 + Math.random() * 0.12 + r * 0.01) % 1 : Math.random()
-        const sat = inArm ? 0.52 + Math.random() * 0.28 : 0.28 + Math.random() * 0.22
-        const lit = inArm ? 0.58 + Math.random() * 0.28 : 0.42 + Math.random() * 0.22
+        // random pastel rainbow with slight arm bias (nebula filaments)
+        hues[written] = inArm
+          ? (arm * 0.14 + Math.random() * 0.55 + r * 0.008) % 1
+          : Math.random()
+        // Crab / Hubble pastel filaments — full-spectrum soft rainbow
+        const sat = inArm ? 0.55 + Math.random() * 0.35 : 0.4 + Math.random() * 0.35
+        const lit = inArm ? 0.62 + Math.random() * 0.28 : 0.55 + Math.random() * 0.3
         const c = new THREE.Color().setHSL(hues[written], sat, lit)
         colors[i3] = c.r
         colors[i3 + 1] = c.g
@@ -1008,7 +1054,7 @@ function App() {
       geo.setDrawRange(0, def.count)
 
       const mat = new THREE.PointsMaterial({
-        size: def.size * 1.05,
+        size: def.size * (0.55 + Math.random() * 1.15),
         map: def.tex,
         vertexColors: true,
         transparent: true,
@@ -1016,7 +1062,7 @@ function App() {
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true,
-        alphaTest: 0.01
+        alphaTest: 0.02
       })
 
       const pts = new THREE.Points(geo, mat)
@@ -1157,8 +1203,8 @@ function App() {
         gPos[i3] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 7
         gPos[i3 + 1] = (Math.random() - 0.5) * (spread * 0.38)
         gPos[i3 + 2] = (Math.random() - 0.5) * spread + (Math.random() - 0.5) * 7
-        const h = (baseHue + (Math.random() - 0.5) * 0.1 + 1) % 1
-        const col = new THREE.Color().setHSL(h, 0.38 + Math.random() * 0.32, 0.48 + Math.random() * 0.28)
+        const h = (baseHue + (Math.random() - 0.5) * 0.22 + Math.random() * 0.15 + 1) % 1
+        const col = new THREE.Color().setHSL(h, 0.45 + Math.random() * 0.4, 0.58 + Math.random() * 0.28)
         gCol[i3] = col.r
         gCol[i3 + 1] = col.g
         gCol[i3 + 2] = col.b
@@ -1169,10 +1215,10 @@ function App() {
       gGeo.setAttribute('color', new THREE.BufferAttribute(gCol, 3))
 
       const gMat = new THREE.PointsMaterial({
-        size: 0.22 + Math.random() * 0.16,
+        size: 0.06 + Math.random() * 0.14,
         vertexColors: true,
         transparent: true,
-        opacity: 0.055 + Math.random() * 0.05,
+        opacity: 0.09 + Math.random() * 0.07,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true
@@ -1203,11 +1249,10 @@ function App() {
         pos[i3] = r * Math.sin(phi) * Math.cos(theta)
         pos[i3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.55
         pos[i3 + 2] = r * Math.cos(phi)
-        const temp = Math.random()
         const c = new THREE.Color().setHSL(
-          temp > 0.7 ? 0.08 + Math.random() * 0.05 : temp > 0.4 ? 0.55 + Math.random() * 0.1 : 0.62,
-          0.25 + Math.random() * 0.35,
-          0.7 + Math.random() * 0.25
+          Math.random(),
+          0.35 + Math.random() * 0.4,
+          0.65 + Math.random() * 0.3
         )
         col[i3] = c.r; col[i3 + 1] = c.g; col[i3 + 2] = c.b
       }
@@ -1312,8 +1357,8 @@ function App() {
         layer.pts.rotation.z = Math.sin(t * 0.022) * 0.012
         const cols = layer.geo.attributes.color
         for (let i = 0; i < layer.count; i++) {
-          layer.hues[i] = (layer.hues[i] + 0.00009) % 1 // slow dreamy drift
-          const c = new THREE.Color().setHSL(layer.hues[i], 0.48, 0.62)
+          layer.hues[i] = (layer.hues[i] + 0.00014) % 1 // pastel rainbow drift
+          const c = new THREE.Color().setHSL(layer.hues[i], 0.55, 0.68)
           cols.array[i * 3] = c.r
           cols.array[i * 3 + 1] = c.g
           cols.array[i * 3 + 2] = c.b
