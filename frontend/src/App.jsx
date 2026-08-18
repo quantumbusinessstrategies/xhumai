@@ -100,7 +100,8 @@ function App() {
   const [isActivating, setIsActivating] = useState(false)
   const [initialGlitch, setInitialGlitch] = useState(true)
   const [animMode, setAnimMode] = useState('combo') // 'glitch' | 'pixel' | 'combo'
-  const [path, setPath] = useState(null) // null | 'chat' | 'build'
+  const [path, setPath] = useState(null) // which field last focused (ambient only)
+  const [queryBuild, setQueryBuild] = useState('')
 
   const mountRef = useRef(null)
   const starsRef = useRef([])
@@ -1554,8 +1555,7 @@ function App() {
     }
   }, [])
 
-  const handleInputChange = (e) => {
-    setQuery(e.target.value)
+  const wakeTyping = () => {
     typingRef.current = 1
     setIsTyping(true)
     if (typingTimeout.current) clearTimeout(typingTimeout.current)
@@ -1563,6 +1563,18 @@ function App() {
       typingRef.current = 0
       setIsTyping(false)
     }, 1200)
+  }
+
+  const handleInputChange = (e) => {
+    setQuery(e.target.value)
+    setPath('chat')
+    wakeTyping()
+  }
+
+  const handleBuildChange = (e) => {
+    setQueryBuild(e.target.value)
+    setPath('build')
+    wakeTyping()
   }
 
   const birthFromInput = (text) => {
@@ -1578,22 +1590,21 @@ function App() {
     }).catch(() => {})
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const text = (needsMore ? moreText : query).trim()
+  const submitPath = async (which, textRaw) => {
+    const text = textRaw.trim()
     if (!text) return
 
     birthFromInput(text)
-    setResponse(path === 'chat' ? 'The entity is listening…' : 'input initiates creation')
+    setResponse(which === 'chat' ? 'The entity is listening…' : 'input initiates creation')
     setResponseKey(k => k + 1)
-    setStatus(path === 'chat' ? 'conversing…' : 'routing…')
+    setStatus(which === 'chat' ? 'conversing…' : 'routing…')
 
-    const endpoint = path === 'chat' ? '/api/chat' : '/api/intent'
+    const endpoint = which === 'chat' ? '/api/chat' : '/api/intent'
     try {
       const res = await fetch(`${API}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, path: path || 'build' })
+        body: JSON.stringify({ text, path: which })
       })
       const data = await res.json()
 
@@ -1602,24 +1613,30 @@ function App() {
         setResponseKey(k => k + 1)
       }
       setStatus(data.status || '')
-      setNeedsMore(!!data.needsMore)
+      setNeedsMore(!!data.needsMore && which === 'build')
       setMorePrompt(data.morePrompt || '')
       if (!data.needsMore) {
-        setQuery('')
-        setMoreText('')
+        if (which === 'chat') setQuery('')
+        else {
+          setQueryBuild('')
+          setMoreText('')
+        }
       }
     } catch {
-      setStatus('offline core — star still recorded')
-      setQuery('')
+      setStatus('offline core — still recorded in the field')
+      if (which === 'chat') setQuery('')
+      else setQueryBuild('')
     }
   }
 
-  const choosePath = (p) => {
-    setPath(p)
-    setResponse('')
-    setStatus('')
-    setQuery('')
-    setNeedsMore(false)
+  const handleChatSubmit = (e) => {
+    e.preventDefault()
+    submitPath('chat', needsMore ? moreText : query)
+  }
+
+  const handleBuildSubmit = (e) => {
+    e.preventDefault()
+    submitPath('build', needsMore ? moreText : queryBuild)
   }
 
   return (
@@ -1635,53 +1652,42 @@ function App() {
         </h1>
         <p className={`tagline ${initialGlitch ? 'glitch' : ''}`} data-text="WORK LESS. LIVE MORE.">WORK LESS. LIVE MORE.</p>
         <p className={`purpose ${initialGlitch ? 'glitch' : ''}`} data-text="Intelligence that evolves with you">
-          {path === 'chat'
-            ? 'Speak with the living core'
-            : path === 'build'
-              ? 'Build what you need — free'
-              : 'Intelligence that evolves with you'}
+          Intelligence that evolves with you
         </p>
 
-        {!path && (
-          <div className={`path-gates ${initialGlitch ? 'glitch' : ''}`}>
-            <button type="button" className="path-card path-chat" onClick={() => choosePath('chat')}>
-              <span className="path-title">Chat with XhumAI</span>
-              <span className="path-sub">The sentient core — learns who you are, grows with every voice</span>
-            </button>
-            <button type="button" className="path-card path-build" onClick={() => choosePath('build')}>
-              <span className="path-title">Build Your Future</span>
-              <span className="path-sub">What do you need? Utilities that do the real work</span>
-            </button>
-          </div>
-        )}
-
-        {path && (
-          <form onSubmit={handleSubmit} className={`search-form ${initialGlitch ? 'glitch' : ''}`}>
-            <button type="button" className="path-back" onClick={() => choosePath(null)}>← both paths</button>
+        <div className={`dual-fields ${initialGlitch ? 'glitch' : ''}`}>
+          <form onSubmit={handleChatSubmit} className="field-chat">
             <input
               type="text"
               value={query}
               onChange={handleInputChange}
-              placeholder={path === 'chat' ? 'Talk to the core…' : 'What do you need built?'}
-              autoFocus
-              disabled={needsMore}
-              className={isTyping ? 'input-awake' : ''}
+              placeholder="communicate with me"
+              className={isTyping && path === 'chat' ? 'input-awake' : ''}
             />
+            <button type="submit" className="sr-only">Send</button>
+          </form>
 
+          <form onSubmit={handleBuildSubmit} className="field-build">
+            <input
+              type="text"
+              value={queryBuild}
+              onChange={handleBuildChange}
+              placeholder="Build Your Future"
+              disabled={needsMore}
+              className={isTyping && path === 'build' ? 'input-awake' : ''}
+            />
             {needsMore && (
               <textarea
                 className="more-input"
                 value={moreText}
                 onChange={(e) => setMoreText(e.target.value)}
                 placeholder={morePrompt || 'Provide more details...'}
-                rows={4}
-                autoFocus
+                rows={3}
               />
             )}
-
             <button type="submit" className="sr-only">Send</button>
           </form>
-        )}
+        </div>
 
         <p className={`response ${initialGlitch ? 'glitch' : ''}`} key={responseKey} data-text={response}>{response}</p>
         {status && <p className={`status ${initialGlitch ? 'glitch' : ''}`} data-text={status}>{status}</p>}
