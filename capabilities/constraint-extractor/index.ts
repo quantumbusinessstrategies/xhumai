@@ -2,8 +2,8 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Constraint Extractor Capability
- * Surfaces constraints, limits, hard boundaries, and non-negotiables from free-form notes
- * so work stays inside reality and less effort is wasted fighting the impossible.
+ * Surfaces constraints, limits, non-negotiables, and hard boundaries from free-form notes
+ * so plans stay inside real bounds and effort is not wasted on impossible paths.
  * Stub for now; later becomes real AI.
  *
  * Complements:
@@ -15,15 +15,16 @@ import { logUsage } from '../../backend/utils/logger';
  * - owner-extractor        → who owns it
  * - priority-sorter        → where attention should go
  * - risk-extractor         → what could go wrong
- * - opportunity-extractor  → what could compound / win
- * - assumption-extractor   → unexamined premises
- * - constraint-extractor   → hard limits and non-negotiables
+ * - opportunity-extractor  → what could go right
+ * - assumption-extractor   → what we are taking as true
+ * - constraint-extractor   → what must not be violated (so plans stay feasible)
  */
 
 export interface ConstraintItem {
   constraint: string;
-  type?: 'hard' | 'soft' | 'resource' | 'policy' | 'time' | 'other';
+  hardness?: 'hard' | 'soft' | 'unknown';
   context?: string;
+  source?: string;
 }
 
 export interface ConstraintResult {
@@ -45,16 +46,14 @@ export async function runConstraintExtractor(input: string): Promise<ConstraintR
       .filter(s => s.length > 8);
 
     const constraintPatterns = [
-      /\b(constraint|constraints|limit|limits|limited by|cannot|can't|must not|must not exceed|non-negotiable|hard limit|boundary|boundaries|ceiling|floor|cap|budget|only|maximum|minimum|within|restricted|restriction)\b/i,
-      /\b(we (can|cannot|can't|must|have to) .{0,40}(only|within|under|before|after|no more than|at most|at least))\b/i,
-      /\b(resource|time|budget|headcount|capacity|scope).{0,30}(limit|constraint|fixed|capped)\b/i,
+      /\b(constraint|constraints|limit|limits|limited|limitation|limitations|non-negotiable|nonnegotiable|must not|cannot|can't|must not exceed|cap|ceiling|floor|bound|bounds|boundary|boundaries)\b/i,
+      /\b(within|no more than|at most|at least|maximum|minimum|only if|as long as|provided that|subject to)\b/i,
+      /\b(budget|timeline|scope|resource|headcount|capacity).{0,30}(limit|constraint|cap|fixed)\b/i,
+      /\b(hard (stop|limit|requirement)|immutable|fixed|locked)\b/i,
     ];
 
-    const hardSignals = /\b(hard|absolute|non-negotiable|must|cannot|can't|forbidden|never)\b/i;
-    const softSignals = /\b(soft|prefer|ideally|should|guideline|nice to)\b/i;
-    const resourceSignals = /\b(budget|cost|money|headcount|people|capacity|resource)\b/i;
-    const timeSignals = /\b(deadline|time|by |before |after |eod|eow|week|month)\b/i;
-    const policySignals = /\b(policy|compliance|legal|regulation|rule|standard)\b/i;
+    const hardSignal = /\b(hard|strict|absolute|non-negotiable|must not|cannot|immutable|locked)\b/i;
+    const softSignal = /\b(soft|prefer|preference|ideally|nice to have|flexible)\b/i;
 
     const constraints: ConstraintItem[] = [];
 
@@ -66,17 +65,14 @@ export async function runConstraintExtractor(input: string): Promise<ConstraintR
       if (cleaned.length < 10) continue;
 
       if (constraintPatterns.some(p => p.test(cleaned))) {
-        let type: ConstraintItem['type'] = 'other';
-        if (resourceSignals.test(cleaned)) type = 'resource';
-        else if (timeSignals.test(cleaned)) type = 'time';
-        else if (policySignals.test(cleaned)) type = 'policy';
-        else if (hardSignals.test(cleaned)) type = 'hard';
-        else if (softSignals.test(cleaned)) type = 'soft';
+        let hardness: ConstraintItem['hardness'] = 'unknown';
+        if (hardSignal.test(cleaned)) hardness = 'hard';
+        else if (softSignal.test(cleaned)) hardness = 'soft';
 
         if (!constraints.some(c => c.constraint === cleaned)) {
           constraints.push({
             constraint: cleaned,
-            type,
+            hardness,
             context: cleaned.length > 90 ? cleaned.slice(0, 90) + '…' : cleaned,
           });
         }
@@ -89,7 +85,7 @@ export async function runConstraintExtractor(input: string): Promise<ConstraintR
         if (line.length < 140) {
           constraints.push({
             constraint: line,
-            type: 'other',
+            hardness: 'unknown',
             context: line,
           });
         }
