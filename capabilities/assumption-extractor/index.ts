@@ -2,8 +2,8 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Assumption Extractor Capability
- * Surfaces implicit and explicit assumptions from free-form notes
- * so premises can be tested early and wasted work on false foundations is avoided.
+ * Surfaces implicit assumptions, premises, and taken-for-granted claims from free-form notes
+ * so they become visible and testable — reducing expensive surprises later.
  * Stub for now; later becomes real AI.
  *
  * Complements:
@@ -14,16 +14,16 @@ import { logUsage } from '../../backend/utils/logger';
  * - blocker-extractor      → what is in the way right now
  * - owner-extractor        → who owns it
  * - priority-sorter        → where attention should go
- * - risk-extractor         → what could go wrong
- * - opportunity-extractor  → what could go right
- * - assumption-extractor   → what we are taking as true (so we can validate or challenge it)
+ * - risk-extractor         → what could go wrong so we see it early
+ * - opportunity-extractor  → what could go right so we capture it early
+ * - assumption-extractor   → what we are taking for granted so we can test it
  */
 
 export interface AssumptionItem {
   assumption: string;
   confidence?: 'high' | 'medium' | 'low';
   context?: string;
-  testSuggestion?: string;
+  testIdea?: string;
 }
 
 export interface AssumptionResult {
@@ -45,14 +45,13 @@ export async function runAssumptionExtractor(input: string): Promise<AssumptionR
       .filter(s => s.length > 8);
 
     const assumptionPatterns = [
-      /\b(assume|assuming|assumption|assumptions|presume|presuming|believe|believing|expect|expecting|take for granted|given that|if we assume)\b/i,
-      /\b(we (think|believe|expect|assume)|it is (assumed|expected|believed)|people will|users will|customers will)\b/i,
-      /\b(without (checking|validating|testing|confirming)|obviously|clearly|of course|naturally)\b/i,
-      /\b(premise|premises|hypothesis|hypotheses|working theory)\b/i,
+      /\b(assume|assumes|assuming|assumption|assumptions|premise|premises|take for granted|taken for granted|implicit|unspoken|given that|suppose|supposing|believe that|we think|it is clear that|obviously|of course|everyone knows)\b/i,
+      /\b(if we .{0,40}(then|will)|must be|has to be|will always|never fails|no need to)\b/i,
+      /\b(we (can|will|should) (rely|count|depend) on|without (checking|validating|testing))\b/i,
     ];
 
-    const highConfidence = /\b(certainly|definitely|obviously|clearly|of course|must be|always)\b/i;
-    const lowConfidence = /\b(maybe|perhaps|might|possibly|unclear|uncertain|guess)\b/i;
+    const highConfidence = /\b(obviously|of course|clearly|certainly|definitely|must|always|never)\b/i;
+    const lowConfidence = /\b(maybe|perhaps|possibly|might|could|uncertain|unclear)\b/i;
 
     const assumptions: AssumptionItem[] = [];
 
