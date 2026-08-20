@@ -20,7 +20,6 @@ import { runPrioritySorter } from '../capabilities/priority-sorter';
 import { runRiskExtractor } from '../capabilities/risk-extractor';
 import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
 import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
-import { runConstraintExtractor } from '../capabilities/constraint-extractor';
 
 dotenv.config();
 
@@ -94,7 +93,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','limit','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -116,7 +115,6 @@ app.post('/api/intent', (req, res) => {
     else if (lower.includes('priority') || lower.includes('p0')) { reply = 'I can rank into P0/P1/P2. Paste notes.'; status = 'utility:priority-sorter'; }
     else if (lower.includes('opportun')) { reply = 'I can surface opportunities and leverage points. Paste your notes.'; status = 'utility:opportunity-extractor'; }
     else if (lower.includes('assum')) { reply = 'I can surface assumptions so premises can be tested early. Paste your notes.'; status = 'utility:assumption-extractor'; }
-    else if (lower.includes('constraint') || lower.includes('limit')) { reply = 'I can surface constraints and non-negotiables so plans stay feasible. Paste your notes.'; status = 'utility:constraint-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -225,13 +223,6 @@ app.post('/api/capabilities/assumption-extractor', async (req, res) => {
     const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     res.json({ capability: 'assumption-extractor', ...(await runAssumptionExtractor(text)) });
-  } catch (e: any) { res.status(500).json({ error: e.message }); }
-});
-app.post('/api/capabilities/constraint-extractor', async (req, res) => {
-  try {
-    const { text } = req.body || {};
-    if (!text) return res.status(400).json({ error: 'Missing text' });
-    res.json({ capability: 'constraint-extractor', ...(await runConstraintExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
