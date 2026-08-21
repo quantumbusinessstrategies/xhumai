@@ -44,6 +44,6 @@ Every capability is an asset. Every asset compounds.
 - **Priority Sorter** → attention goes where it compounds
 - **Risk Extractor** → downside visible early, fewer blindsides
 - **Opportunity Extractor** → upside and leverage visible early, high-value openings captured
-- **Assumption Extractor** → hidden premises visible and testable, fewer expensive surprises
+- **Assumption Extractor** → premises visible early, fewer costly reworks from untested beliefs
 
 Together they turn notes into leverage.
