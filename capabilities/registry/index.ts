@@ -112,7 +112,7 @@ export const capabilities: Capability[] = [
   {
     id: "assumption-extractor",
     name: "Assumption Extractor",
-    description: "Surface implicit and explicit assumptions from notes so they can be validated early and rework is reduced",
+    description: "Surface implicit and explicit assumptions from notes so they can be validated early — reducing rework and false starts",
     category: "productivity",
     endpoint: "/api/capabilities/assumption-extractor",
     inputSchema: { type: "text" },

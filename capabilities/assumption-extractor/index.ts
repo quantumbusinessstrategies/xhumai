@@ -3,7 +3,7 @@ import { logUsage } from '../../backend/utils/logger';
 /**
  * Assumption Extractor Capability
  * Surfaces implicit and explicit assumptions from free-form notes
- * so they can be validated early and rework is reduced.
+ * so they can be validated or challenged early — reducing rework and false starts.
  * Stub for now; later becomes real AI.
  *
  * Complements:
@@ -14,8 +14,8 @@ import { logUsage } from '../../backend/utils/logger';
  * - blocker-extractor    → what is in the way right now
  * - owner-extractor      → who owns it
  * - priority-sorter      → where attention should go
- * - risk-extractor       → what could go wrong
- * - opportunity-extractor → what could go right
+ * - risk-extractor       → what could go wrong so we see it early
+ * - opportunity-extractor → what could go right so we capture it early
  * - assumption-extractor → what we are taking for granted so we can test it
  */
 
@@ -23,7 +23,7 @@ export interface AssumptionItem {
   assumption: string;
   confidence?: 'high' | 'medium' | 'low';
   context?: string;
-  testIdea?: string;
+  testSuggestion?: string;
 }
 
 export interface AssumptionResult {
@@ -45,13 +45,14 @@ export async function runAssumptionExtractor(input: string): Promise<AssumptionR
       .filter(s => s.length > 8);
 
     const assumptionPatterns = [
-      /\b(assume|assuming|assumption|assumptions|presuppose|take for granted|given that|we believe|it is assumed|presumably|evidently|obviously|of course|everyone knows)\b/i,
-      /\b(if we assume|based on the assumption|working under the assumption|implicitly|implicit)\b/i,
-      /\b(must be|has to be|will be|is going to|always|never).{0,30}(true|the case|happen|work)\b/i,
+      /\b(assume|assuming|assumption|assumptions|presume|presuming|given that|take for granted|it is assumed|we believe|we expect|likely that|probably)\b/i,
+      /\b(if we assume|based on the assumption|under the assumption)\b/i,
+      /\b(everyone knows|it is clear that|obviously|of course|without a doubt)\b/i,
+      /\b(will (definitely|certainly|always|never)|must be true|has to be)\b/i,
     ];
 
-    const highConfidence = /\b(certain|sure|definite|obvious|clear|proven|known)\b/i;
-    const lowConfidence = /\b(maybe|perhaps|possibly|might|could be|uncertain|unproven)\b/i;
+    const highConfidence = /\b(certain|definitely|always|never|must|obviously|of course)\b/i;
+    const lowConfidence = /\b(maybe|perhaps|might|could|possibly|uncertain)\b/i;
 
     const assumptions: AssumptionItem[] = [];
 
