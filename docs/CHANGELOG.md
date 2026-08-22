@@ -1,12 +1,13 @@
 # Changelog
 
-## v1.2 — 2026-08-21
+## v1.2 — 2026-08-22
 - Added **Assumption Extractor** capability (productivity category)
-  - Surfaces implicit and explicit assumptions from free-form notes so premises can be validated early
+  - Surfaces implicit and explicit assumptions from free-form notes so they can be validated or challenged early
   - Full usage logging for self-improvement loop
   - Wired into capability registry + API route + intent classifier
   - Complements the extractor suite: risk = what could go wrong; opportunity = what could go right; assumption = what we are taking for granted
-- Direct progress toward "Work Less. Live More." — untested beliefs stop generating silent rework
+- Also completed wiring for **Opportunity Extractor** route (was registered but missing from server)
+- Direct progress toward "Work Less. Live More." — false foundations become visible so energy is not wasted on them
 
 ## v1.1 — 2026-08-17
 - Added **Opportunity Extractor** capability (productivity category)

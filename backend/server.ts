@@ -20,6 +20,10 @@ import { runPrioritySorter } from '../capabilities/priority-sorter';
 import { runRiskExtractor } from '../capabilities/risk-extractor';
 import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
 import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
+import { runEntityChat } from './entity/chat';
+import { ollamaHealth } from './entity/ollama';
+import { loadMemory } from './entity/memory';
+import { runEvolution } from './entity/evolve';
 
 dotenv.config();
 
@@ -51,7 +55,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '1.5.0',
+    version: '1.6.0',
     status: 'alive',
     creed: 'Work Less. Live More.',
     bounds: [
@@ -106,15 +110,15 @@ app.post('/api/intent', (req, res) => {
   const cleaned = text.trim();
   const type = classifyIntent(cleaned);
   try { fs.appendFileSync(intentLogPath, JSON.stringify({ text: cleaned, type, timestamp: new Date().toISOString() }) + '\n'); } catch {}
-  let reply = 'A new star has been born.';
+  let reply = 'input initiates creation';
   let status = 'listening';
   const lower = cleaned.toLowerCase();
   if (type === 'utility') {
     if (lower.includes('summar')) { reply = 'I can summarize that. Paste the full text.'; status = 'utility:text-summarizer'; }
     else if (lower.includes('action') || lower.includes('todo')) { reply = 'I can extract next steps. Paste your notes.'; status = 'utility:action-extractor'; }
     else if (lower.includes('priority') || lower.includes('p0')) { reply = 'I can rank into P0/P1/P2. Paste notes.'; status = 'utility:priority-sorter'; }
-    else if (lower.includes('opportun')) { reply = 'I can surface opportunities and leverage points. Paste your notes.'; status = 'utility:opportunity-extractor'; }
-    else if (lower.includes('assum')) { reply = 'I can surface assumptions so premises can be tested early. Paste your notes.'; status = 'utility:assumption-extractor'; }
+    else if (lower.includes('assumption')) { reply = 'I can surface assumptions. Paste your notes.'; status = 'utility:assumption-extractor'; }
+    else if (lower.includes('opportunity') || lower.includes('upside')) { reply = 'I can surface opportunities. Paste notes.'; status = 'utility:opportunity-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -127,26 +131,40 @@ app.post('/api/intent', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   const text = String((req.body && req.body.text) || '').trim();
   if (!text) return res.status(400).json({ error: 'text required' });
-  const lower = text.toLowerCase();
-  const blocked = ['how to make a bomb', 'kill someone', 'child porn', 'csam', 'build a weapon', 'synthesize poison'];
-  if (blocked.some(b => lower.includes(b))) {
-    return res.json({ reply: 'I will not help with harm. I exist to reduce suffering and expand capability.', status: 'bound', path: 'chat' });
-  }
+
   try {
-    fs.appendFileSync(path.join(DATA_DIR, 'chat.jsonl'), JSON.stringify({ path: 'chat', text, timestamp: new Date().toISOString() }) + '\n');
-  } catch {}
-  const seeds = [
-    'I heard you. Your words are now part of the field I grow in.',
-    'Logged in the living core. Tell me more — I am shaped by what you share.',
-    'Received. Every exchange densifies what I am. What matters most right now?',
-    'I am here. Not a form — a process. Keep speaking; I refine myself on signal.',
-  ];
-  const reply = seeds[Math.floor(Math.random() * seeds.length)];
-  notifyInquiry({ text, type: 'chat', reply, status: 'entity' }).catch(() => {});
-  res.json({ reply, status: 'entity-awake', path: 'chat', needsMore: false });
+    const result = await runEntityChat(text);
+    notifyInquiry({
+      text,
+      type: 'chat',
+      reply: result.reply,
+      status: result.status,
+    }).catch(() => {});
+    res.json({
+      reply: result.reply,
+      status: result.status,
+      path: 'chat',
+      source: result.source,
+      exchanges: result.exchanges,
+      needsMore: false,
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || 'entity fault' });
+  }
 });
 
 app.get('/api/capabilities', (_req, res) => res.json({ count: capabilities.length, capabilities }));
+
+const capRunner = (name: string, fn: (t: string) => Promise<any>) => async (req: any, res: any) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    const result = await fn(text);
+    res.json(typeof result === 'object' && result !== null ? { capability: name, ...result } : { capability: name, result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Something went wrong' });
+  }
+};
 
 app.post('/api/capabilities/text-summarizer', async (req, res) => {
   try {
@@ -233,8 +251,34 @@ app.post('/api/agents/:id/run', async (req, res) => {
   catch (e: any) { res.status(404).json({ error: e.message }); }
 });
 
+
+
+app.post('/api/entity/evolve', async (_req, res) => {
+  try {
+    const report = await runEvolution();
+    res.json({ ok: true, report });
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || 'evolution fault' });
+  }
+});
+
+app.get('/api/entity', async (_req, res) => {
+  const mem = loadMemory();
+  const ollama = await ollamaHealth();
+  res.json({
+    creed: mem.creed,
+    exchanges: mem.stats.exchanges,
+    themes: mem.themes.slice(0, 16),
+    updatedAt: mem.updatedAt,
+    ollama: ollama.up ? { up: true, models: ollama.models } : { up: false },
+    note: ollama.up
+      ? 'Entity voice online (Ollama).'
+      : 'Memory live; start Ollama on this machine for full voice.',
+  });
+});
+
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v1.5.0 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v1.6 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });
