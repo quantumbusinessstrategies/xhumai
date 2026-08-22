@@ -7,9 +7,10 @@ const dir = path.join(root, 'frontend', 'src')
 const out = path.join(dir, 'App.jsx')
 const cssOut = path.join(dir, 'App.css')
 const MIN_LANDER_BYTES = 50000
-
-if (fs.existsSync(out) && fs.statSync(out).size > MIN_LANDER_BYTES) {
-  console.log('App.jsx already present →', fs.statSync(out).size, 'bytes')
+let outStat
+try { outStat = fs.statSync(out) } catch {}
+if (outStat && outStat.isFile() && outStat.size > MIN_LANDER_BYTES) {
+  console.log('App.jsx already present →', outStat.size, 'bytes')
   process.exit(0)
 }
 
