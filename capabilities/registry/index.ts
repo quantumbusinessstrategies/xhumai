@@ -117,6 +117,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/assumption-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { assumptions: "array" } }
+  },
+  {
+    id: "constraint-extractor",
+    name: "Constraint Extractor",
+    description: "Surface constraints, limits, and non-negotiables from notes so work stays inside real bounds and effort is not wasted on impossible paths",
+    category: "productivity",
+    endpoint: "/api/capabilities/constraint-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { constraints: "array" } }
   }
 ];
 

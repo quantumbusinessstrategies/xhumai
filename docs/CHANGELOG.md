@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3 — 2026-08-23
+- Added **Constraint Extractor** capability (productivity category)
+  - Surfaces constraints, limits, non-negotiables, and hard boundaries from free-form notes so work stays inside real bounds
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier
+  - Complements the extractor suite: assumption = what we take for granted; constraint = what cannot be violated
+- Direct progress toward "Work Less. Live More." — effort is not wasted on paths that violate real limits
+
 ## v1.2 — 2026-08-22
 - Added **Assumption Extractor** capability (productivity category)
   - Surfaces implicit and explicit assumptions from free-form notes so they can be validated or challenged early

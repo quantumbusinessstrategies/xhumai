@@ -3,28 +3,27 @@ import { logUsage } from '../../backend/utils/logger';
 /**
  * Constraint Extractor Capability
  * Surfaces constraints, limits, non-negotiables, and hard boundaries from free-form notes
- * so plans stay inside real bounds and effort is not wasted on impossible paths.
+ * so work stays inside real bounds and effort is not wasted on impossible paths.
  * Stub for now; later becomes real AI.
  *
  * Complements:
- * - action-extractor       → what to do next
- * - decision-extractor     → what was settled (or still open)
- * - follow-up-extractor    → who/what still needs a touch
- * - deadline-extractor     → when it must happen
- * - blocker-extractor      → what is in the way right now
- * - owner-extractor        → who owns it
- * - priority-sorter        → where attention should go
- * - risk-extractor         → what could go wrong
- * - opportunity-extractor  → what could go right
- * - assumption-extractor   → what we are taking as true
- * - constraint-extractor   → what must not be violated (so plans stay feasible)
+ * - action-extractor     → what to do next
+ * - decision-extractor   → what was settled (or still open)
+ * - follow-up-extractor  → who/what still needs a touch
+ * - deadline-extractor   → when it must happen
+ * - blocker-extractor    → what is in the way right now
+ * - owner-extractor      → who owns it
+ * - priority-sorter      → where attention should go
+ * - risk-extractor       → what could go wrong
+ * - opportunity-extractor → what could go right
+ * - assumption-extractor → what we are taking for granted
+ * - constraint-extractor → what cannot be violated / must stay true
  */
 
 export interface ConstraintItem {
   constraint: string;
   hardness?: 'hard' | 'soft' | 'unknown';
   context?: string;
-  source?: string;
 }
 
 export interface ConstraintResult {
@@ -46,14 +45,13 @@ export async function runConstraintExtractor(input: string): Promise<ConstraintR
       .filter(s => s.length > 8);
 
     const constraintPatterns = [
-      /\b(constraint|constraints|limit|limits|limited|limitation|limitations|non-negotiable|nonnegotiable|must not|cannot|can't|must not exceed|cap|ceiling|floor|bound|bounds|boundary|boundaries)\b/i,
-      /\b(within|no more than|at most|at least|maximum|minimum|only if|as long as|provided that|subject to)\b/i,
-      /\b(budget|timeline|scope|resource|headcount|capacity).{0,30}(limit|constraint|cap|fixed)\b/i,
-      /\b(hard (stop|limit|requirement)|immutable|fixed|locked)\b/i,
+      /\b(constraint|constraints|limit|limits|limited|must not|cannot|can't|non[- ]?negotiable|hard boundary|boundary|boundaries|cap|ceiling|floor|max|maximum|min|minimum|only if|provided that|as long as|within|budget|budgeted|deadline is fixed|fixed date)\b/i,
+      /\b(we (can|may) only|no more than|at most|at least|not exceed|stay under|stay within)\b/i,
+      /\b(requirement|requirements|must (be|have|remain|keep)|required to|obligat)\b/i,
     ];
 
-    const hardSignal = /\b(hard|strict|absolute|non-negotiable|must not|cannot|immutable|locked)\b/i;
-    const softSignal = /\b(soft|prefer|preference|ideally|nice to have|flexible)\b/i;
+    const hardSignals = /\b(hard|non[- ]?negotiable|must not|cannot|can't|absolute|fixed|immutable|never)\b/i;
+    const softSignals = /\b(prefer|preferably|ideally|soft|flexible|nice to have|if possible)\b/i;
 
     const constraints: ConstraintItem[] = [];
 
@@ -66,8 +64,8 @@ export async function runConstraintExtractor(input: string): Promise<ConstraintR
 
       if (constraintPatterns.some(p => p.test(cleaned))) {
         let hardness: ConstraintItem['hardness'] = 'unknown';
-        if (hardSignal.test(cleaned)) hardness = 'hard';
-        else if (softSignal.test(cleaned)) hardness = 'soft';
+        if (hardSignals.test(cleaned)) hardness = 'hard';
+        else if (softSignals.test(cleaned)) hardness = 'soft';
 
         if (!constraints.some(c => c.constraint === cleaned)) {
           constraints.push({
