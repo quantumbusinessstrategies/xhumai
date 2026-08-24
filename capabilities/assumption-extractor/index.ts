@@ -2,28 +2,28 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Assumption Extractor Capability
- * Surfaces implicit and explicit assumptions from free-form notes
- * so they can be validated or challenged early — reducing rework and false starts.
+ * Surfaces unspoken assumptions, premises, and taken-for-granted beliefs from free-form notes
+ * so decisions rest on clearer ground and hidden premises become visible.
  * Stub for now; later becomes real AI.
  *
  * Complements:
- * - action-extractor     → what to do next
- * - decision-extractor   → what was settled (or still open)
- * - follow-up-extractor  → who/what still needs a touch
- * - deadline-extractor   → when it must happen
- * - blocker-extractor    → what is in the way right now
- * - owner-extractor      → who owns it
- * - priority-sorter      → where attention should go
- * - risk-extractor       → what could go wrong so we see it early
- * - opportunity-extractor → what could go right so we capture it early
- * - assumption-extractor → what we are taking for granted so we can test it
+ * - action-extractor      → what to do next
+ * - decision-extractor    → what was settled (or still open)
+ * - follow-up-extractor   → who/what still needs a touch
+ * - deadline-extractor    → when it must happen
+ * - blocker-extractor     → what is in the way right now
+ * - owner-extractor       → who owns it
+ * - priority-sorter       → where attention should go
+ * - risk-extractor        → what could go wrong
+ * - opportunity-extractor → what could go right
+ * - assumption-extractor  → what we are taking for granted
  */
 
 export interface AssumptionItem {
   assumption: string;
-  confidence?: 'high' | 'medium' | 'low';
+  strength?: 'strong' | 'moderate' | 'weak';
   context?: string;
-  testSuggestion?: string;
+  challenge?: string;
 }
 
 export interface AssumptionResult {
@@ -45,14 +45,14 @@ export async function runAssumptionExtractor(input: string): Promise<AssumptionR
       .filter(s => s.length > 8);
 
     const assumptionPatterns = [
-      /\b(assume|assuming|assumption|assumptions|presume|presuming|given that|take for granted|it is assumed|we believe|we expect|likely that|probably)\b/i,
-      /\b(if we assume|based on the assumption|under the assumption)\b/i,
-      /\b(everyone knows|it is clear that|obviously|of course|without a doubt)\b/i,
-      /\b(will (definitely|certainly|always|never)|must be true|has to be)\b/i,
+      /\b(assume|assuming|assumption|assumptions|presume|presuming|presumption|take for granted|taken for granted|implicit|implicitly|given that|of course|obviously|clearly|naturally|we all know|everyone knows)\b/i,
+      /\b(must be|has to be|is bound to|will always|never fails|without question)\b/i,
+      /\b(if we .{0,40}then|since .{0,30}we|because .{0,30}will)\b/i,
+      /\b(premise|premises|belief|beliefs|expect|expected|expectation)\b/i,
     ];
 
-    const highConfidence = /\b(certain|definitely|always|never|must|obviously|of course)\b/i;
-    const lowConfidence = /\b(maybe|perhaps|might|could|possibly|uncertain)\b/i;
+    const strongCue = /\b(always|never|must|certain|definitely|obviously|clearly|without doubt)\b/i;
+    const weakCue = /\b(maybe|perhaps|might|possibly|seems|appears|could)\b/i;
 
     const assumptions: AssumptionItem[] = [];
 
@@ -64,14 +64,14 @@ export async function runAssumptionExtractor(input: string): Promise<AssumptionR
       if (cleaned.length < 10) continue;
 
       if (assumptionPatterns.some(p => p.test(cleaned))) {
-        let confidence: AssumptionItem['confidence'] = 'medium';
-        if (highConfidence.test(cleaned)) confidence = 'high';
-        else if (lowConfidence.test(cleaned)) confidence = 'low';
+        let strength: AssumptionItem['strength'] = 'moderate';
+        if (strongCue.test(cleaned)) strength = 'strong';
+        else if (weakCue.test(cleaned)) strength = 'weak';
 
         if (!assumptions.some(a => a.assumption === cleaned)) {
           assumptions.push({
             assumption: cleaned,
-            confidence,
+            strength,
             context: cleaned.length > 90 ? cleaned.slice(0, 90) + '…' : cleaned,
           });
         }
@@ -84,7 +84,7 @@ export async function runAssumptionExtractor(input: string): Promise<AssumptionR
         if (line.length < 140) {
           assumptions.push({
             assumption: line,
-            confidence: 'medium',
+            strength: 'moderate',
             context: line,
           });
         }

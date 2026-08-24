@@ -112,20 +112,11 @@ export const capabilities: Capability[] = [
   {
     id: "assumption-extractor",
     name: "Assumption Extractor",
-    description: "Surface implicit and explicit assumptions from notes so they can be validated early — reducing rework and false starts",
+    description: "Surface unspoken assumptions, premises, and taken-for-granted beliefs from notes so decisions rest on clearer ground and hidden premises become visible",
     category: "productivity",
     endpoint: "/api/capabilities/assumption-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { assumptions: "array" } }
-  },
-  {
-    id: "constraint-extractor",
-    name: "Constraint Extractor",
-    description: "Surface constraints, limits, and non-negotiables from notes so work stays inside real bounds and effort is not wasted on impossible paths",
-    category: "productivity",
-    endpoint: "/api/capabilities/constraint-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { constraints: "array" } }
   }
 ];
 
