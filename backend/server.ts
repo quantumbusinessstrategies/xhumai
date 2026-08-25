@@ -18,6 +18,8 @@ import { agents, runAgent } from './agents';
 import { notifyInquiry } from './utils/notify';
 import { runPrioritySorter } from '../capabilities/priority-sorter';
 import { runRiskExtractor } from '../capabilities/risk-extractor';
+import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
+import { runInsightExtractor } from '../capabilities/insight-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -53,7 +55,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '1.5.0',
+    version: '1.6.0',
     status: 'alive',
     creed: 'Work Less. Live More.',
     bounds: [
@@ -95,7 +97,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','insight','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -115,6 +117,8 @@ app.post('/api/intent', (req, res) => {
     if (lower.includes('summar')) { reply = 'I can summarize that. Paste the full text.'; status = 'utility:text-summarizer'; }
     else if (lower.includes('action') || lower.includes('todo')) { reply = 'I can extract next steps. Paste your notes.'; status = 'utility:action-extractor'; }
     else if (lower.includes('priority') || lower.includes('p0')) { reply = 'I can rank into P0/P1/P2. Paste notes.'; status = 'utility:priority-sorter'; }
+    else if (lower.includes('insight') || lower.includes('takeaway') || lower.includes('pattern')) { reply = 'I can surface key insights and patterns. Paste your notes.'; status = 'utility:insight-extractor'; }
+    else if (lower.includes('opportunit')) { reply = 'I can surface opportunities and leverage points. Paste your notes.'; status = 'utility:opportunity-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -225,6 +229,20 @@ app.post('/api/capabilities/risk-extractor', async (req, res) => {
     res.json({ capability: 'risk-extractor', ...(await runRiskExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
+app.post('/api/capabilities/opportunity-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'opportunity-extractor', ...(await runOpportunityExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/insight-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'insight-extractor', ...(await runInsightExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 
 app.use('/api/admin', adminRoutes);
 app.get('/api/agents', (_req, res) => res.json({ count: agents.length, agents }));
@@ -260,7 +278,7 @@ app.get('/api/entity', async (_req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v1.5 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v1.6 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });
