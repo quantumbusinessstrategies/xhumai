@@ -16,6 +16,7 @@ Every capability is an asset. Every asset compounds.
 | priority-sorter | Priority Sorter | productivity | stub (logging live) |
 | risk-extractor | Risk Extractor | productivity | stub (logging live) |
 | opportunity-extractor | Opportunity Extractor | productivity | stub (logging live) |
+| insight-extractor | Insight Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -43,5 +44,6 @@ Every capability is an asset. Every asset compounds.
 - **Priority Sorter** → attention goes where it compounds
 - **Risk Extractor** → downside visible early, fewer blindsides
 - **Opportunity Extractor** → upside and leverage visible early, high-value openings captured
+- **Insight Extractor** → patterns and takeaways visible, understanding compounds
 
 Together they turn notes into leverage.

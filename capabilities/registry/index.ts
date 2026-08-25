@@ -108,6 +108,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/opportunity-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { opportunities: "array" } }
+  },
+  {
+    id: "insight-extractor",
+    name: "Insight Extractor",
+    description: "Surface key insights, patterns, and non-obvious takeaways from notes so understanding compounds and nothing valuable is missed",
+    category: "productivity",
+    endpoint: "/api/capabilities/insight-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { insights: "array" } }
   }
 ];
 
