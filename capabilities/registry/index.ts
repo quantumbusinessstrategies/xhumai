@@ -117,6 +117,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/assumption-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { assumptions: "array" } }
+  },
+  {
+    id: "commitment-extractor",
+    name: "Commitment Extractor",
+    description: "Surface promises, commitments, and obligations from notes so accountability compounds and nothing is left hanging",
+    category: "productivity",
+    endpoint: "/api/capabilities/commitment-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { commitments: "array" } }
   }
 ];
 
