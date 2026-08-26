@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4 — 2026-08-25
+- Added **Commitment Extractor** capability (productivity category)
+  - Surfaces promises, commitments, obligations, and "I will / we will" statements from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements the extractor suite: owners = who; actions = next steps; commitments = what was promised so nothing is left hanging
+- Direct progress toward "Work Less. Live More." — accountability compounds so less chasing and fewer dropped promises
+
 ## v1.3 — 2026-08-25
 - Added **Assumption Extractor** capability (productivity category)
   - Surfaces implicit assumptions, premises, and taken-for-granted beliefs from free-form notes
