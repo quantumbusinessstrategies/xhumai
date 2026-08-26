@@ -2,8 +2,8 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Assumption Extractor Capability
- * Surfaces unspoken assumptions, premises, and taken-for-granted beliefs from free-form notes
- * so decisions rest on clearer ground and hidden premises become visible.
+ * Surfaces implicit assumptions, premises, and taken-for-granted beliefs from free-form notes
+ * so they can be validated or challenged and nothing rests on invisible foundations.
  * Stub for now; later becomes real AI.
  *
  * Complements:
@@ -14,14 +14,15 @@ import { logUsage } from '../../backend/utils/logger';
  * - blocker-extractor     → what is in the way right now
  * - owner-extractor       → who owns it
  * - priority-sorter       → where attention should go
- * - risk-extractor        → what could go wrong
- * - opportunity-extractor → what could go right
- * - assumption-extractor  → what we are taking for granted
+ * - risk-extractor        → what could go wrong so we see it early
+ * - opportunity-extractor → what could go right so we capture it early
+ * - insight-extractor     → what we learned / what stands out
+ * - assumption-extractor  → what we are taking for granted so foundations stay solid
  */
 
 export interface AssumptionItem {
   assumption: string;
-  strength?: 'strong' | 'moderate' | 'weak';
+  confidence?: 'high' | 'medium' | 'low';
   context?: string;
   challenge?: string;
 }
@@ -45,33 +46,32 @@ export async function runAssumptionExtractor(input: string): Promise<AssumptionR
       .filter(s => s.length > 8);
 
     const assumptionPatterns = [
-      /\b(assume|assuming|assumption|assumptions|presume|presuming|presumption|take for granted|taken for granted|implicit|implicitly|given that|of course|obviously|clearly|naturally|we all know|everyone knows)\b/i,
-      /\b(must be|has to be|is bound to|will always|never fails|without question)\b/i,
-      /\b(if we .{0,40}then|since .{0,30}we|because .{0,30}will)\b/i,
-      /\b(premise|premises|belief|beliefs|expect|expected|expectation)\b/i,
+      /\b(assum(e|es|ed|ing|ption|ptions)|premise|premises|given that|taking for granted|we (believe|expect|presume)|it is (assumed|understood)|obviously|clearly|of course|must be|has to be)\b/i,
+      /\b(if we (assume|presume)|based on the (assumption|idea) that|underlying (belief|premise))\b/i,
+      /\b(we (are|were) (assuming|presuming)|the (assumption|premise) (is|was|that))\b/i,
     ];
 
-    const strongCue = /\b(always|never|must|certain|definitely|obviously|clearly|without doubt)\b/i;
-    const weakCue = /\b(maybe|perhaps|might|possibly|seems|appears|could)\b/i;
+    const highConfidence = /\b(certain|sure|definite|obvious|clear|known|proven)\b/i;
+    const lowConfidence = /\b(maybe|perhaps|possibly|might|could|uncertain|tentative)\b/i;
 
     const assumptions: AssumptionItem[] = [];
 
     for (const line of lines) {
       const cleaned = line
-        .replace(/^[-*\u2022]\s+/, '')
+        .replace(/^[-*\u2022]\s+/u, '')
         .replace(/^\d+[.)]\s+/, '')
         .trim();
       if (cleaned.length < 10) continue;
 
       if (assumptionPatterns.some(p => p.test(cleaned))) {
-        let strength: AssumptionItem['strength'] = 'moderate';
-        if (strongCue.test(cleaned)) strength = 'strong';
-        else if (weakCue.test(cleaned)) strength = 'weak';
+        let confidence: AssumptionItem['confidence'] = 'medium';
+        if (highConfidence.test(cleaned)) confidence = 'high';
+        else if (lowConfidence.test(cleaned)) confidence = 'low';
 
         if (!assumptions.some(a => a.assumption === cleaned)) {
           assumptions.push({
             assumption: cleaned,
-            strength,
+            confidence,
             context: cleaned.length > 90 ? cleaned.slice(0, 90) + '…' : cleaned,
           });
         }
@@ -84,7 +84,7 @@ export async function runAssumptionExtractor(input: string): Promise<AssumptionR
         if (line.length < 140) {
           assumptions.push({
             assumption: line,
-            strength: 'moderate',
+            confidence: 'medium',
             context: line,
           });
         }

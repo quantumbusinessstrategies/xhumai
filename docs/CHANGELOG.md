@@ -1,13 +1,21 @@
 # Changelog
 
-## v1.2 — 2026-08-24
+## v1.3 — 2026-08-25
 - Added **Assumption Extractor** capability (productivity category)
-  - Surfaces unspoken assumptions, premises, and taken-for-granted beliefs from free-form notes
+  - Surfaces implicit assumptions, premises, and taken-for-granted beliefs from free-form notes
   - Full usage logging for self-improvement loop
-  - Wired into capability registry + API route + intent classifier
-  - Complements the extractor suite: risk = what could go wrong; opportunity = what could go right; assumption = what we are taking for granted
-- Wired missing **Opportunity Extractor** API route and import (was registered but not reachable)
-- Direct progress toward "Work Less. Live More." — decisions rest on clearer ground when hidden premises are visible
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements the extractor suite: risk = what could go wrong; opportunity = what could go right; insight = what we learned; assumption = what we are taking for granted so foundations stay solid
+- Direct progress toward "Work Less. Live More." — hidden premises become visible so fewer surprises and less rework
+
+## v1.2 — 2026-08-25
+- Added **Insight Extractor** capability (productivity category)
+  - Surfaces key insights, patterns, and non-obvious takeaways from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements the extractor suite: risk = what could go wrong; opportunity = what could go right; insight = what we learned / what stands out so understanding compounds
+- Fully wired **Opportunity Extractor** into server routes (was registered but missing import/route)
+- Direct progress toward "Work Less. Live More." — understanding compounds so less re-discovery
 
 ## v1.1 — 2026-08-17
 - Added **Opportunity Extractor** capability (productivity category)
