@@ -956,10 +956,10 @@ function App() {
     const DPR = Math.min(window.devicePixelRatio, 1.75)
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x000006)
-    // Pastel-shifting fog (hue drifts in animate loop via fog.color)
-    scene.fog = new THREE.FogExp2(0xc8b0e8, 0.0035)
-    scene.fog.color.setHSL(0.72, 0.35, 0.12)
+    scene.background = new THREE.Color(0x000008)
+    // Deep-space haze — subtle, cosmic, not confetti wash
+    scene.fog = new THREE.FogExp2(0x0a0618, 0.0016)
+    scene.fog.color.setHSL(0.7, 0.35, 0.04)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 200)
@@ -986,21 +986,20 @@ function App() {
     // Distribution of 2D shape layers (of ~11k point particles)
     // square 30%, circle 30%, hex 15%, pent 5%, star6 5%, star7 4% ≈ 89%
     // remaining ~11% reserved conceptually for specials (we spawn fewer 3D specials)
+    // 80% orbs/dots, 20% random shapes — 3x smaller, high punch (anti-wash)
+    // Soft stellar orbs only — no square confetti. Cosmic continuum.
     const layerDefs = [
-      { tex: texCircle, count: 3200, size: 0.018 },
-      { tex: texSquare, count: 2400, size: 0.022 },
-      { tex: texHex, count: 1800, size: 0.02 },
-      { tex: texPent, count: 1400, size: 0.024 },
-      { tex: texTri, count: 1600, size: 0.021 },
-      { tex: texDiamond, count: 1500, size: 0.019 },
-      { tex: texCross, count: 1200, size: 0.026 },
-      { tex: texStar6, count: 1100, size: 0.028 },
-      { tex: texStar7, count: 900, size: 0.032 }
+      { tex: texCircle, count: 4800, size: 0.014 },
+      { tex: texCircle, count: 3600, size: 0.02 },
+      { tex: texCircle, count: 2800, size: 0.028 },
+      { tex: texCircle, count: 1600, size: 0.038 },
+      { tex: texCircle, count: 900, size: 0.052 },
+      { tex: texStar6, count: 400, size: 0.04 },
+      { tex: texStar7, count: 280, size: 0.045 }
     ]
 
     const layers = []
-    // 20% less transparent than prior ~0.78 → ~0.936
-    const baseOpacity = 0.94
+    const baseOpacity = 0.92
 
     for (const def of layerDefs) {
       const positions = new Float32Array(def.count * 3)
@@ -1009,22 +1008,21 @@ function App() {
       const hues = new Float32Array(def.count)
 
       let written = 0
-      const target = Math.floor(def.count * 1.08) // denser spiral arms
-      const ARM_COUNT = 5
-      const SPIRAL = 0.58
+      const target = Math.floor(def.count * 1.05)
+      const ARM_COUNT = 4
+      const SPIRAL = 0.55
       for (let attempt = 0; written < Math.min(target, def.count) && attempt < def.count * 4; attempt++) {
         const u = Math.random()
-        // bias mass into arms + dust lanes (hyperreal disk)
-        const inArm = Math.random() < 0.82
-        const r = Math.pow(u, inArm ? 1.28 : 1.95) * 15.2
-        if (r > 13.2 && Math.random() < 0.45) continue
+        // Log-spiral galaxy: dense arms, faint disk fill, thin vertical profile
+        const inArm = Math.random() < 0.88
+        const r = Math.pow(u, inArm ? 1.15 : 1.7) * 14.5
+        if (r > 12.8 && Math.random() < 0.4) continue
         const arm = Math.floor(Math.random() * ARM_COUNT)
         const armBase = (arm / ARM_COUNT) * Math.PI * 2
-        const spread = inArm ? (Math.random() - 0.5) * 0.34 : Math.random() * Math.PI * 2
+        const spread = inArm ? (Math.random() - 0.5) * 0.28 : Math.random() * Math.PI * 2
         const theta = inArm ? (armBase + r * SPIRAL + spread) : spread
         const i3 = written * 3
-        // thinner disk near core, thicker halo outward (real spiral galaxies)
-        const diskH = (0.55 + r * 0.18) * (inArm ? 0.85 : 1.15)
+        const diskH = (0.08 + r * 0.035) * (inArm ? 0.65 : 1.0)
         const y = (Math.random() - 0.5) * diskH
 
         positions[i3] = Math.cos(theta) * r
@@ -1034,14 +1032,11 @@ function App() {
         basePositions[i3 + 1] = y
         basePositions[i3 + 2] = positions[i3 + 2]
 
-        // arm cores slightly brighter / cooler pastel
-        // random pastel rainbow with slight arm bias (nebula filaments)
-        hues[written] = inArm
-          ? (arm * 0.14 + Math.random() * 0.55 + r * 0.008) % 1
-          : Math.random()
-        // Gram-style contrast: structured arms bright, inter-arm darker; pastel spectrum
-        const sat = inArm ? 0.62 + Math.random() * 0.32 : 0.45 + Math.random() * 0.35
-        const lit = inArm ? 0.68 + Math.random() * 0.28 : 0.38 + Math.random() * 0.28
+        // Hubble/Cosmos palette: arm = cyan-gold-magenta continuum, interarm dimmer
+        const armHue = (arm * 0.22 + r * 0.012 + Math.random() * 0.08) % 1
+        hues[written] = inArm ? armHue : (0.55 + Math.random() * 0.25) % 1
+        const sat = inArm ? 0.55 + Math.random() * 0.35 : 0.25 + Math.random() * 0.25
+        const lit = inArm ? 0.58 + Math.random() * 0.32 : 0.28 + Math.random() * 0.25
         const c = new THREE.Color().setHSL(hues[written], sat, lit)
         colors[i3] = c.r
         colors[i3 + 1] = c.g
@@ -1056,7 +1051,7 @@ function App() {
       geo.setDrawRange(0, def.count)
 
       const mat = new THREE.PointsMaterial({
-        size: def.size * (0.55 + Math.random() * 1.15),
+        size: def.size * (0.85 + Math.random() * 0.5),
         map: def.tex,
         vertexColors: true,
         transparent: true,
@@ -1193,8 +1188,8 @@ function App() {
     // Translucent rainbow freeform clouds
     const gasClouds = []
     const cloudHues = [0.0, 0.12, 0.28, 0.45, 0.58, 0.72, 0.88]
-    for (let c = 0; c < 11; c++) {
-      const gCount = 1400
+    for (let c = 0; c < 8; c++) {
+      const gCount = 800
       const gPos = new Float32Array(gCount * 3)
       const gCol = new Float32Array(gCount * 3)
       const baseHue = cloudHues[c]
@@ -1217,10 +1212,10 @@ function App() {
       gGeo.setAttribute('color', new THREE.BufferAttribute(gCol, 3))
 
       const gMat = new THREE.PointsMaterial({
-        size: 0.06 + Math.random() * 0.14,
+        size: 0.08 + Math.random() * 0.12,
         vertexColors: true,
         transparent: true,
-        opacity: 0.09 + Math.random() * 0.07,
+        opacity: 0.04 + Math.random() * 0.05,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true
@@ -1273,70 +1268,129 @@ function App() {
       scene.add(pts)
     }
 
-    // Core black hole — 30% smaller, more orbital chaos
+    // ─── COSMOS BLACK HOLE: event horizon + photon ring + chaotic light warp ───
     const core = new THREE.Mesh(
-      new THREE.SphereGeometry(0.25, 64, 64),
+      new THREE.SphereGeometry(0.28, 64, 64),
       new THREE.MeshBasicMaterial({ color: 0x000000 })
     )
     scene.add(core)
     coreRef.current = core
 
+    // Event-horizon glow (swallowed light edge)
     const horizon = new THREE.Mesh(
-      new THREE.RingGeometry(0.28, 0.44, 96),
+      new THREE.RingGeometry(0.28, 0.36, 128),
       new THREE.MeshBasicMaterial({
-        color: 0x7b3fd5,
+        color: 0xff6a3d,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.75,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending
       })
     )
-    horizon.rotation.x = Math.PI / 2.05
+    horizon.rotation.x = Math.PI / 2.08
+    horizon.scale.set(1, 0.35, 1)
     scene.add(horizon)
     horizonRef.current = horizon
 
+    // Photon sphere — unstable light orbit (Einstein ring feel)
     const photon = new THREE.Mesh(
-      new THREE.RingGeometry(0.42, 0.55, 96),
+      new THREE.RingGeometry(0.38, 0.48, 128),
       new THREE.MeshBasicMaterial({
-        color: 0xb8f0ff,
+        color: 0xfff5e0,
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.9,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending
       })
     )
-    photon.rotation.x = Math.PI / 2.12
+    photon.rotation.x = Math.PI / 2.08
+    photon.scale.set(1, 0.32, 1)
     scene.add(photon)
     photonRef.current = photon
 
-    // Dense warp ring chaos around smaller core
-    for (let ri = 0; ri < 8; ri++) {
-      const inner = 0.26 + ri * 0.055
+    // Accretion disk — Doppler-warm inner / cool outer
+    const accCanvas = document.createElement('canvas')
+    accCanvas.width = 512
+    accCanvas.height = 64
+    {
+      const ctx = accCanvas.getContext('2d')
+      const g = ctx.createLinearGradient(0, 0, 512, 0)
+      g.addColorStop(0, 'rgba(255,240,200,0)')
+      g.addColorStop(0.15, 'rgba(255,180,80,0.9)')
+      g.addColorStop(0.35, 'rgba(255,90,40,1)')
+      g.addColorStop(0.5, 'rgba(255,200,120,0.85)')
+      g.addColorStop(0.7, 'rgba(120,160,255,0.7)')
+      g.addColorStop(0.9, 'rgba(80,100,200,0.35)')
+      g.addColorStop(1, 'rgba(40,40,80,0)')
+      ctx.fillStyle = g
+      ctx.fillRect(0, 0, 512, 64)
+      // turbulence streaks
+      for (let i = 0; i < 40; i++) {
+        ctx.strokeStyle = `rgba(255,${180 + Math.random()*75},${100 + Math.random()*80},${0.15 + Math.random()*0.35})`
+        ctx.lineWidth = 1 + Math.random() * 3
+        const y = Math.random() * 64
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        for (let x = 0; x < 512; x += 8) ctx.lineTo(x, y + Math.sin(x * 0.05 + i) * 4)
+        ctx.stroke()
+      }
+    }
+    const accTex = new THREE.CanvasTexture(accCanvas)
+    accTex.wrapS = THREE.RepeatWrapping
+    const accretion = new THREE.Mesh(
+      new THREE.RingGeometry(0.5, 2.4, 128),
+      new THREE.MeshBasicMaterial({
+        map: accTex,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    )
+    accretion.rotation.x = Math.PI / 2.08
+    accretion.scale.set(1, 0.28, 1)
+    accretion.userData = { spin: 0.004 }
+    scene.add(accretion)
+    if (!warpRingsRef.current) warpRingsRef.current = []
+    warpRingsRef.current.push(accretion)
+
+    // Chaotic gravitational lensing shells — light bends / phase-shifts around the hole
+    for (let ri = 0; ri < 10; ri++) {
+      const inner = 0.32 + ri * 0.09
       const wr = new THREE.Mesh(
-        new THREE.RingGeometry(inner, inner + 0.035, 80),
+        new THREE.RingGeometry(inner, inner + 0.025 + (ri % 3) * 0.01, 96),
         new THREE.MeshBasicMaterial({
-          color: new THREE.Color().setHSL(0.65 + ri * 0.06, 0.9, 0.55 + (ri % 3) * 0.08),
+          color: new THREE.Color().setHSL(0.08 + ri * 0.07, 0.7, 0.55 + (ri % 2) * 0.15),
           transparent: true,
-          opacity: 0.1 + (ri % 2) * 0.08,
+          opacity: 0.08 + (10 - ri) * 0.012,
           side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
         })
       )
-      wr.rotation.x = Math.PI / 2 + (ri - 3.5) * 0.11
-      wr.rotation.y = (ri % 3) * 0.15
-      wr.rotation.z = ri * 0.55
-      wr.userData = { spin: 0.006 + ri * 0.003, tilt: 0.0025 * (ri + 1), wobble: 0.4 + ri * 0.12 }
+      // Chaos: tilted rings so light appears to warp off-axis
+      wr.rotation.x = Math.PI / 2 + (ri - 4.5) * 0.14
+      wr.rotation.y = Math.sin(ri * 1.7) * 0.35
+      wr.rotation.z = ri * 0.45
+      wr.scale.set(1, 0.22 + (ri % 3) * 0.08, 1)
+      wr.userData = {
+        spin: 0.01 + ri * 0.004 * (ri % 2 === 0 ? 1 : -1),
+        tilt: 0.003 * (ri + 1),
+        wobble: 0.5 + ri * 0.15,
+        phase: ri * 0.7
+      }
       scene.add(wr)
-      if (!warpRingsRef.current) warpRingsRef.current = []
       warpRingsRef.current.push(wr)
     }
 
+    // Outer lensing haze
     const aura = new THREE.Mesh(
-      new THREE.SphereGeometry(2.1, 32, 32),
+      new THREE.SphereGeometry(1.8, 48, 48),
       new THREE.MeshBasicMaterial({
-        color: 0x6a40a0,
+        color: 0x4020a0,
         transparent: true,
-        opacity: 0.1,
+        opacity: 0.06,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending
       })
@@ -1359,11 +1413,12 @@ function App() {
         layer.pts.rotation.z = Math.sin(t * 0.022) * 0.012
         const cols = layer.geo.attributes.color
         for (let i = 0; i < layer.count; i++) {
-          layer.hues[i] = (layer.hues[i] + 0.00014) % 1 // pastel rainbow drift
+          layer.hues[i] = (layer.hues[i] + 0.00008) % 1 // slow cosmic continuum
+          // Slow living rotational glow — cosmos continuum
           const c = new THREE.Color().setHSL(
-            layer.hues[i],
-            0.58 + 0.12 * Math.sin(t * 0.15 + layer.hues[i] * 6.28),
-            0.52 + 0.28 * (layer.hues[i] % 0.2 > 0.1 ? 1 : 0.55)
+            (layer.hues[i] + t * 0.008) % 1,
+            0.5 + 0.25 * Math.sin(t * 0.12 + layer.hues[i] * 4),
+            0.55 + 0.2 * Math.sin(t * 0.09 + i * 0.01)
           )
           cols.array[i * 3] = c.r
           cols.array[i * 3 + 1] = c.g
@@ -1380,10 +1435,12 @@ function App() {
           const x = pos.array[ix]
           const z = pos.array[ix + 2]
           const dist = Math.sqrt(x * x + z * z)
-          if (dist < 3.0 && dist > 0.45) {
-            const pull = 0.00008 / dist + smoothTyping * 0.00012 / dist
-            pos.array[ix] -= x * pull
-            pos.array[ix + 2] -= z * pull
+          // Gravitational lensing feel — swirl + pull near the hole
+          if (dist < 4.5 && dist > 0.55) {
+            const pull = 0.00014 / dist + smoothTyping * 0.00018 / dist
+            const swirl = 0.00009 / dist
+            pos.array[ix] -= x * pull - z * swirl
+            pos.array[ix + 2] -= z * pull + x * swirl
           }
           if (smoothTyping < 0.1 && dist > 0.5) {
             pos.array[ix] += (layer.basePositions[ix] - pos.array[ix]) * 0.001
@@ -1416,8 +1473,7 @@ function App() {
       }
       // Pastel-shifting atmospheric fog
       if (scene.fog && scene.fog.color) {
-        const fh = (t * 0.018) % 1
-        scene.fog.color.setHSL(fh, 0.32, 0.11 + 0.04 * Math.sin(t * 0.11))
+        scene.fog.color.setHSL((0.65 + t * 0.008) % 1, 0.4, 0.04 + 0.02 * Math.sin(t * 0.08))
       }
 
       // Specials orbit + spin
@@ -1435,17 +1491,31 @@ function App() {
 
       // Whole-system ~5° living wobble
       if (sceneRef.current) {
-        sceneRef.current.rotation.x = Math.sin(t * 0.07) * 0.045
-        sceneRef.current.rotation.z = Math.cos(t * 0.055) * 0.028
+        sceneRef.current.rotation.x = Math.sin(t * 0.05) * 0.038
+        sceneRef.current.rotation.y = t * 0.012  // slow cosmic spin
+        sceneRef.current.rotation.z = Math.cos(t * 0.04) * 0.022
       }
-      // Warp ring chaos
+      // Chaotic light-warp shells + accretion spin (Cosmos BH)
       if (warpRingsRef.current) {
         for (const wr of warpRingsRef.current) {
+          const spin = wr.userData.spin || 0.004
           const w = wr.userData.wobble || 1
-          wr.rotation.z += wr.userData.spin
-          wr.rotation.x += wr.userData.tilt * Math.sin(t * 1.4 * w)
-          wr.rotation.y += wr.userData.spin * 0.35 * Math.cos(t * w)
-          wr.material.opacity = 0.08 + 0.14 * Math.abs(Math.sin(t * 2.6 + wr.userData.spin * 80))
+          const phase = wr.userData.phase || 0
+          wr.rotation.z += spin
+          if (wr.userData.tilt) {
+            wr.rotation.x += wr.userData.tilt * Math.sin(t * 1.2 * w + phase)
+            wr.rotation.y += spin * 0.4 * Math.cos(t * w + phase)
+          }
+          if (wr.material && wr.material.map) {
+            // accretion disk: scroll texture + living opacity
+            wr.material.map.offset.x = (t * 0.03) % 1
+            wr.material.opacity = 0.7 + 0.2 * Math.sin(t * 0.5)
+          } else if (wr.material) {
+            wr.material.opacity = 0.06 + 0.12 * Math.abs(Math.sin(t * 2.2 + phase + spin * 40))
+            if (wr.material.color && !wr.material.map) {
+              wr.material.color.setHSL((0.05 + t * 0.02 + phase * 0.1) % 1, 0.75, 0.55)
+            }
+          }
         }
       }
       // Born stars pulse / type personality (glow + gentle scale)
@@ -1477,19 +1547,29 @@ function App() {
       core.scale.setScalar(0.94 + breath * 0.1 + smoothTyping * 0.035 + actPulse * 0.05)
       horizon.scale.setScalar(0.96 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
 
+      // Photon ring + horizon: living light, phase-shift under activity
+      const ph = (t * 0.04) % 1
       if (actPulse > 0.08) {
-        photon.material.color.setHex(0x40d8ff)
-        photon.material.opacity = 0.14 + actPulse * 0.28 + breath * 0.08
+        photon.material.color.setHSL(0.12 + actPulse * 0.15, 0.9, 0.75)
+        photon.material.opacity = 0.7 + actPulse * 0.25 + breath * 0.1
+        horizon.material.color.setHSL(0.05, 1, 0.55 + actPulse * 0.2)
+        horizon.material.opacity = 0.7 + actPulse * 0.25
       } else if (smoothTyping > 0.15) {
-        photon.material.color.setHex(0xb0d4ff)
-        photon.material.opacity = 0.16 + breath * 0.1 + smoothTyping * 0.06
+        photon.material.color.setHSL(0.55 + ph * 0.1, 0.7, 0.7)
+        photon.material.opacity = 0.75 + breath * 0.12 + smoothTyping * 0.1
+        horizon.material.opacity = 0.65 + breath * 0.1
       } else {
-        photon.material.color.setHex(0xc8d8ff)
-        photon.material.opacity = 0.12 + breath * 0.1
+        photon.material.color.setHSL(0.08 + ph * 0.05, 0.85, 0.72 + breath * 0.08)
+        photon.material.opacity = 0.8 + breath * 0.1
+        horizon.material.color.setHSL(0.04 + Math.sin(t * 0.2) * 0.02, 0.95, 0.5)
+        horizon.material.opacity = 0.65 + breath * 0.12
       }
+      photon.rotation.z = t * 0.15
+      horizon.rotation.z = -t * 0.08
 
-      aura.scale.setScalar(1 + breath * 0.08 + smoothTyping * 0.025 + actPulse * 0.04)
-      aura.material.opacity = 0.04 + breath * 0.04 + smoothTyping * 0.015 + actPulse * 0.03
+      aura.scale.setScalar(1 + breath * 0.1 + smoothTyping * 0.03 + actPulse * 0.06)
+      aura.material.opacity = 0.05 + breath * 0.04 + smoothTyping * 0.02 + actPulse * 0.04
+      aura.material.color.setHSL((0.7 + t * 0.01) % 1, 0.6, 0.35)
 
       // Born stars + gravitational warp near core
       for (const s of starsRef.current) {
