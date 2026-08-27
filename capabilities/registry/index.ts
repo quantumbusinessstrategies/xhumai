@@ -126,6 +126,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/commitment-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { commitments: "array" } }
+  },
+  {
+    id: "leverage-extractor",
+    name: "Leverage Extractor",
+    description: "Surface systems, automations, and compounding moves from notes so small effort keeps working after you stop",
+    category: "productivity",
+    endpoint: "/api/capabilities/leverage-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { leverage: "array" } }
   }
 ];
 

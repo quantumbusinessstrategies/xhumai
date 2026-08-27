@@ -18,6 +18,7 @@ Every capability is an asset. Every asset compounds.
 | opportunity-extractor | Opportunity Extractor | productivity | stub (logging live) |
 | assumption-extractor | Assumption Extractor | productivity | stub (logging live) |
 | commitment-extractor | Commitment Extractor | productivity | stub (logging live) |
+| leverage-extractor | Leverage Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -47,5 +48,6 @@ Every capability is an asset. Every asset compounds.
 - **Opportunity Extractor** → upside and leverage visible early, high-value openings captured
 - **Assumption Extractor** → hidden premises visible, decisions rest on clearer ground
 - **Commitment Extractor** → promises and obligations visible, accountability compounds, nothing left hanging
+- **Leverage Extractor** → systems and compounding moves visible, work keeps happening after you stop
 
 Together they turn notes into leverage.

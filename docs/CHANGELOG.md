@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5 — 2026-08-27
+- Wired **Leverage Extractor** into the formal capability registry + API + intent classifier
+  - Surfaces systems, automations, templates, and compounding moves from free-form notes
+  - Full usage logging for self-improvement loop
+  - Complements opportunity (what could go right) with leverage (what keeps working after you stop)
+- Direct progress toward "Work Less. Live More." — every capability is an asset; this one names the assets that compound
+
 ## v1.4 — 2026-08-25
 - Added **Commitment Extractor** capability (productivity category)
   - Surfaces promises, commitments, obligations, and "I will / we will" statements from free-form notes
