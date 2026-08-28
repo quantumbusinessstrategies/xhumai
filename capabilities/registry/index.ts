@@ -119,6 +119,15 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { assumptions: "array" } }
   },
   {
+    id: "constraint-extractor",
+    name: "Constraint Extractor",
+    description: "Surface constraints, limits, and non-negotiables from notes so effort stays inside real bounds",
+    category: "productivity",
+    endpoint: "/api/capabilities/constraint-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { constraints: "array" } }
+  },
+  {
     id: "commitment-extractor",
     name: "Commitment Extractor",
     description: "Surface promises, commitments, and obligations from notes so accountability compounds and nothing is left hanging",
@@ -135,6 +144,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/leverage-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { leverage: "array" } }
+  },
+  {
+    id: "delegation-extractor",
+    name: "Delegation Extractor",
+    description: "Surface work that can be delegated, outsourced, automated, or dropped so the founder keeps only high-leverage work",
+    category: "productivity",
+    endpoint: "/api/capabilities/delegation-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { delegations: "array" } }
   }
 ];
 
