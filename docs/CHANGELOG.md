@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6 — 2026-08-28
+- Added **Delegation Extractor** capability (productivity category)
+  - Surfaces work that can be delegated, outsourced, automated, or dropped from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements owner (who has it) and leverage (what keeps working) with delegation (what should leave the founder's hands)
+- Registered **Constraint Extractor** in the formal capability registry (route already existed)
+- Direct progress toward "Work Less. Live More." — less founder time on work that does not require the founder
+
 ## v1.5 — 2026-08-27
 - Wired **Leverage Extractor** into the formal capability registry + API + intent classifier
   - Surfaces systems, automations, templates, and compounding moves from free-form notes
