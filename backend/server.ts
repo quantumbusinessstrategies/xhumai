@@ -23,6 +23,7 @@ import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
 import { runConstraintExtractor } from '../capabilities/constraint-extractor';
 import { runCommitmentExtractor } from '../capabilities/commitment-extractor';
 import { runLeverageExtractor } from '../capabilities/leverage-extractor';
+import { runDelegationExtractor } from '../capabilities/delegation-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -58,7 +59,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '1.9.0',
+    version: '2.0.0',
     status: 'alive',
     creed: 'Work Less. Live More.',
     bounds: [
@@ -100,7 +101,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -120,6 +121,7 @@ app.post('/api/intent', (req, res) => {
     if (lower.includes('summar')) { reply = 'I can summarize that. Paste the full text.'; status = 'utility:text-summarizer'; }
     else if (lower.includes('action') || lower.includes('todo')) { reply = 'I can extract next steps. Paste your notes.'; status = 'utility:action-extractor'; }
     else if (lower.includes('priority') || lower.includes('p0')) { reply = 'I can rank into P0/P1/P2. Paste notes.'; status = 'utility:priority-sorter'; }
+    else if (lower.includes('delegat') || lower.includes('handoff') || lower.includes('hand off') || lower.includes('outsource') || lower.includes('offload')) { reply = 'I can surface work to delegate, automate, or drop. Paste your notes.'; status = 'utility:delegation-extractor'; }
     else if (lower.includes('leverage') || lower.includes('compound') || lower.includes('automat')) { reply = 'I can surface leverage: systems and moves that keep working after you stop. Paste your notes.'; status = 'utility:leverage-extractor'; }
     else if (lower.includes('assumption')) { reply = 'I can surface assumptions. Paste your notes.'; status = 'utility:assumption-extractor'; }
     else if (lower.includes('constraint') || lower.includes('limit') || lower.includes('non-negotiable')) { reply = 'I can surface constraints and limits. Paste notes.'; status = 'utility:constraint-extractor'; }
@@ -270,6 +272,13 @@ app.post('/api/capabilities/leverage-extractor', async (req, res) => {
     res.json({ capability: 'leverage-extractor', ...(await runLeverageExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
+app.post('/api/capabilities/delegation-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'delegation-extractor', ...(await runDelegationExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 
 app.use('/api/admin', adminRoutes);
 app.get('/api/agents', (_req, res) => res.json({ count: agents.length, agents }));
@@ -305,7 +314,7 @@ app.get('/api/entity', async (_req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v1.9 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v2.0 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });
