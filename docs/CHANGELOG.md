@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7 — 2026-08-28
+- Added **Energy Extractor** capability (productivity category)
+  - Surfaces what drains energy and what restores it from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements delegation (what leaves the founder) and leverage (what keeps working) with energy (what costs life-force vs what returns it)
+- Direct progress toward "Work Less. Live More." — work is redesigned around energy, not just tasks
+
 ## v1.6 — 2026-08-28
 - Added **Delegation Extractor** capability (productivity category)
   - Surfaces work that can be delegated, outsourced, automated, or dropped from free-form notes
