@@ -153,6 +153,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/delegation-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { delegations: "array" } }
+  },
+  {
+    id: "energy-extractor",
+    name: "Energy Extractor",
+    description: "Surface what drains energy and what restores it from notes so work is redesigned toward living more, not just doing more",
+    category: "productivity",
+    endpoint: "/api/capabilities/energy-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { energy: "array" } }
   }
 ];
 
