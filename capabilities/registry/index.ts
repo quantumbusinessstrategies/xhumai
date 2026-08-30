@@ -110,58 +110,22 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { opportunities: "array" } }
   },
   {
-    id: "assumption-extractor",
-    name: "Assumption Extractor",
-    description: "Surface unspoken assumptions, premises, and taken-for-granted beliefs from notes so decisions rest on clearer ground and hidden premises become visible",
+    id: "insight-extractor",
+    name: "Insight Extractor",
+    description: "Surface key insights, patterns, and non-obvious takeaways from notes so understanding compounds and nothing valuable is missed",
     category: "productivity",
-    endpoint: "/api/capabilities/assumption-extractor",
+    endpoint: "/api/capabilities/insight-extractor",
     inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { assumptions: "array" } }
-  },
-  {
-    id: "constraint-extractor",
-    name: "Constraint Extractor",
-    description: "Surface constraints, limits, and non-negotiables from notes so effort stays inside real bounds",
-    category: "productivity",
-    endpoint: "/api/capabilities/constraint-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { constraints: "array" } }
+    outputSchema: { type: "object", properties: { insights: "array" } }
   },
   {
     id: "commitment-extractor",
     name: "Commitment Extractor",
-    description: "Surface promises, commitments, and obligations from notes so accountability compounds and nothing is left hanging",
+    description: "Surface promises, commitments, and agreements from notes so obligations are visible and loops close",
     category: "productivity",
     endpoint: "/api/capabilities/commitment-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { commitments: "array" } }
-  },
-  {
-    id: "leverage-extractor",
-    name: "Leverage Extractor",
-    description: "Surface systems, automations, and compounding moves from notes so small effort keeps working after you stop",
-    category: "productivity",
-    endpoint: "/api/capabilities/leverage-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { leverage: "array" } }
-  },
-  {
-    id: "delegation-extractor",
-    name: "Delegation Extractor",
-    description: "Surface work that can be delegated, outsourced, automated, or dropped so the founder keeps only high-leverage work",
-    category: "productivity",
-    endpoint: "/api/capabilities/delegation-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { delegations: "array" } }
-  },
-  {
-    id: "energy-extractor",
-    name: "Energy Extractor",
-    description: "Surface what drains energy and what restores it from notes so work is redesigned toward living more, not just doing more",
-    category: "productivity",
-    endpoint: "/api/capabilities/energy-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { energy: "array" } }
   }
 ];
 
