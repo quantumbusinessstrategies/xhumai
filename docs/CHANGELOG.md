@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.8 — 2026-08-29
+- Wired **Dependency Extractor** into the formal capability registry + API + intent classifier
+  - Surfaces prerequisites, sequential requirements, and hidden waits from free-form notes
+  - Full usage logging for self-improvement loop
+  - Complements blocker (what is in the way now) with dependency (what must come first)
+- Restored full registry entries for assumption / constraint / leverage / delegation / energy after a partial overwrite
+- Quantum Core version bump to 2.1.0
+- Direct progress toward "Work Less. Live More." — sequence becomes visible so work does not stall on invisible prerequisites
+
 ## v1.7 — 2026-08-28
 - Added **Energy Extractor** capability (productivity category)
   - Surfaces what drains energy and what restores it from free-form notes
