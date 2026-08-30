@@ -119,6 +119,24 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { insights: "array" } }
   },
   {
+    id: "assumption-extractor",
+    name: "Assumption Extractor",
+    description: "Surface implicit assumptions and premises from notes so decisions rest on clearer ground",
+    category: "productivity",
+    endpoint: "/api/capabilities/assumption-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { assumptions: "array" } }
+  },
+  {
+    id: "constraint-extractor",
+    name: "Constraint Extractor",
+    description: "Surface constraints and non-negotiable limits from notes so effort is not wasted on impossible paths",
+    category: "productivity",
+    endpoint: "/api/capabilities/constraint-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { constraints: "array" } }
+  },
+  {
     id: "commitment-extractor",
     name: "Commitment Extractor",
     description: "Surface promises, commitments, and agreements from notes so obligations are visible and loops close",
@@ -126,6 +144,42 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/commitment-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { commitments: "array" } }
+  },
+  {
+    id: "leverage-extractor",
+    name: "Leverage Extractor",
+    description: "Surface systems, automations, and compounding moves from notes so work keeps happening after you stop",
+    category: "productivity",
+    endpoint: "/api/capabilities/leverage-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { leverage: "array" } }
+  },
+  {
+    id: "delegation-extractor",
+    name: "Delegation Extractor",
+    description: "Surface work that can be delegated, automated, or dropped so founder time returns to high-leverage work",
+    category: "productivity",
+    endpoint: "/api/capabilities/delegation-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { delegations: "array" } }
+  },
+  {
+    id: "energy-extractor",
+    name: "Energy Extractor",
+    description: "Surface what drains energy and what restores it so work is redesigned toward living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/energy-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { drains: "array", restoratives: "array" } }
+  },
+  {
+    id: "dependency-extractor",
+    name: "Dependency Extractor",
+    description: "Surface prerequisites and sequential dependencies from notes so hidden waits become visible and work does not stall",
+    category: "productivity",
+    endpoint: "/api/capabilities/dependency-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { dependencies: "array" } }
   }
 ];
 
