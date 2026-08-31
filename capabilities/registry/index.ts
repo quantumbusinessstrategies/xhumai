@@ -180,6 +180,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/dependency-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { dependencies: "array" } }
+  },
+  {
+    id: "metric-extractor",
+    name: "Metric Extractor",
+    description: "Surface success metrics, KPIs, and how-we'll-know signals from notes so work has a finish line",
+    category: "productivity",
+    endpoint: "/api/capabilities/metric-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { metrics: "array" } }
   }
 ];
 
