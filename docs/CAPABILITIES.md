@@ -23,6 +23,7 @@ Every capability is an asset. Every asset compounds.
 | delegation-extractor | Delegation Extractor | productivity | stub (logging live) |
 | energy-extractor | Energy Extractor | productivity | stub (logging live) |
 | dependency-extractor | Dependency Extractor | productivity | stub (logging live) |
+| metric-extractor | Metric Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -57,5 +58,6 @@ Every capability is an asset. Every asset compounds.
 - **Delegation Extractor** → work leaves the founder, capacity returns to high-leverage work
 - **Energy Extractor** → drains and restoratives visible, work is redesigned toward living more
 - **Dependency Extractor** → prerequisites and sequence visible, hidden waits stop stalling the system
+- **Metric Extractor** → success criteria visible, work has a finish line, less motion without progress
 
 Together they turn notes into leverage.
