@@ -189,6 +189,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/metric-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { metrics: "array" } }
+  },
+  {
+    id: "question-extractor",
+    name: "Question Extractor",
+    description: "Surface unanswered questions and open inquiries from notes so thinking can close instead of looping",
+    category: "productivity",
+    endpoint: "/api/capabilities/question-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { questions: "array" } }
   }
 ];
 
