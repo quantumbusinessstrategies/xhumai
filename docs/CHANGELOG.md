@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0 — 2026-09-01
+- Added **Question Extractor** capability (productivity category)
+  - Surfaces unanswered questions, clarifying asks, and decision-shaped inquiries from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements decision (what was decided) and assumption (what we take as given) with question (what is still unresolved)
+- Quantum Core version bump to 2.3.0
+- Direct progress toward "Work Less. Live More." — open questions become visible so work does not pretend to be finished
+
 ## v1.9 — 2026-08-31
 - Added **Metric Extractor** capability (productivity category)
   - Surfaces success metrics, KPIs, targets, and how-we'll-know signals from free-form notes
