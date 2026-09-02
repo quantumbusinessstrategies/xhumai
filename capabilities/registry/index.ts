@@ -198,6 +198,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/question-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { questions: "array" } }
+  },
+  {
+    id: "tradeoff-extractor",
+    name: "Tradeoff Extractor",
+    description: "Surface tradeoffs, costs-vs-gains, and competing choices from notes so decisions get made once and are not re-litigated",
+    category: "productivity",
+    endpoint: "/api/capabilities/tradeoff-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { tradeoffs: "array" } }
   }
 ];
 
