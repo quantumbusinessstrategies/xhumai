@@ -25,6 +25,7 @@ Every capability is an asset. Every asset compounds.
 | dependency-extractor | Dependency Extractor | productivity | stub (logging live) |
 | metric-extractor | Metric Extractor | productivity | stub (logging live) |
 | question-extractor | Question Extractor | productivity | stub (logging live) |
+| tradeoff-extractor | Tradeoff Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -61,5 +62,6 @@ Every capability is an asset. Every asset compounds.
 - **Dependency Extractor** → prerequisites and sequence visible, hidden waits stop stalling the system
 - **Metric Extractor** → success criteria visible, work has a finish line, less motion without progress
 - **Question Extractor** → unanswered questions visible, thinking can close instead of looping
+- **Tradeoff Extractor** → costs vs gains visible, decisions get made once instead of circling
 
 Together they turn notes into leverage.
