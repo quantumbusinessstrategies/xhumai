@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.1 — 2026-09-02
+- Added **Tradeoff Extractor** capability (productivity category)
+  - Surfaces tradeoffs, costs-vs-gains, and competing choices from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements decision (what was settled) and constraint (hard bounds) with tradeoff (what we give up to get what we want)
+- Quantum Core version bump to 2.4.0
+- Direct progress toward "Work Less. Live More." — tradeoffs become visible so decisions stop looping
+
 ## v2.0 — 2026-09-01
 - Added **Question Extractor** capability (productivity category)
   - Surfaces unanswered questions, clarifying asks, and decision-shaped inquiries from free-form notes
