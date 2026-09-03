@@ -207,6 +207,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/tradeoff-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { tradeoffs: "array" } }
+  },
+  {
+    id: "stakeholder-extractor",
+    name: "Stakeholder Extractor",
+    description: "Surface people and groups who are affected, informed, or need buy-in so work is not built in a vacuum",
+    category: "productivity",
+    endpoint: "/api/capabilities/stakeholder-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { stakeholders: "array" } }
   }
 ];
 
