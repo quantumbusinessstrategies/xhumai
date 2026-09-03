@@ -1,1 +1,287 @@
-PLACEHOLDER
+@import url('https://fonts.cdnfonts.com/css/ocr-a-extended');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  background: #03010f;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+}
+
+.landing {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.canvas-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.canvas-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.content {
+  position: relative;
+  z-index: 20;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.logo {
+  font-family: Tahoma, 'Segoe UI', system-ui, sans-serif;
+  font-size: clamp(6.5rem, 18vw, 12rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0.95rem;
+  background: linear-gradient(
+    120deg,
+    #ffb3d9 0%,
+    #c9b6ff 18%,
+    #a8e0ff 36%,
+    #b8f0d0 52%,
+    #ffe6a8 70%,
+    #ffc4e8 85%,
+    #ffb3d9 100%
+  );
+  background-size: 280% 280%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 36px rgba(200, 160, 255, 0.35));
+  animation: logoBreath 4.2s ease-in-out infinite, logoRainbow 14s linear infinite;
+  transform-origin: center center;
+}
+
+.logo-activate {
+  filter: drop-shadow(0 0 52px rgba(0, 220, 255, 0.35));
+  transition: filter 0.6s ease;
+}
+
+@keyframes logoBreath {
+  0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 28px rgba(200, 160, 255, 0.3)); }
+  15% { transform: scale(1.012); }
+  30% { transform: scale(1.028); opacity: 0.97; filter: drop-shadow(0 0 48px rgba(180, 200, 255, 0.45)); }
+  45% { transform: scale(1.01); }
+  60% { transform: scale(1.022); opacity: 0.98; filter: drop-shadow(0 0 40px rgba(255, 180, 220, 0.4)); }
+  80% { transform: scale(1.008); }
+}
+
+@keyframes logoRainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.tagline {
+  font-size: clamp(1.45rem, 3.6vw, 2.05rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(240, 230, 255, 0.95);
+  font-weight: 550;
+  margin-bottom: 0.75rem;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  position: relative;
+  z-index: 2;
+}
+
+.purpose {
+  font-family: 'OCR A Extended', 'OCR A Std', 'OCRAExtended', monospace;
+  font-size: clamp(1.2rem, 2.8vw, 1.55rem);
+  letter-spacing: 0.04em;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  z-index: 2;
+  color: rgba(200, 215, 240, 0.72);
+  margin-bottom: 2.75rem;
+  font-weight: 400;
+}
+
+.response {
+  margin-top: 2.5rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.14em;
+  min-height: 1.4em;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  animation: particleIn 2.5s cubic-bezier(.22,.9,.26,1) forwards, responseRainbow 12s linear infinite;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 190, 230, 0.4),
+    rgba(190, 210, 255, 0.4),
+    rgba(190, 255, 235, 0.38),
+    rgba(255, 235, 190, 0.38),
+    rgba(255, 190, 230, 0.4)
+  );
+  background-size: 280% 280%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 18px rgba(180, 160, 255, 0.14), 0 0 32px rgba(120, 200, 255, 0.07);
+}
+
+@keyframes responseRainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.status {
+  margin-top: 0.9rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  color: rgba(195, 180, 220, 0.36);
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  filter: blur(6px);
+  animation: particleIn 1.2s ease forwards;
+}
+
+@keyframes particleIn {
+  0% { opacity: 0; transform: translateY(14px) scale(0.98); filter: blur(8px); }
+  60% { opacity: 1; transform: translateY(-6px) scale(1.01); filter: blur(2px); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.universe-note {
+  margin-top: 2.1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(180, 190, 220, 0.26);
+}
+
+.dual-fields {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+  pointer-events: auto;
+  margin-top: 0.6rem;
+}
+
+.field-chat,
+.field-build {
+  width: min(100%, 480px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.field-chat {
+  align-self: flex-start;
+  margin-left: clamp(0px, 2vw, 1rem);
+  transform: translateX(clamp(-4vw, -3vw, -12px));
+}
+
+.field-build {
+  align-self: flex-end;
+  margin-right: clamp(0px, 2vw, 1rem);
+  transform: translateX(clamp(12px, 3vw, 4vw));
+}
+
+.field-chat input,
+.field-build input {
+  width: 100%;
+  padding: 1.45rem 1.75rem;
+  font-family: 'OCR A Extended', 'OCR A Std', 'OCRAExtended', monospace;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(20, 24, 40, 0.18) 100%
+  );
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  color: #f2f4ff;
+  outline: none;
+  transition: all 0.45s ease;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.field-chat input::placeholder,
+.field-build input::placeholder {
+  color: rgba(200, 205, 230, 0.48);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  font-family: 'OCR A Extended', 'OCR A Std', 'OCRAExtended', monospace;
+}
+
+.field-chat input:focus,
+.field-chat input.input-awake {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(200, 160, 255, 0.28),
+    0 0 40px rgba(140, 100, 255, 0.16),
+    0 12px 40px rgba(0, 0, 0, 0.32);
+}
+
+.field-build input:focus,
+.field-build input.input-awake {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(120, 200, 255, 0.28),
+    0 0 40px rgba(80, 160, 255, 0.16),
+    0 12px 40px rgba(0, 0, 0, 0.32);
+}
+
+@media (max-width: 640px) {
+  .field-chat,
+  .field-build {
+    align-self: stretch;
+    margin-left: 0;
+    margin-right: 0;
+    transform: none;
+    width: 100%;
+  }
+}
