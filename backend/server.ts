@@ -19,7 +19,17 @@ import { notifyInquiry } from './utils/notify';
 import { runPrioritySorter } from '../capabilities/priority-sorter';
 import { runRiskExtractor } from '../capabilities/risk-extractor';
 import { runOpportunityExtractor } from '../capabilities/opportunity-extractor';
-import { runInsightExtractor } from '../capabilities/insight-extractor';
+import { runAssumptionExtractor } from '../capabilities/assumption-extractor';
+import { runConstraintExtractor } from '../capabilities/constraint-extractor';
+import { runCommitmentExtractor } from '../capabilities/commitment-extractor';
+import { runLeverageExtractor } from '../capabilities/leverage-extractor';
+import { runDelegationExtractor } from '../capabilities/delegation-extractor';
+import { runEnergyExtractor } from '../capabilities/energy-extractor';
+import { runDependencyExtractor } from '../capabilities/dependency-extractor';
+import { runMetricExtractor } from '../capabilities/metric-extractor';
+import { runQuestionExtractor } from '../capabilities/question-extractor';
+import { runTradeoffExtractor } from '../capabilities/tradeoff-extractor';
+import { runStakeholderExtractor } from '../capabilities/stakeholder-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -55,7 +65,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '1.6.0',
+    version: '2.5.0',
     status: 'alive',
     creed: 'Work Less. Live More.',
     bounds: [
@@ -97,7 +107,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','insight','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -117,8 +127,18 @@ app.post('/api/intent', (req, res) => {
     if (lower.includes('summar')) { reply = 'I can summarize that. Paste the full text.'; status = 'utility:text-summarizer'; }
     else if (lower.includes('action') || lower.includes('todo')) { reply = 'I can extract next steps. Paste your notes.'; status = 'utility:action-extractor'; }
     else if (lower.includes('priority') || lower.includes('p0')) { reply = 'I can rank into P0/P1/P2. Paste notes.'; status = 'utility:priority-sorter'; }
-    else if (lower.includes('insight') || lower.includes('takeaway') || lower.includes('pattern')) { reply = 'I can surface key insights and patterns. Paste your notes.'; status = 'utility:insight-extractor'; }
-    else if (lower.includes('opportunit')) { reply = 'I can surface opportunities and leverage points. Paste your notes.'; status = 'utility:opportunity-extractor'; }
+    else if (lower.includes('energy') || lower.includes('drain') || lower.includes('restore') || lower.includes('burnout')) { reply = 'I can surface what drains energy and what restores it. Paste your notes.'; status = 'utility:energy-extractor'; }
+    else if (lower.includes('delegat') || lower.includes('handoff') || lower.includes('hand off') || lower.includes('outsource') || lower.includes('offload')) { reply = 'I can surface work to delegate, automate, or drop. Paste your notes.'; status = 'utility:delegation-extractor'; }
+    else if (lower.includes('leverage') || lower.includes('compound') || lower.includes('automat')) { reply = 'I can surface leverage: systems and moves that keep working after you stop. Paste your notes.'; status = 'utility:leverage-extractor'; }
+    else if (lower.includes('assumption')) { reply = 'I can surface assumptions. Paste your notes.'; status = 'utility:assumption-extractor'; }
+    else if (lower.includes('constraint') || lower.includes('limit') || lower.includes('non-negotiable')) { reply = 'I can surface constraints and limits. Paste notes.'; status = 'utility:constraint-extractor'; }
+    else if (lower.includes('commitment') || lower.includes('promise') || lower.includes('obligation')) { reply = 'I can surface commitments and promises. Paste your notes.'; status = 'utility:commitment-extractor'; }
+    else if (lower.includes('depend') || lower.includes('prerequisite') || lower.includes('waiting on')) { reply = 'I can surface dependencies and prerequisites. Paste your notes.'; status = 'utility:dependency-extractor'; }
+    else if (lower.includes('metric') || lower.includes('kpi') || lower.includes('okr') || lower.includes('success criteria')) { reply = 'I can surface metrics and how we will know it worked. Paste your notes.'; status = 'utility:metric-extractor'; }
+    else if (lower.includes('question') || lower.includes('unresolved') || lower.includes('unclear') || lower.includes('open question')) { reply = 'I can surface unanswered questions so thinking can close. Paste your notes.'; status = 'utility:question-extractor'; }
+    else if (lower.includes('tradeoff') || lower.includes('trade-off') || lower.includes('trade off') || lower.includes('versus') || lower.includes('pros and cons')) { reply = 'I can surface tradeoffs and costs vs gains. Paste your notes.'; status = 'utility:tradeoff-extractor'; }
+    else if (lower.includes('stakeholder') || lower.includes('audience') || lower.includes('buy-in') || lower.includes('buy in') || lower.includes('sign-off') || lower.includes('sign off') || lower.includes('who is affected')) { reply = 'I can surface stakeholders: who is affected, who needs buy-in, who should know. Paste your notes.'; status = 'utility:stakeholder-extractor'; }
+    else if (lower.includes('opportunity') || lower.includes('upside')) { reply = 'I can surface opportunities. Paste notes.'; status = 'utility:opportunity-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -154,17 +174,6 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.get('/api/capabilities', (_req, res) => res.json({ count: capabilities.length, capabilities }));
-
-const capRunner = (name: string, fn: (t: string) => Promise<any>) => async (req: any, res: any) => {
-  try {
-    const { text } = req.body || {};
-    if (!text) return res.status(400).json({ error: 'Missing text' });
-    const result = await fn(text);
-    res.json(typeof result === 'object' && result !== null ? { capability: name, ...result } : { capability: name, result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Something went wrong' });
-  }
-};
 
 app.post('/api/capabilities/text-summarizer', async (req, res) => {
   try {
@@ -236,11 +245,81 @@ app.post('/api/capabilities/opportunity-extractor', async (req, res) => {
     res.json({ capability: 'opportunity-extractor', ...(await runOpportunityExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-app.post('/api/capabilities/insight-extractor', async (req, res) => {
+app.post('/api/capabilities/assumption-extractor', async (req, res) => {
   try {
     const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    res.json({ capability: 'insight-extractor', ...(await runInsightExtractor(text)) });
+    res.json({ capability: 'assumption-extractor', ...(await runAssumptionExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/constraint-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'constraint-extractor', ...(await runConstraintExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/commitment-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'commitment-extractor', ...(await runCommitmentExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/leverage-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'leverage-extractor', ...(await runLeverageExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/delegation-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'delegation-extractor', ...(await runDelegationExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/energy-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'energy-extractor', ...(await runEnergyExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/dependency-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'dependency-extractor', ...(await runDependencyExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/metric-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'metric-extractor', ...(await runMetricExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/question-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'question-extractor', ...(await runQuestionExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/tradeoff-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'tradeoff-extractor', ...(await runTradeoffExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/capabilities/stakeholder-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'stakeholder-extractor', ...(await runStakeholderExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
@@ -250,8 +329,6 @@ app.post('/api/agents/:id/run', async (req, res) => {
   try { res.json(await runAgent(req.params.id)); }
   catch (e: any) { res.status(404).json({ error: e.message }); }
 });
-
-
 
 app.post('/api/entity/evolve', async (_req, res) => {
   try {
@@ -278,7 +355,7 @@ app.get('/api/entity', async (_req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v1.6 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v2.5 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });
