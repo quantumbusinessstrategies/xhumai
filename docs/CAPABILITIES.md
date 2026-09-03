@@ -16,6 +16,7 @@ Every capability is an asset. Every asset compounds.
 | priority-sorter | Priority Sorter | productivity | stub (logging live) |
 | risk-extractor | Risk Extractor | productivity | stub (logging live) |
 | opportunity-extractor | Opportunity Extractor | productivity | stub (logging live) |
+<<<<<<< HEAD
 | assumption-extractor | Assumption Extractor | productivity | stub (logging live) |
 | constraint-extractor | Constraint Extractor | productivity | stub (logging live) |
 | commitment-extractor | Commitment Extractor | productivity | stub (logging live) |
@@ -27,6 +28,9 @@ Every capability is an asset. Every asset compounds.
 | question-extractor | Question Extractor | productivity | stub (logging live) |
 | tradeoff-extractor | Tradeoff Extractor | productivity | stub (logging live) |
 | stakeholder-extractor | Stakeholder Extractor | productivity | stub (logging live) |
+=======
+| insight-extractor | Insight Extractor | productivity | stub (logging live) |
+>>>>>>> origin/main
 
 ## Seeded / Coming
 
@@ -54,6 +58,7 @@ Every capability is an asset. Every asset compounds.
 - **Priority Sorter** → attention goes where it compounds
 - **Risk Extractor** → downside visible early, fewer blindsides
 - **Opportunity Extractor** → upside and leverage visible early, high-value openings captured
+<<<<<<< HEAD
 - **Assumption Extractor** → hidden premises visible, decisions rest on clearer ground
 - **Constraint Extractor** → real bounds visible, effort is not wasted on impossible paths
 - **Commitment Extractor** → promises and obligations visible, accountability compounds, nothing left hanging
@@ -65,5 +70,8 @@ Every capability is an asset. Every asset compounds.
 - **Question Extractor** → unanswered questions visible, thinking can close instead of looping
 - **Tradeoff Extractor** → costs vs gains visible, decisions get made once instead of circling
 - **Stakeholder Extractor** → who is affected / who needs buy-in visible, work is not built in a vacuum
+=======
+- **Insight Extractor** → patterns and takeaways visible, understanding compounds
+>>>>>>> origin/main
 
 Together they turn notes into leverage.

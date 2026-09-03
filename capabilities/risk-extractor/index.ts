@@ -2,8 +2,13 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Risk Extractor Capability
+<<<<<<< HEAD
  * Surfaces risks, uncertainties, and potential failure modes from free-form notes
  * so foresight is visible and work stays ahead of surprises.
+=======
+ * Surfaces risks, threats, exposure points, and potential downsides from free-form notes
+ * so downside is visible and nothing blindsides the work.
+>>>>>>> origin/main
  * Stub for now; later becomes real AI.
  *
  * Complements:
@@ -13,6 +18,7 @@ import { logUsage } from '../../backend/utils/logger';
  * - deadline-extractor   → when it must happen
  * - blocker-extractor    → what is in the way right now
  * - owner-extractor      → who owns it
+<<<<<<< HEAD
  * - risk-extractor       → what could go wrong so foresight compounds
  */
 
@@ -21,6 +27,17 @@ export interface RiskItem {
   severity?: 'high' | 'medium' | 'low';
   category?: 'delivery' | 'technical' | 'people' | 'external' | 'unknown';
   context?: string;
+=======
+ * - priority-sorter      → where attention should go
+ * - risk-extractor       → what could go wrong so we see it early
+ */
+
+export interface RiskItem {
+  risk: string;
+  severity?: 'high' | 'medium' | 'low';
+  context?: string;
+  mitigation?: string;
+>>>>>>> origin/main
 }
 
 export interface RiskResult {
@@ -42,6 +59,7 @@ export async function runRiskExtractor(input: string): Promise<RiskResult> {
       .filter(s => s.length > 8);
 
     const riskPatterns = [
+<<<<<<< HEAD
       /\b(risk|risks|at risk|risky|jeopardy|threat|threats|exposure)\b/i,
       /\b(could fail|might fail|may fail|failure mode|what if|worst case)\b/i,
       /\b(uncertain|uncertainty|unknown|assumption|assume|assuming)\b/i,
@@ -62,6 +80,15 @@ export async function runRiskExtractor(input: string): Promise<RiskResult> {
       { pattern: /\b(people|team|hire|attrition|capacity|burnout|skill)\b/i, category: 'people' },
       { pattern: /\b(vendor|client|market|regulation|legal|external|partner)\b/i, category: 'external' },
     ];
+=======
+      /\b(risk|risks|threat|threats|exposure|vulnerable|downside|could fail|might break|concern|concerns|worry|worried|hazard|liability|uncertainty)\b/i,
+      /\b(if .+ (fails|breaks|delays|slips|misses)|what if|in case of|worst case)\b/i,
+      /\b(potential|possible|likely).{0,40}(problem|issue|delay|loss|impact)\b/i,
+    ];
+
+    const highSeverity = /\b(critical|high|severe|major|catastrophic|urgent|immediate)\b/i;
+    const lowSeverity = /\b(low|minor|small|slight|unlikely)\b/i;
+>>>>>>> origin/main
 
     const risks: RiskItem[] = [];
 
@@ -74,6 +101,7 @@ export async function runRiskExtractor(input: string): Promise<RiskResult> {
 
       if (riskPatterns.some(p => p.test(cleaned))) {
         let severity: RiskItem['severity'] = 'medium';
+<<<<<<< HEAD
         for (const sp of severityPatterns) {
           if (sp.pattern.test(cleaned)) {
             severity = sp.severity;
@@ -94,6 +122,15 @@ export async function runRiskExtractor(input: string): Promise<RiskResult> {
             item: cleaned,
             severity,
             category,
+=======
+        if (highSeverity.test(cleaned)) severity = 'high';
+        else if (lowSeverity.test(cleaned)) severity = 'low';
+
+        if (!risks.some(r => r.risk === cleaned)) {
+          risks.push({
+            risk: cleaned,
+            severity,
+>>>>>>> origin/main
             context: cleaned.length > 90 ? cleaned.slice(0, 90) + '…' : cleaned,
           });
         }
@@ -104,7 +141,15 @@ export async function runRiskExtractor(input: string): Promise<RiskResult> {
     if (risks.length === 0) {
       for (const line of lines.slice(0, 3)) {
         if (line.length < 140) {
+<<<<<<< HEAD
           risks.push({ item: line, context: line, severity: 'medium', category: 'unknown' });
+=======
+          risks.push({
+            risk: line,
+            severity: 'medium',
+            context: line,
+          });
+>>>>>>> origin/main
         }
       }
     }

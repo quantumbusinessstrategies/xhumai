@@ -117,6 +117,7 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/insight-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { insights: "array" } }
+<<<<<<< HEAD
   },
   {
     id: "assumption-extractor",
@@ -216,6 +217,8 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/stakeholder-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { stakeholders: "array" } }
+=======
+>>>>>>> origin/main
   }
 ];
 

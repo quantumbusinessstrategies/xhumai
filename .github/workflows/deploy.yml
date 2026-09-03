@@ -26,6 +26,17 @@ jobs:
         with:
           node-version: 22
 
+      - name: Restore full lander App.jsx from parts
+        run: |
+          set -e
+          node scripts/restore-app.mjs
+          echo "=== Verify lander ==="
+          wc -c frontend/src/App.jsx frontend/src/App.css
+          grep -n "useState('combo')" frontend/src/App.jsx | head -1
+          grep -n "ARM_COUNT\|SPIRAL\|playPixelForm" frontend/src/App.jsx | head -5
+          test -s frontend/src/App.jsx
+          test $(wc -c < frontend/src/App.jsx) -gt 50000
+
       - name: Install dependencies
         working-directory: frontend
         run: npm install
@@ -33,6 +44,11 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npm run build
+
+      - name: Check dist
+        run: |
+          ls -la frontend/dist/
+          find frontend/dist -type f -exec wc -c {} \; | sort -n | tail -10
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

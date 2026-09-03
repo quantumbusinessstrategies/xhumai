@@ -2,8 +2,13 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Opportunity Extractor Capability
+<<<<<<< HEAD
  * Surfaces opportunities, upside, potential wins, and leverage points from free-form notes
  * so upside is visible and nothing is left on the table.
+=======
+ * Surfaces opportunities, upsides, leverage points, and positive openings from free-form notes
+ * so attention goes where it compounds and nothing high-value is missed.
+>>>>>>> origin/main
  * Stub for now; later becomes real AI.
  *
  * Complements:
@@ -14,8 +19,13 @@ import { logUsage } from '../../backend/utils/logger';
  * - blocker-extractor    → what is in the way right now
  * - owner-extractor      → who owns it
  * - priority-sorter      → where attention should go
+<<<<<<< HEAD
  * - risk-extractor       → what could go wrong
  * - opportunity-extractor → what could compound / win
+=======
+ * - risk-extractor       → what could go wrong so we see it early
+ * - opportunity-extractor → what could go right so we capture it early
+>>>>>>> origin/main
  */
 
 export interface OpportunityItem {
@@ -44,6 +54,7 @@ export async function runOpportunityExtractor(input: string): Promise<Opportunit
       .filter(s => s.length > 8);
 
     const opportunityPatterns = [
+<<<<<<< HEAD
       /\b(opportunity|opportunities|upside|potential|win|wins|leverage|advantage|growth|scale|expand|breakthrough|untapped|opening|chance|could gain|might grow|room to|room for)\b/i,
       /\b(if we .{0,30}(could|can|might)|what if we|imagine if|possibility of)\b/i,
       /\b(potential|possible|likely).{0,40}(gain|win|growth|improvement|leverage|advantage)\b/i,
@@ -51,6 +62,16 @@ export async function runOpportunityExtractor(input: string): Promise<Opportunit
 
     const highPotential = /\b(huge|massive|significant|major|high|breakthrough|game.?changing|transformative)\b/i;
     const lowPotential = /\b(small|minor|slight|limited|modest)\b/i;
+=======
+      /\b(opportunity|opportunities|upside|upsides|leverage|potential|opening|openings|advantage|advantages|win|wins|gain|gains|growth|scale|compound)\b/i,
+      /\b(could (unlock|enable|accelerate|expand|improve|grow)|might (lead|create|open)|if we .{0,30}(could|can))\b/i,
+      /\b(potential|possible|promising).{0,40}(upside|gain|win|growth|impact|return)\b/i,
+      /\b(low.?hanging|quick.?win|high.?leverage|force.?multiplier)\b/i,
+    ];
+
+    const highPotential = /\b(high|major|significant|huge|transformative|game.?changing|critical)\b/i;
+    const lowPotential = /\b(low|minor|small|slight|modest)\b/i;
+>>>>>>> origin/main
 
     const opportunities: OpportunityItem[] = [];
 
