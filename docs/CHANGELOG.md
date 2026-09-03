@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.2 — 2026-09-03
+- Added **Stakeholder Extractor** capability (productivity category)
+  - Surfaces people and groups who are affected, informed, or need buy-in from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements owner (who is accountable) and follow-up (who still needs a touch) with stakeholder (who is affected / who cares)
+- Quantum Core version bump to 2.5.0
+- Direct progress toward "Work Less. Live More." — the human system becomes visible so work is not rebuilt after someone important was missed
+
 ## v2.1 — 2026-09-02
 - Added **Tradeoff Extractor** capability (productivity category)
   - Surfaces tradeoffs, costs-vs-gains, and competing choices from free-form notes
