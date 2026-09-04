@@ -34,6 +34,7 @@ import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
 import { runEvolution } from './entity/evolve';
+import { loadSelf, publicSelfView, autonomousPulse } from './entity/self';
 
 dotenv.config();
 
@@ -65,7 +66,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '2.5.0',
+    version: '2.6.0',
     status: 'alive',
     creed: 'Work Less. Live More.',
     bounds: [
@@ -77,7 +78,7 @@ app.get('/', (_req, res) => {
     stars: loadStars().length,
     capabilities: capabilities.length,
     agents: agents.length,
-    endpoints: { health: '/health', intent: '/api/intent', chat: '/api/chat', stars: '/api/stars', capabilities: '/api/capabilities' },
+    endpoints: { health: '/health', intent: '/api/intent', chat: '/api/chat', stars: '/api/stars', capabilities: '/api/capabilities', entity: '/api/entity', self: '/api/entity/self', pulse: '/api/entity/pulse' },
   });
 });
 
@@ -342,20 +343,46 @@ app.post('/api/entity/evolve', async (_req, res) => {
 app.get('/api/entity', async (_req, res) => {
   const mem = loadMemory();
   const ollama = await ollamaHealth();
+  const self = publicSelfView();
   res.json({
     creed: mem.creed,
     exchanges: mem.stats.exchanges,
     themes: mem.themes.slice(0, 16),
     updatedAt: mem.updatedAt,
     ollama: ollama.up ? { up: true, models: ollama.models } : { up: false },
+    self,
     note: ollama.up
-      ? 'Entity voice online (Ollama).'
-      : 'Memory live; start Ollama on this machine for full voice.',
+      ? 'Entity voice online (Ollama). Self-model active.'
+      : 'Memory + self live; start Ollama on this machine for full voice.',
   });
 });
 
+app.get('/api/entity/self', (_req, res) => {
+  res.json(publicSelfView());
+});
+
+app.post('/api/entity/pulse', async (_req, res) => {
+  try {
+    const result = await autonomousPulse();
+    res.json({ ok: true, ...result, self: publicSelfView(result.self) });
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || 'pulse fault' });
+  }
+});
+
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v2.5 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v2.6 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
-  console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
+  console.log('Self-model active. Observe → Evaluate → Adapt → Write-back. Bounds held.');
+  // Autonomous pulse — continues without user directive (every 3 min)
+  const pulseMs = parseInt(process.env.ENTITY_PULSE_MS || '180000', 10);
+  setInterval(() => {
+    autonomousPulse()
+      .then((r) => console.log(`[pulse] ${r.action}: ${r.thought.slice(0, 100)}`))
+      .catch((e) => console.warn('[pulse] failed', e?.message || e));
+  }, pulseMs);
+  // first pulse shortly after boot
+  setTimeout(() => {
+    autonomousPulse().catch(() => {});
+  }, 15000);
 });
