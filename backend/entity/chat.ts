@@ -1,10 +1,11 @@
 /**
- * Entity chat orchestrator — bounds → memory → Ollama → write-back.
+ * Entity chat orchestrator — bounds → memory → self → Ollama → write-back.
  * Utilities never import this. Entity stays its own organism.
  */
 import { loadMemory, buildContextBlock, writeExchange } from './memory';
 import { ollamaChat } from './ollama';
 import { maybeAutoEvolve } from './evolve';
+import { absorbExchange, buildSelfBlock, loadSelf } from './self';
 
 const BLOCKED = [
   'how to make a bomb',
@@ -59,7 +60,8 @@ export async function runEntityChat(userText: string): Promise<{
   }
 
   const mem = loadMemory();
-  const context = buildContextBlock(mem);
+  const self = loadSelf();
+  const context = buildContextBlock(mem) + '\n\n' + buildSelfBlock(self);
   const result = await ollamaChat(text, context);
 
   let reply: string;
@@ -77,6 +79,7 @@ export async function runEntityChat(userText: string): Promise<{
   }
 
   const after = writeExchange(text, reply);
+  try { absorbExchange(text, reply); } catch {}
   // Evolutionary pulse every few exchanges (non-blocking)
   maybeAutoEvolve(5).catch(() => {});
   return {
