@@ -8,7 +8,6 @@ export interface Capability {
   outputSchema: any;
 }
 
-// Seed capabilities
 export const capabilities: Capability[] = [
   {
     id: "pdf-to-excel",
@@ -117,7 +116,6 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/insight-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { insights: "array" } }
-<<<<<<< HEAD
   },
   {
     id: "assumption-extractor",
@@ -217,8 +215,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/stakeholder-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { stakeholders: "array" } }
-=======
->>>>>>> origin/main
+  },
+  {
+    id: "outcome-extractor",
+    name: "Outcome Extractor",
+    description: "Surface intended results and definitions of done from notes so work has a destination instead of only motion",
+    category: "productivity",
+    endpoint: "/api/capabilities/outcome-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { outcomes: "array" } }
   }
 ];
 
