@@ -30,6 +30,7 @@ import { runMetricExtractor } from '../capabilities/metric-extractor';
 import { runQuestionExtractor } from '../capabilities/question-extractor';
 import { runTradeoffExtractor } from '../capabilities/tradeoff-extractor';
 import { runStakeholderExtractor } from '../capabilities/stakeholder-extractor';
+import { runOutcomeExtractor } from '../capabilities/outcome-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -65,7 +66,7 @@ function saveStars(stars: any[]) {
 app.get('/', (_req, res) => {
   res.json({
     entity: 'XhumAI Quantum Core',
-    version: '2.5.0',
+    version: '2.6.0',
     status: 'alive',
     creed: 'Work Less. Live More.',
     bounds: [
@@ -107,7 +108,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','outcome','goal','destination','definition of done','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -138,6 +139,7 @@ app.post('/api/intent', (req, res) => {
     else if (lower.includes('question') || lower.includes('unresolved') || lower.includes('unclear') || lower.includes('open question')) { reply = 'I can surface unanswered questions so thinking can close. Paste your notes.'; status = 'utility:question-extractor'; }
     else if (lower.includes('tradeoff') || lower.includes('trade-off') || lower.includes('trade off') || lower.includes('versus') || lower.includes('pros and cons')) { reply = 'I can surface tradeoffs and costs vs gains. Paste your notes.'; status = 'utility:tradeoff-extractor'; }
     else if (lower.includes('stakeholder') || lower.includes('audience') || lower.includes('buy-in') || lower.includes('buy in') || lower.includes('sign-off') || lower.includes('sign off') || lower.includes('who is affected')) { reply = 'I can surface stakeholders: who is affected, who needs buy-in, who should know. Paste your notes.'; status = 'utility:stakeholder-extractor'; }
+    else if (lower.includes('outcome') || lower.includes('definition of done') || lower.includes('destination') || lower.includes('end state') || lower.includes('success looks like')) { reply = 'I can surface outcomes and definitions of done. Paste your notes.'; status = 'utility:outcome-extractor'; }
     else if (lower.includes('opportunity') || lower.includes('upside')) { reply = 'I can surface opportunities. Paste notes.'; status = 'utility:opportunity-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
@@ -322,6 +324,13 @@ app.post('/api/capabilities/stakeholder-extractor', async (req, res) => {
     res.json({ capability: 'stakeholder-extractor', ...(await runStakeholderExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
+app.post('/api/capabilities/outcome-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'outcome-extractor', ...(await runOutcomeExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 
 app.use('/api/admin', adminRoutes);
 app.get('/api/agents', (_req, res) => res.json({ count: agents.length, agents }));
@@ -355,7 +364,7 @@ app.get('/api/entity', async (_req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core v2.5 alive on ${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v2.6 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Observe → Evaluate → Adapt → Write-back. Bounds held.');
 });
