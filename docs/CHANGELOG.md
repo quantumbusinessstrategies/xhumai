@@ -1,23 +1,17 @@
 # Changelog
 
-## v2.3 — 2026-09-04
-- Added **Outcome Extractor** capability (productivity category)
-  - Surfaces intended results, definitions of done, and destination states from free-form notes
+## v2.3 — 2026-09-05
+- Added **Progress Extractor** capability (productivity category)
+  - Surfaces progress signals, milestones, momentum, and stalled work from free-form notes
   - Full usage logging for self-improvement loop
   - Wired into capability registry + API route + intent classifier signals
-  - Complements action (what we do) and metric (how we measure) with outcome (what success looks like)
-- Resolved leftover merge-conflict markers in registry, CAPABILITIES.md, and CHANGELOG.md so both Insight and the later extractor suite remain live
-- Quantum Core version bump to 2.6.0
-- Direct progress toward "Work Less. Live More." — work has a destination so motion is not mistaken for progress
+  - Complements metric (definition of done) and blocker (what is in the way) with progress (whether we are actually moving)
+- Resolved merge conflicts in CAPABILITIES.md (unified full extractor suite)
+- Direct progress toward "Work Less. Live More." — momentum becomes visible so effort is not spent on invisible plateaus
 
 ## v2.2 — 2026-09-03
 - Added **Stakeholder Extractor** capability (productivity category)
   - Surfaces people and groups who are affected, informed, or need buy-in from free-form notes
-  - Full usage logging for self-improvement loop
-  - Wired into capability registry + API route + intent classifier signals
-  - Complements owner (who is accountable) and follow-up (who still needs a touch) with stakeholder (who is affected / who cares)
-- Quantum Core version bump to 2.5.0
-- Direct progress toward "Work Less. Live More." — the human system becomes visible so work is not rebuilt after someone important was missed
 
 ## v2.1 — 2026-09-02
 - Added **Tradeoff Extractor** capability (productivity category)
