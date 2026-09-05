@@ -224,6 +224,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/outcome-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { outcomes: "array" } }
+  },
+  {
+    id: "progress-extractor",
+    name: "Progress Extractor",
+    description: "Surface progress signals, milestones, momentum, and stalled work from notes so movement becomes visible and effort is not spent on invisible plateaus",
+    category: "productivity",
+    endpoint: "/api/capabilities/progress-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { progress: "array" } }
   }
 ];
 
