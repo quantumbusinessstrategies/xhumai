@@ -6,6 +6,20 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = path.join(__dirname, '..', 'frontend', 'src');
 const outPath = path.join(srcDir, 'App.jsx');
+const galaxyPath = path.join(srcDir, 'components', 'GalaxyCanvas.jsx');
+
+// Continuum lander lives as App.jsx + GalaxyCanvas.jsx. Never clobber it with stale parts.
+if (fs.existsSync(galaxyPath) && fs.existsSync(outPath)) {
+  console.log(
+    'Continuum lander present →',
+    fs.statSync(outPath).size,
+    'bytes App.jsx +',
+    fs.statSync(galaxyPath).size,
+    'bytes GalaxyCanvas.jsx; skipping restore',
+  );
+  process.exit(0);
+}
+
 const parts = fs.readdirSync(srcDir).filter((f) => /^App\.jsx\.part\d+$/.test(f)).sort();
 
 if (parts.length) {
