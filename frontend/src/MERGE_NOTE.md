@@ -1,17 +1,13 @@
-# Merge blocked until App.jsx is full
+# Continuum lander (2026-09-06)
 
-`preview` had a TEMPORARY STUB App.jsx (343 bytes). Merging that to `main` would blank xhumai.com.
+Live frontend is `App.jsx` + `components/GalaxyCanvas.jsx`.
+Do not restore `App.jsx` from `lander.pack.b64.*` or `App.jsx.part*`.
+Those packs are the previous lander. `scripts/restore-app.mjs` now
+skips when GalaxyCanvas is present.
 
-**main already has the live lander** (dual inputs, soft orbs, Hubble spiral).
+Wiring (frontend → Fly core `https://xhumai-core.fly.dev`):
+- communicate with me → POST `/api/chat` (entity)
+- build your future → POST `/api/intent` (utilities / extractors)
+- both also POST `/api/stars` (shared continuum)
 
-To finish merge:
-1. On preview, restore App.jsx from main:
-```bash
-git checkout main -- frontend/src/App.jsx frontend/src/App.css
-git add frontend/src/App.jsx frontend/src/App.css
-git commit -m "preview: restore full lander from main"
-git push origin preview
-```
-2. Then merge PR #3.
-
-App.css on preview was restored from main in a prior commit.
+Backend is untouched. Do not overwrite `backend/`.

@@ -26,16 +26,20 @@ jobs:
         with:
           node-version: 22
 
-      - name: Restore full lander App.jsx from parts
+      - name: Verify continuum lander
         run: |
           set -e
           node scripts/restore-app.mjs
           echo "=== Verify lander ==="
-          wc -c frontend/src/App.jsx frontend/src/App.css
-          grep -n "useState('combo')" frontend/src/App.jsx | head -1
-          grep -n "ARM_COUNT\|SPIRAL\|playPixelForm" frontend/src/App.jsx | head -5
+          wc -c frontend/src/App.jsx frontend/src/App.css frontend/src/components/GalaxyCanvas.jsx
+          grep -n "/api/chat\|/api/intent\|/api/stars\|GalaxyCanvas" frontend/src/App.jsx
+          grep -n "ARM_COUNT\|T_SING\|export function GalaxyCanvas" frontend/src/components/GalaxyCanvas.jsx | head -10
           test -s frontend/src/App.jsx
-          test $(wc -c < frontend/src/App.jsx) -gt 50000
+          test -s frontend/src/components/GalaxyCanvas.jsx
+          grep -q "/api/chat" frontend/src/App.jsx
+          grep -q "/api/intent" frontend/src/App.jsx
+          grep -q "/api/stars" frontend/src/App.jsx
+          grep -q "ARM_COUNT" frontend/src/components/GalaxyCanvas.jsx
 
       - name: Install dependencies
         working-directory: frontend
