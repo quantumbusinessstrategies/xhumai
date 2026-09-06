@@ -233,6 +233,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/progress-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { progress: "array" } }
+  },
+  {
+    id: "waste-extractor",
+    name: "Waste Extractor",
+    description: "Surface time sinks, low-ROI activities, busywork, and eliminable work from notes so the system can shrink the unnecessary and free capacity for living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/waste-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { waste: "array" } }
   }
 ];
 
