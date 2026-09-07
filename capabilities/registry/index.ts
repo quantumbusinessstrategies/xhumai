@@ -216,6 +216,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/stakeholder-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { stakeholders: "array" } }
+  },
+  {
+    id: "progress-extractor",
+    name: "Progress Extractor",
+    description: "Surface completed work, wins, milestones, and forward motion from notes so progress is visible and effort feels cumulative",
+    category: "productivity",
+    endpoint: "/api/capabilities/progress-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { progress: "array" } }
   }
 ];
 
