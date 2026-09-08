@@ -242,6 +242,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/waste-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { waste: "array" } }
+  },
+  {
+    id: "system-extractor",
+    name: "System Extractor",
+    description: "Surface recurring systems, processes, structural patterns, and leverage points from notes so work can be systematized and continues after you stop",
+    category: "productivity",
+    endpoint: "/api/capabilities/system-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { systems: "array" } }
   }
 ];
 
