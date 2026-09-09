@@ -29,6 +29,7 @@ Every capability is an asset. Every asset compounds.
 | tradeoff-extractor | Tradeoff Extractor | productivity | stub (logging live) |
 | stakeholder-extractor | Stakeholder Extractor | productivity | stub (logging live) |
 | progress-extractor | Progress Extractor | productivity | stub (logging live) |
+| clarity-extractor | Clarity Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -69,5 +70,6 @@ Every capability is an asset. Every asset compounds.
 - **Tradeoff Extractor** → costs vs gains visible, decisions get made once instead of circling
 - **Stakeholder Extractor** → who is affected / who needs buy-in visible, work is not built in a vacuum
 - **Progress Extractor** → completed work, wins, and momentum visible, effort feels cumulative instead of endless
+- **Clarity Extractor** → vague language and fuzzy commitments visible, ambiguity shrinks so execution can start
 
 Together they turn notes into leverage.
