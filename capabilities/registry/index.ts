@@ -225,6 +225,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/progress-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { progress: "array" } }
+  },
+  {
+    id: "clarity-extractor",
+    name: "Clarity Extractor",
+    description: "Surface vague language, undefined terms, and fuzzy commitments so work stops spinning on ambiguity and execution can start",
+    category: "productivity",
+    endpoint: "/api/capabilities/clarity-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { clarities: "array" } }
   }
 ];
 
