@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.4 — 2026-09-09
+- Added **Clarity Extractor** capability (productivity category)
+  - Surfaces vague language, undefined terms, fuzzy commitments, and places needing precision from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + API route + intent classifier signals
+  - Complements assumption (hidden premises) and question (open inquiries) with clarity (language that needs sharpening so execution can start)
+- Quantum Core version bump to 2.8.0
+- Direct progress toward "Work Less. Live More." — ambiguity becomes visible so rework shrinks and effort compounds
+
 ## v2.3 — 2026-09-06
 - Added **Progress Extractor** capability (productivity category)
   - Surfaces completed work, wins, milestones, and forward motion from free-form notes
