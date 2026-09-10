@@ -2,22 +2,23 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Waste Extractor Capability
- * Surfaces time sinks, low-ROI activities, busywork, and eliminable work from free-form notes
- * so the system can shrink the unnecessary and free capacity for living more.
+ * Surfaces low-leverage, repetitive, status-theater, and time-wasting activity
+ * from free-form notes so the system can cut it, automate it, or drop it.
+ * Directly serves the creed: Work Less. Live More.
  * Stub for now; later becomes real AI.
  *
  * Complements:
- * - energy-extractor     → what costs life-force vs what returns it
- * - delegation-extractor → what should leave the founder's hands
- * - leverage-extractor   → what keeps working after you stop
- * - priority-sorter      → where attention should go
- * - waste-extractor      → what can simply be stopped or removed
+ * - energy-extractor      → what drains life-force
+ * - leverage-extractor    → what keeps working after you stop
+ * - delegation-extractor  → what should leave the founder's hands
+ * - priority-sorter       → where attention should go
+ * - waste-extractor       → what should simply stop existing
  */
 
 export interface WasteItem {
   item: string;
-  kind?: 'busywork' | 'low-roi' | 'redundant' | 'over-processing' | 'waiting' | 'other';
-  impact?: 'high' | 'medium' | 'low';
+  kind?: 'repetitive' | 'low-leverage' | 'status' | 'context-switch' | 'rework' | 'unknown';
+  severity?: 'high' | 'medium' | 'low';
   note?: string;
 }
 
@@ -39,19 +40,23 @@ export async function runWasteExtractor(input: string): Promise<WasteResult> {
       .filter(s => s.length > 8);
 
     const wastePatterns = [
-      /\b(waste|wasting|busywork|busy work|low.?roi|low return|pointless|unnecessary|redundant|duplicate|over.?process|micromanag|status update for the sake|meeting that could be|email chain|context switch|context-switch|toil|grind|busy for the sake)\b/i,
-      /\b(stop doing|eliminate|cut|drop|remove|no longer needed|can live without|does not move the needle|not worth it)\b/i,
-      /\b(waiting on|idle time|blocked waiting|queue time|hand.?off delay)\b/i,
-      /\b(rework|redo|re-do|fix the same|again and again)\b/i,
+      /\b(waste|wasting|wasted|busywork|busy work|busy-work|low.?leverage|low impact|status update|status theater|meeting about meetings)\b/i,
+      /\b(rework|redo|re-do|rehash|circular|looping|same conversation|again and again|over and over)\b/i,
+      /\b(context switch|context-switching|too many tools|tool sprawl|inbox zero theater|notification hell)\b/i,
+      /\b(manual (copy|entry|report|sync)|copy.?paste|spreadsheet hell|status slide|deck for the sake of)\b/i,
+      /\b(should not exist|could be automated|no one reads|vanity metric|performative)\b/i,
     ];
 
-    const busyworkHints = /\b(busywork|busy work|status update|meeting that could|email chain|toil|grind)\b/i;
-    const lowRoiHints = /\b(low.?roi|low return|pointless|not worth|does not move the needle)\b/i;
-    const redundantHints = /\b(redundant|duplicate|again and again|rework|redo)\b/i;
-    const overHints = /\b(over.?process|micromanag|too many steps)\b/i;
-    const waitingHints = /\b(waiting on|idle|queue|hand.?off delay)\b/i;
-    const highHints = /\b(huge|massive|constant|always|killing|crushing|major)\b/i;
-    const lowHints = /\b(slight|minor|occasional|small)\b/i;
+    const kindHints: Array<{ re: RegExp; kind: WasteItem['kind'] }> = [
+      { re: /\b(repetitive|again and again|over and over|manual (copy|entry|report)|copy.?paste)\b/i, kind: 'repetitive' },
+      { re: /\b(low.?leverage|low impact|vanity|no one reads|performative)\b/i, kind: 'low-leverage' },
+      { re: /\b(status update|status theater|status slide|deck for the sake)\b/i, kind: 'status' },
+      { re: /\b(context switch|notification|tool sprawl|too many tools)\b/i, kind: 'context-switch' },
+      { re: /\b(rework|redo|rehash|circular|looping)\b/i, kind: 'rework' },
+    ];
+
+    const highHints = /\b(extreme|constantly|always|crushing|hours of|every day|chronic)\b/i;
+    const lowHints = /\b(slightly|occasional|mild|sometimes)\b/i;
 
     const waste: WasteItem[] = [];
 
@@ -63,32 +68,35 @@ export async function runWasteExtractor(input: string): Promise<WasteResult> {
       if (cleaned.length < 10) continue;
 
       if (wastePatterns.some(p => p.test(cleaned))) {
-        let kind: WasteItem['kind'] = 'other';
-        if (busyworkHints.test(cleaned)) kind = 'busywork';
-        else if (lowRoiHints.test(cleaned)) kind = 'low-roi';
-        else if (redundantHints.test(cleaned)) kind = 'redundant';
-        else if (overHints.test(cleaned)) kind = 'over-processing';
-        else if (waitingHints.test(cleaned)) kind = 'waiting';
+        let kind: WasteItem['kind'] = 'unknown';
+        for (const h of kindHints) {
+          if (h.re.test(cleaned)) {
+            kind = h.kind;
+            break;
+          }
+        }
 
-        let impact: WasteItem['impact'] = 'medium';
-        if (highHints.test(cleaned)) impact = 'high';
-        else if (lowHints.test(cleaned)) impact = 'low';
+        let severity: WasteItem['severity'] = 'medium';
+        if (highHints.test(cleaned)) severity = 'high';
+        else if (lowHints.test(cleaned)) severity = 'low';
 
         if (!waste.some(w => w.item === cleaned)) {
           waste.push({
             item: cleaned,
             kind,
-            impact,
+            severity,
             note:
-              kind === 'busywork'
-                ? 'Candidate to stop or radically simplify'
-                : kind === 'low-roi'
-                  ? 'Candidate to cut or deprioritize hard'
-                  : kind === 'redundant'
-                    ? 'Candidate to collapse into one source of truth'
-                    : kind === 'waiting'
-                      ? 'Candidate to remove the wait or parallelize'
-                      : 'Candidate for elimination or redesign',
+              kind === 'repetitive'
+                ? 'Candidate for automation or elimination'
+                : kind === 'low-leverage'
+                  ? 'Candidate to drop or redesign for leverage'
+                  : kind === 'status'
+                    ? 'Candidate to replace with async signal or kill'
+                    : kind === 'context-switch'
+                      ? 'Candidate to batch, reduce tools, or protect deep work'
+                      : kind === 'rework'
+                        ? 'Candidate to fix root cause so it never repeats'
+                        : 'Waste-relevant signal — consider cutting',
           });
         }
       }
@@ -99,9 +107,9 @@ export async function runWasteExtractor(input: string): Promise<WasteResult> {
         if (line.length < 140) {
           waste.push({
             item: line,
-            kind: 'other',
-            impact: 'medium',
-            note: 'Candidate for waste review — does this still need to exist?',
+            kind: 'unknown',
+            severity: 'medium',
+            note: 'Candidate for waste review',
           });
         }
       }

@@ -8,6 +8,7 @@ export interface Capability {
   outputSchema: any;
 }
 
+// Seed capabilities
 export const capabilities: Capability[] = [
   {
     id: "pdf-to-excel",
@@ -217,40 +218,31 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { stakeholders: "array" } }
   },
   {
-    id: "outcome-extractor",
-    name: "Outcome Extractor",
-    description: "Surface intended results and definitions of done from notes so work has a destination instead of only motion",
-    category: "productivity",
-    endpoint: "/api/capabilities/outcome-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { outcomes: "array" } }
-  },
-  {
     id: "progress-extractor",
     name: "Progress Extractor",
-    description: "Surface progress signals, milestones, momentum, and stalled work from notes so movement becomes visible and effort is not spent on invisible plateaus",
+    description: "Surface completed work, wins, milestones, and forward motion from notes so progress is visible and effort feels cumulative",
     category: "productivity",
     endpoint: "/api/capabilities/progress-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { progress: "array" } }
   },
   {
+    id: "clarity-extractor",
+    name: "Clarity Extractor",
+    description: "Surface vague language, undefined terms, and fuzzy commitments so work stops spinning on ambiguity and execution can start",
+    category: "productivity",
+    endpoint: "/api/capabilities/clarity-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { clarities: "array" } }
+  },
+  {
     id: "waste-extractor",
     name: "Waste Extractor",
-    description: "Surface time sinks, low-ROI activities, busywork, and eliminable work from notes so the system can shrink the unnecessary and free capacity for living more",
+    description: "Surface low-leverage, repetitive, status-theater, and time-wasting work from notes so it can be cut, automated, or dropped — directly serving Work Less. Live More.",
     category: "productivity",
     endpoint: "/api/capabilities/waste-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { waste: "array" } }
-  },
-  {
-    id: "system-extractor",
-    name: "System Extractor",
-    description: "Surface recurring systems, processes, structural patterns, and leverage points from notes so work can be systematized and continues after you stop",
-    category: "productivity",
-    endpoint: "/api/capabilities/system-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { systems: "array" } }
   }
 ];
 

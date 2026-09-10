@@ -29,9 +29,8 @@ Every capability is an asset. Every asset compounds.
 | tradeoff-extractor | Tradeoff Extractor | productivity | stub (logging live) |
 | stakeholder-extractor | Stakeholder Extractor | productivity | stub (logging live) |
 | progress-extractor | Progress Extractor | productivity | stub (logging live) |
-| outcome-extractor | Outcome Extractor | productivity | stub (logging live) |
+| clarity-extractor | Clarity Extractor | productivity | stub (logging live) |
 | waste-extractor | Waste Extractor | productivity | stub (logging live) |
-| system-extractor | System Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -71,9 +70,8 @@ Every capability is an asset. Every asset compounds.
 - **Question Extractor** → unanswered questions visible, thinking can close instead of looping
 - **Tradeoff Extractor** → costs vs gains visible, decisions get made once instead of circling
 - **Stakeholder Extractor** → who is affected / who needs buy-in visible, work is not built in a vacuum
-- **Progress Extractor** → momentum and stalled work visible, effort goes where movement actually lives
-- **Outcome Extractor** → destination visible, work has a finish line instead of only motion
-- **Waste Extractor** → time sinks and busywork visible, capacity returns for living more
-- **System Extractor** → recurring structures and leverage points visible, work can be systematized so it continues after you stop
+- **Progress Extractor** → completed work, wins, and momentum visible, effort feels cumulative instead of endless
+- **Clarity Extractor** → vague language and fuzzy commitments visible, ambiguity shrinks so execution can start
+- **Waste Extractor** → low-leverage, repetitive, and status theater visible so it can be cut, automated, or dropped — pure Work Less
 
 Together they turn notes into leverage.
