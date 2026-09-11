@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.5 — 2026-09-11
+- Added **Habit Extractor** capability (productivity category)
+  - Surfaces recurring habits, routines, and behavioral patterns from free-form notes
+  - Full usage logging for self-improvement loop
+  - Wired into capability registry + CAPABILITIES.md
+  - Complements energy (what drains/restores) and waste (what to cut) with habit (what repeats automatically)
+- Direct progress toward "Work Less. Live More." — automatic behavior becomes visible so positive patterns compound and draining ones can be redesigned
+
 ## v2.3 — 2026-09-05
 - Added **Progress Extractor** capability (productivity category)
   - Surfaces progress signals, milestones, momentum, and stalled work from free-form notes
