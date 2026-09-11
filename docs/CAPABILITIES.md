@@ -31,6 +31,7 @@ Every capability is an asset. Every asset compounds.
 | progress-extractor | Progress Extractor | productivity | stub (logging live) |
 | clarity-extractor | Clarity Extractor | productivity | stub (logging live) |
 | waste-extractor | Waste Extractor | productivity | stub (logging live) |
+| habit-extractor | Habit Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -73,5 +74,6 @@ Every capability is an asset. Every asset compounds.
 - **Progress Extractor** → completed work, wins, and momentum visible, effort feels cumulative instead of endless
 - **Clarity Extractor** → vague language and fuzzy commitments visible, ambiguity shrinks so execution can start
 - **Waste Extractor** → low-leverage, repetitive, and status theater visible so it can be cut, automated, or dropped — pure Work Less
+- **Habit Extractor** → recurring patterns visible so positive habits compound and draining ones can be redesigned — living more by design
 
 Together they turn notes into leverage.
