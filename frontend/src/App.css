@@ -53,6 +53,7 @@ button:not(:disabled),
   pointer-events: none;
   opacity: 0;
   perspective: 1100px;
+  transition: opacity 1.2s ease;
 }
 
 .lander.is-bloom .lander-ui,
@@ -146,18 +147,18 @@ button:not(:disabled),
 }
 
 .lander.is-bloom .logo-block {
-  animation: blockDrop 2.44s calc(var(--i) * 0.14s) cubic-bezier(0.2, 1.15, 0.3, 1) both;
+  animation: blockDrop 2.68s calc(var(--i) * 0.16s) cubic-bezier(0.2, 1.15, 0.3, 1) both;
 }
 
 .lander.is-bloom .logo-pixels {
-  animation: pixelBuild 2.44s ease both;
+  animation: pixelBuild 2.68s ease both;
 }
 
 .lander.is-suck .logo-pixels,
 .lander.is-ring .logo-pixels,
 .lander.is-nova .logo-pixels,
 .lander.is-live .logo-pixels {
-  animation: suckPixels 0.81s ease forwards;
+  animation: suckPixels 1.12s ease forwards;
 }
 
 .lander.is-suck .logo-block,
@@ -344,19 +345,19 @@ button:not(:disabled),
 }
 
 .lander.is-bloom .tagline {
-  animation: explodeBack 2.44s 0.13s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: explodeBack 2.68s 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .lander.is-bloom .purpose {
-  animation: explodeBack 2.44s 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: explodeBack 2.68s 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .lander.is-bloom .hint {
-  animation: explodeBack 2.44s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: explodeBack 2.68s 0.56s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .lander.is-bloom .path-left {
-  animation: glitchLeft 2.44s ease both;
+  animation: glitchLeft 2.68s ease both;
 }
 .lander.is-bloom .path-right {
-  animation: glitchRight 2.44s ease both;
+  animation: glitchRight 2.68s ease both;
 }
 
 .lander.is-suck .tagline,
@@ -375,7 +376,7 @@ button:not(:disabled),
 }
 
 .lander.is-suck .suck-fx {
-  animation: suckGhost 0.81s ease forwards;
+  animation: suckGhost 1.12s ease forwards;
 }
 
 @keyframes explodeBack {
@@ -778,6 +779,7 @@ button:not(:disabled),
     0 0 22px #0aa;
   opacity: 0;
   pointer-events: none;
+  transition: opacity 1.6s ease;
 }
 
 .lander.is-live .why-link {
@@ -821,9 +823,7 @@ button:not(:disabled),
 }
 
 .why-page {
-  height: 100dvh;
   min-height: 100dvh;
-  overflow-y: auto;
   padding: 4.5rem 1.4rem 3rem;
   max-width: 42rem;
   margin: 0 auto;
