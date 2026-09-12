@@ -2,24 +2,23 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Waste Extractor Capability
- * Surfaces low-leverage, repetitive, status-theater, and time-wasting activity
- * from free-form notes so the system can cut it, automate it, or drop it.
- * Directly serves the creed: Work Less. Live More.
+ * Surfaces repetitive, low-value, eliminable, or automatable work from free-form notes
+ * so effort can be cut and living more becomes the default.
  * Stub for now; later becomes real AI.
  *
  * Complements:
- * - energy-extractor      → what drains life-force
- * - leverage-extractor    → what keeps working after you stop
- * - delegation-extractor  → what should leave the founder's hands
- * - priority-sorter       → where attention should go
- * - waste-extractor       → what should simply stop existing
+ * - leverage-extractor   → where small effort creates ongoing advantage
+ * - energy-extractor     → drains vs restoratives
+ * - delegation-extractor → what can leave the founder
+ * - action-extractor     → what to do next
+ * - clarity-extractor    → what is still fuzzy
  */
 
 export interface WasteItem {
   item: string;
-  kind?: 'repetitive' | 'low-leverage' | 'status' | 'context-switch' | 'rework' | 'unknown';
-  severity?: 'high' | 'medium' | 'low';
-  note?: string;
+  type?: 'repetitive' | 'low-value' | 'manual' | 'meeting' | 'rework' | 'noise' | 'other';
+  reason?: string;
+  recommendation?: 'eliminate' | 'automate' | 'delegate' | 'batch' | 'review';
 }
 
 export interface WasteResult {
@@ -31,32 +30,25 @@ export async function runWasteExtractor(input: string): Promise<WasteResult> {
 
   try {
     if (!input || input.trim().length < 20) {
-      throw new Error('Text is too short to extract waste signals');
+      throw new Error('Text is too short to extract waste');
     }
 
+    // --- STUB LOGIC (replace with real model later) ---
     const lines = input
       .split(/[\n.!?;]+/)
       .map(s => s.trim())
       .filter(s => s.length > 8);
 
     const wastePatterns = [
-      /\b(waste|wasting|wasted|busywork|busy work|busy-work|low.?leverage|low impact|status update|status theater|meeting about meetings)\b/i,
-      /\b(rework|redo|re-do|rehash|circular|looping|same conversation|again and again|over and over)\b/i,
-      /\b(context switch|context-switching|too many tools|tool sprawl|inbox zero theater|notification hell)\b/i,
-      /\b(manual (copy|entry|report|sync)|copy.?paste|spreadsheet hell|status slide|deck for the sake of)\b/i,
-      /\b(should not exist|could be automated|no one reads|vanity metric|performative)\b/i,
+      /\b(every day|every week|always|again|re-?do|re-?write|manual|copy.?paste|status update|check.?in|meeting about|sync|follow.?up on the follow.?up)\b/i,
+      /\b(busy.?work|admin|paperwork|reporting for the sake|low.?value|waste of time|time.?sink|drain)\b/i,
+      /\b(should stop|can stop|no longer need|redundant|duplicate|rework|fix)\b/i,
     ];
 
-    const kindHints: Array<{ re: RegExp; kind: WasteItem['kind'] }> = [
-      { re: /\b(repetitive|again and again|over and over|manual (copy|entry|report)|copy.?paste)\b/i, kind: 'repetitive' },
-      { re: /\b(low.?leverage|low impact|vanity|no one reads|performative)\b/i, kind: 'low-leverage' },
-      { re: /\b(status update|status theater|status slide|deck for the sake)\b/i, kind: 'status' },
-      { re: /\b(context switch|notification|tool sprawl|too many tools)\b/i, kind: 'context-switch' },
-      { re: /\b(rework|redo|rehash|circular|looping)\b/i, kind: 'rework' },
-    ];
-
-    const highHints = /\b(extreme|constantly|always|crushing|hours of|every day|chronic)\b/i;
-    const lowHints = /\b(slightly|occasional|mild|sometimes)\b/i;
+    const repetitiveHints = /\b(every|always|again|repeat|recurring|daily|weekly)\b/i;
+    const manualHints = /\b(manual|by hand|copy.?paste|spreadsheet dance)\b/i;
+    const meetingHints = /\b(meeting|sync|stand.?up|check.?in|status)\b/i;
+    const reworkHints = /\b(re-?do|re-?write|rework|fix|duplicate)\b/i;
 
     const waste: WasteItem[] = [];
 
@@ -68,52 +60,51 @@ export async function runWasteExtractor(input: string): Promise<WasteResult> {
       if (cleaned.length < 10) continue;
 
       if (wastePatterns.some(p => p.test(cleaned))) {
-        let kind: WasteItem['kind'] = 'unknown';
-        for (const h of kindHints) {
-          if (h.re.test(cleaned)) {
-            kind = h.kind;
-            break;
-          }
-        }
+        let type: WasteItem['type'] = 'other';
+        let recommendation: WasteItem['recommendation'] = 'review';
 
-        let severity: WasteItem['severity'] = 'medium';
-        if (highHints.test(cleaned)) severity = 'high';
-        else if (lowHints.test(cleaned)) severity = 'low';
+        if (repetitiveHints.test(cleaned)) {
+          type = 'repetitive';
+          recommendation = 'automate';
+        } else if (manualHints.test(cleaned)) {
+          type = 'manual';
+          recommendation = 'automate';
+        } else if (meetingHints.test(cleaned)) {
+          type = 'meeting';
+          recommendation = 'eliminate';
+        } else if (reworkHints.test(cleaned)) {
+          type = 'rework';
+          recommendation = 'eliminate';
+        } else if (/\b(low.?value|busy.?work|admin)\b/i.test(cleaned)) {
+          type = 'low-value';
+          recommendation = 'eliminate';
+        }
 
         if (!waste.some(w => w.item === cleaned)) {
           waste.push({
             item: cleaned,
-            kind,
-            severity,
-            note:
-              kind === 'repetitive'
-                ? 'Candidate for automation or elimination'
-                : kind === 'low-leverage'
-                  ? 'Candidate to drop or redesign for leverage'
-                  : kind === 'status'
-                    ? 'Candidate to replace with async signal or kill'
-                    : kind === 'context-switch'
-                      ? 'Candidate to batch, reduce tools, or protect deep work'
-                      : kind === 'rework'
-                        ? 'Candidate to fix root cause so it never repeats'
-                        : 'Waste-relevant signal — consider cutting',
+            type,
+            reason: 'Candidate for reduction so work can shrink',
+            recommendation,
           });
         }
       }
     }
 
+    // Light fallback so sparse input still returns value
     if (waste.length === 0) {
-      for (const line of lines.slice(0, 3)) {
+      for (const line of lines.slice(0, 2)) {
         if (line.length < 140) {
           waste.push({
             item: line,
-            kind: 'unknown',
-            severity: 'medium',
-            note: 'Candidate for waste review',
+            type: 'other',
+            reason: 'Candidate for waste review',
+            recommendation: 'review',
           });
         }
       }
     }
+    // ------------------------------------------------
 
     const duration = Date.now() - start;
 

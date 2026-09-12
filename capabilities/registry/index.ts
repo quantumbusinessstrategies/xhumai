@@ -238,20 +238,11 @@ export const capabilities: Capability[] = [
   {
     id: "waste-extractor",
     name: "Waste Extractor",
-    description: "Surface low-leverage, repetitive, status-theater, and time-wasting work from notes so it can be cut, automated, or dropped — directly serving Work Less. Live More.",
+    description: "Surface repetitive, low-value, eliminable, or automatable work from notes so effort can be cut and living more becomes the default",
     category: "productivity",
     endpoint: "/api/capabilities/waste-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { waste: "array" } }
-  },
-  {
-    id: "habit-extractor",
-    name: "Habit Extractor",
-    description: "Surface recurring habits, routines, and behavioral patterns from notes so positive ones can be reinforced and draining ones redesigned toward living more",
-    category: "productivity",
-    endpoint: "/api/capabilities/habit-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { habits: "array" } }
   }
 ];
 
