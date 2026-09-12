@@ -9,11 +9,20 @@ const FAR_N = 2400;
 const DISK_R = 11.2;
 const TRAIL_N = 96;
 const WAVE_N = 72;
-const T_SING = 5.2;
-const T_BLOOM = 7.638;
-const T_SUCK = 8.45;
-const T_RING = 12.513;
-const T_NOVA = 18.525;
+const T_SING = 5.82;
+const T_BLOOM = 8.68;
+const T_SUCK = 10.02;
+const T_RING = 14.5;
+const T_NOVA = 21.3;
+
+function ease3(u) {
+  const x = Math.max(0, Math.min(1, u));
+  return x * x * (3 - 2 * x);
+}
+
+function smooth01(t, a, b) {
+  return ease3((t - a) / Math.max(1e-6, b - a));
+}
 
 function remapOuterR(r, maxR) {
   if (r <= maxR * 0.8) return r;
@@ -128,50 +137,63 @@ void main() {
   float seq = uBirth;
   vHeat = 0.0;
   vCore = 0.0;
-  if (seq < 18.525) {
-    if (seq < 5.2) {
-      float pulse = 1.0 + 0.18 * sin(seq * 7.4 + 1.5708) + 0.1 * sin(seq * 19.0 + 0.8);
-      rLive = 0.001625 * pulse;
-      yMul = 0.03;
-      szT = 2.15 + 0.7 * pulse;
-      vHeat = 1.0;
-      vCore = 1.0;
-    } else if (seq < 7.638) {
-      float k = smoothstep(5.2, 7.638, seq);
-      float e = 1.0 - pow(1.0 - k, 2.05);
-      rLive = mix(0.002, r0 * 0.52 * petals, e);
-      yMul = mix(0.04, 0.55, e);
-      szT = mix(2.4, 1.08, e);
-      vHeat = mix(1.0, 0.15, e);
+  float yLive = p.y;
+  float yAbs = 0.0;
+  if (seq < 21.30) {
+    if (seq < 5.82) {
+      float pulse = 1.0 + 0.22 * sin(seq * 11.0 + 1.5708) + 0.14 * sin(seq * 29.0 + 0.8);
+      float leave = smoothstep(5.22, 5.82, seq);
+      rLive = mix(0.00022 * pulse, 0.0032, leave);
+      yMul = mix(0.012, 0.08, leave);
+      szT = mix(0.22 + 0.1 * pulse, 0.42, leave);
+      vHeat = mix(1.0, 0.85, leave);
+      vCore = mix(1.0, 0.7, leave);
+    } else if (seq < 8.68) {
+      float k = smoothstep(5.82, 8.68, seq);
+      float e = k * k * (3.0 - 2.0 * k);
+      float polar = clamp(aSeed * 2.0 - 1.0, -1.0, 1.0);
+      polar = mix(polar, clamp(p.y / max(r0, 0.12), -1.0, 1.0), 0.28);
+      float sphR = mix(0.004, 3.15 + fract(aSeed * 11.3) * 5.6, e);
+      float lat = sqrt(max(0.0, 1.0 - polar * polar));
+      float toDisk = e * e * (3.0 - 2.0 * e);
+      rLive = mix(sphR * lat, r0 * 0.52 * petals, toDisk);
+      yLive = mix(sphR * polar, p.y * 0.62, toDisk);
+      yAbs = 1.0;
+      yMul = 1.0;
+      szT = mix(0.5, 1.18, e);
+      vHeat = mix(1.0, 0.12, e);
       vCore = mix(1.0, 0.0, e);
-    } else if (seq < 8.45) {
-      float k = clamp((seq - 7.638) / 0.812, 0.0, 1.0);
-      float s = pow(k, 0.32);
-      rLive = mix(r0 * 0.52 * petals, 0.0025, s);
-      yMul = mix(0.55, 0.02, s);
-      szT = mix(1.08, 2.5, s);
+    } else if (seq < 10.02) {
+      float k = smoothstep(8.68, 10.02, seq);
+      float s = k * k * (3.0 - 2.0 * k);
+      rLive = mix(r0 * 0.52 * petals, 0.00026, s);
+      yLive = mix(p.y * 0.62, 0.0, s);
+      yAbs = 1.0 - s;
+      yMul = mix(0.62, 0.012, s);
+      szT = mix(1.08, 0.28, s);
       vHeat = mix(0.2, 1.0, s);
       vCore = mix(0.0, 2.0, s);
-    } else if (seq < 12.513) {
-      float growl = 1.0 + 0.32 * sin(seq * 22.0) + 0.14 * sin(seq * 41.0);
-      rLive = (0.002 + 0.0009 * sin(th * 18.0 + seq * 14.0)) * growl;
-      yMul = 0.018;
-      szT = 2.4 * growl;
+    } else if (seq < 14.50) {
+      float enter = smoothstep(10.02, 10.72, seq);
+      float growl = 1.0 + (0.38 * sin(seq * 28.0) + 0.18 * sin(seq * 53.0)) * enter;
+      rLive = mix(0.00026, (0.0002 + 0.0001 * sin(th * 22.0 + seq * 18.0)) * growl, enter);
+      yMul = 0.01;
+      szT = 0.26 * growl;
       vHeat = 1.0;
       vCore = 2.0;
     } else {
-      float k = smoothstep(12.513, 18.525, seq);
+      float k = smoothstep(14.50, 21.30, seq);
       float seedK = fract(aSeed * 7.13 + aSeed * aSeed * 3.1);
-      float boom = 1.0 - pow(1.0 - k, 1.1 + seedK * 0.75);
+      float boom = 1.0 - pow(1.0 - k, 1.32 + seedK * 0.55);
       float spray = (aSeed - 0.5) * 1.2 * sin(k * 3.14159) * (1.0 - smoothstep(0.58, 1.0, k));
       th += spray;
       float over = mix(1.18, 1.9, seedK);
       float chaos = 1.0 + 0.32 * sin(th * 7.0 + seq * 4.4 + aSeed * 18.0) * (k * (1.0 - k) * 4.0);
-      rLive = mix(0.002, r0 * over, boom) * chaos;
-      float settle = smoothstep(0.3, 1.0, k);
+      rLive = mix(0.0008, r0 * over, boom) * chaos;
+      float settle = smoothstep(0.16, 1.0, k);
       settle = settle * settle * (3.0 - 2.0 * settle);
       rLive = mix(rLive, r0, settle * (0.35 + 0.65 * seedK));
-      yMul = mix(0.1, 1.0, k);
+      yMul = mix(0.08, 1.0, k);
       yMul *= 1.0 + 0.5 * sin(aSeed * 31.0 + seq * 5.6) * k * (1.0 - settle);
       szT = mix(2.3, 1.0, settle);
       vHeat = (1.0 - settle) * (0.65 + 0.35 * seedK);
@@ -191,7 +213,7 @@ void main() {
     vAlpha = 0.2 + 0.8 * tw;
     return;
   }
-  if (seq > 18.525 && r0 < 0.595) {
+  if (seq > 21.30 && r0 < 0.595) {
     float fall = fract(uTime * (0.0096 + aSeed * 0.0064) + aSeed * 7.1);
     r = mix(rLive, 0.065, fall * smoothstep(0.595, 0.145, r0));
     if (r < 0.079) {
@@ -215,18 +237,20 @@ void main() {
   float breath = 1.0 + 0.016 * sin(uTime * 0.38) + 0.006 * sin(uTime * 0.86);
   float x = cos(th + spin) * (r + wob) * breath;
   float z = sin(th + spin) * (r + wob) * breath;
-  if (seq < 5.2) {
-    x += 0.003 * sin(seq * 31.0 + aSeed * 8.0);
-    z += 0.0025 * cos(seq * 27.0 + aSeed * 6.0);
+  if (seq < 5.22) {
+    x += 0.00042 * sin(seq * 41.0 + aSeed * 8.0);
+    z += 0.00036 * cos(seq * 37.0 + aSeed * 6.0);
   }
-  vec3 wp = vec3(x, p.y * yMul * (1.0 + 0.024 * sin(uTime * 0.38 + aSeed)), z);
+  vec3 wp = vec3(x, mix(p.y * yMul * (1.0 + 0.024 * sin(uTime * 0.38 + aSeed)), yLive, yAbs), z);
   vec4 mv = modelViewMatrix * vec4(wp, 1.0);
   gl_Position = projectionMatrix * mv;
   float sz = aSize * szT;
   if (aKind > 2.5 && aKind < 3.5) sz *= 1.8;
   if (aKind > 4.5 && aKind < 5.5) sz *= 1.12 + 0.12 * sin(uTime * 3.2 + aSeed * 40.0);
   sz *= 1.0 + 0.045 * sin(uTime * 0.38);
-  gl_PointSize = clamp(sz * uPixelRatio * (320.0 / -mv.z), 1.0, 56.0);
+  float collapsed = step(0.5, vCore) * (1.0 - step(2.5, vCore));
+  float maxSz = mix(56.0, 2.15, collapsed);
+  gl_PointSize = clamp(sz * uPixelRatio * (320.0 / -mv.z), 1.0, maxSz);
   vAlpha = pop;
 }
 `;
@@ -274,14 +298,13 @@ void main() {
     c = mix(vec3(1.0), vec3(0.92, 0.96, 1.0), 0.25);
   }
   float br = vKind > 6.5 ? 1.18 : 1.28;
-  if (vCore > 0.5 && vCore < 1.5) {
-    vec3 ice = mix(vec3(0.55, 0.82, 1.0), vec3(1.0), 0.45 + 0.35 * vSeed);
-    c = mix(c, ice, clamp(vHeat, 0.0, 1.0));
-    br *= 1.45;
-  } else if (vCore > 1.5 && vCore < 2.5) {
-    vec3 ring = mix(vec3(0.75, 0.92, 1.0), vec3(1.0, 0.95, 0.82), 0.35 + 0.4 * vSeed);
-    c = mix(c, ring, 0.92);
-    br *= 1.85;
+  if (vCore > 0.5 && vCore < 2.5) {
+    vec3 rain = hsl2rgb(vec3(fract(uTime * 2.55 + vSeed * 2.1), 1.0, 0.58));
+    vec3 rain2 = hsl2rgb(vec3(fract(uTime * 1.8 + vSeed * 5.0 + 0.33), 0.98, 0.62));
+    vec3 white = vec3(1.0, 0.97, 0.9);
+    float lick = 0.5 + 0.5 * sin(uTime * 34.0 + vSeed * 22.0);
+    c = mix(mix(rain, rain2, lick), white, 0.22 + 0.28 * vHeat);
+    br *= 3.4 + 1.6 * vHeat;
   } else if (vCore > 2.5) {
     vec3 fire = vec3(1.0, 0.42 + 0.22 * vSeed, 0.12);
     c = mix(c, mix(fire, vec3(1.0, 0.88, 0.55), vSeed), clamp(vHeat, 0.0, 1.0));
@@ -303,24 +326,25 @@ uniform sampler2D tDiffuse;
 uniform vec2 uBH;
 uniform vec2 uRes;
 uniform float uTime;
+uniform float uPunch;
 varying vec2 vUv;
 void main() {
   vec2 aspect = vec2(uRes.x / uRes.y, 1.0);
   vec2 p = (vUv - uBH) * aspect;
   float r = length(p);
   float rs = 0.0021;
-  if (r < rs * 0.5) {
+  if (uPunch > 0.5 && r < rs * 0.5) {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     return;
   }
   float inv = rs * rs / max(r * r, 1e-6);
-  float swirl = 0.22 * inv / max(r, 0.002);
+  float swirl = 0.22 * inv / max(r, 0.002) * uPunch;
   float s = sin(swirl);
   float c = cos(swirl);
   vec2 pr = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
-  float stretch = 1.0 - 0.38 * inv * smoothstep(0.05, rs, r);
+  float stretch = 1.0 - 0.38 * inv * smoothstep(0.05, rs, r) * uPunch;
   vec2 warped = uBH + (pr * stretch) / aspect;
-  vec2 dir = pr * 0.0016;
+  vec2 dir = pr * mix(0.0032, 0.0016, uPunch);
   vec3 rgb;
   rgb.r = texture2D(tDiffuse, clamp(warped + dir, 0.0, 1.0)).r;
   rgb.g = texture2D(tDiffuse, clamp(warped, 0.0, 1.0)).g;
@@ -331,11 +355,11 @@ void main() {
   bloom += max(texture2D(tDiffuse, clamp(warped - vec2(px.x * 2.4, 0.0), 0.0, 1.0)).rgb - 0.62, 0.0);
   bloom += max(texture2D(tDiffuse, clamp(warped + vec2(0.0, px.y * 2.4), 0.0, 1.0)).rgb - 0.62, 0.0);
   bloom += max(texture2D(tDiffuse, clamp(warped - vec2(0.0, px.y * 2.4), 0.0, 1.0)).rgb - 0.62, 0.0);
-  rgb += bloom * 0.18;
+  rgb += bloom * mix(0.55, 0.18, uPunch);
   float kiss = smoothstep(rs * 1.1, rs * 0.94, r) * smoothstep(rs * 0.62, rs * 0.98, r);
-  rgb += vec3(1.0, 0.82, 0.58) * kiss * 0.62;
+  rgb += vec3(1.0, 0.82, 0.58) * kiss * 0.62 * uPunch;
   float wrap = smoothstep(rs * 1.45, rs * 1.02, r) * (1.0 - smoothstep(rs * 1.02, rs * 0.78, r));
-  rgb += vec3(0.95, 0.78, 1.0) * wrap * 0.1;
+  rgb += vec3(0.95, 0.78, 1.0) * wrap * 0.1 * uPunch;
   rgb *= 1.0 - 0.12 * dot(pr, pr);
   float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
   rgb = mix(vec3(luma), rgb, 1.12);
@@ -422,6 +446,63 @@ void main() {
   gl_FragColor = vec4(c, a);
 }
 `;
+
+function makeTorchTexture() {
+  const s = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = s;
+  canvas.height = s;
+  const ctx = canvas.getContext("2d");
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, "rgba(255,255,255,0.95)");
+  g.addColorStop(0.12, "rgba(255,236,210,0.55)");
+  g.addColorStop(0.32, "rgba(190,210,255,0.22)");
+  g.addColorStop(0.55, "rgba(230,170,255,0.1)");
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function makeTieDyeTexture() {
+  const s = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = s;
+  canvas.height = s;
+  const ctx = canvas.getContext("2d");
+  const cx = s / 2;
+  ctx.fillStyle = "#f7f4ee";
+  ctx.beginPath();
+  ctx.arc(cx, cx, cx - 1, 0, Math.PI * 2);
+  ctx.fill();
+  const hues = [0, 28, 48, 165, 195, 265, 310];
+  for (let i = 0; i < 40; i++) {
+    const x = cx + (Math.random() - 0.5) * s * 0.78;
+    const y = cx + (Math.random() - 0.5) * s * 0.78;
+    const r = 16 + Math.random() * 70;
+    const h = hues[i % hues.length] + (Math.random() - 0.5) * 16;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `hsla(${h}, 62%, 78%, 0.88)`);
+    g.addColorStop(0.5, `hsla(${h}, 48%, 84%, 0.4)`);
+    g.addColorStop(1, `hsla(${h}, 30%, 92%, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = "destination-in";
+  const cut = ctx.createRadialGradient(cx, cx, 0, cx, cx, cx);
+  cut.addColorStop(0, "rgba(0,0,0,1)");
+  cut.addColorStop(0.86, "rgba(0,0,0,1)");
+  cut.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = cut;
+  ctx.fillRect(0, 0, s, s);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
 
 function fillDisk() {
   const positions = new Float32Array(STAR_N * 3);
@@ -581,6 +662,7 @@ function makeBinaryCanvas() {
   return { tex, draw };
 }
 
+
 function keplerPos(el, out) {
   const e = el.e;
   let E = el.M;
@@ -636,6 +718,7 @@ export function GalaxyCanvas({ onPhase }) {
         uBH: { value: new THREE.Vector2(0.5, 0.5) },
         uRes: { value: new THREE.Vector2(1, 1) },
         uTime: { value: 0 },
+        uPunch: { value: 0 },
       },
       vertexShader: LENS_VERT,
       fragmentShader: LENS_FRAG,
@@ -704,7 +787,8 @@ export function GalaxyCanvas({ onPhase }) {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    disk.add(new THREE.Points(diskGeo, diskMat));
+    const diskPts = new THREE.Points(diskGeo, diskMat);
+    disk.add(diskPts);
 
     const nebTex = makeNebulaTexture();
     const nebulae = [];
@@ -726,9 +810,12 @@ export function GalaxyCanvas({ onPhase }) {
       nebulae.push(spr);
     }
 
-    disk.add(
-      new THREE.Mesh(new THREE.SphereGeometry(EH, 32, 32), new THREE.MeshBasicMaterial({ color: 0x000000 })),
+    const horizon = new THREE.Mesh(
+      new THREE.SphereGeometry(EH, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0x000000 }),
     );
+    horizon.visible = false;
+    disk.add(horizon);
 
     const tube = EH * 0.065;
     const einstein = new THREE.Mesh(
@@ -742,6 +829,7 @@ export function GalaxyCanvas({ onPhase }) {
       }),
     );
     einstein.rotation.x = Math.PI / 2;
+    einstein.visible = false;
     disk.add(einstein);
 
     const heatN = 640;
@@ -774,6 +862,7 @@ export function GalaxyCanvas({ onPhase }) {
       }),
     );
     disk.add(heatPts);
+    heatPts.visible = false;
 
     const JET_H = 5.4;
     const jetGeo = new THREE.CylinderGeometry(0.0265, 0.0063, JET_H, 8, 12, true);
@@ -1034,18 +1123,101 @@ export function GalaxyCanvas({ onPhase }) {
       el.wave.visible = false;
     });
 
-    const coreGlow = new THREE.Sprite(
+    const torchTex = makeTorchTexture();
+    const tieTex = makeTieDyeTexture();
+    const fusionMat = new THREE.SpriteMaterial({
+      map: tieTex,
+      color: 0xffffff,
+      transparent: true,
+      depthWrite: false,
+      rotation: 0,
+    });
+    const fusionBall = new THREE.Sprite(fusionMat);
+    fusionBall.scale.set(2.45, 2.45, 1);
+    const fusionSkin2 = new THREE.Sprite(
       new THREE.SpriteMaterial({
-        map: orb,
-        color: 0xb7e7ff,
+        map: tieTex,
+        color: 0xffffff,
         transparent: true,
-        opacity: 0.95,
+        opacity: 0.38,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
     );
-    coreGlow.scale.set(0.21, 0.21, 1);
-    disk.add(coreGlow);
+    fusionSkin2.scale.set(2.2, 2.2, 1);
+    const fusionHeart = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: orb,
+        color: 0xfff7ea,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    fusionHeart.scale.set(0.72, 0.72, 1);
+    const torchHalo = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: torchTex,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 1,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    torchHalo.scale.set(1.45, 1.45, 1);
+    const torchHalo2 = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: torchTex,
+        color: 0xff66aa,
+        transparent: true,
+        opacity: 0.72,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    torchHalo2.scale.set(2.05, 2.05, 1);
+    const sparkN = 320;
+    const sparkPos = new Float32Array(sparkN * 3);
+    const sparkCol = new Float32Array(sparkN * 3);
+    const sc = new THREE.Color();
+    for (let i = 0; i < sparkN; i++) {
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      const rr = 0.72 + Math.random() * 0.55;
+      sparkPos[i * 3] = rr * Math.sin(ph) * Math.cos(th);
+      sparkPos[i * 3 + 1] = rr * Math.cos(ph);
+      sparkPos[i * 3 + 2] = rr * Math.sin(ph) * Math.sin(th);
+      sc.setHSL(Math.random(), 0.38, 0.88);
+      sparkCol[i * 3] = sc.r;
+      sparkCol[i * 3 + 1] = sc.g;
+      sparkCol[i * 3 + 2] = sc.b;
+    }
+    const sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPos, 3));
+    sparkGeo.setAttribute("color", new THREE.BufferAttribute(sparkCol, 3));
+    const fusionSparks = new THREE.Points(
+      sparkGeo,
+      new THREE.PointsMaterial({
+        size: 0.038,
+        map: orb,
+        vertexColors: true,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+      }),
+    );
+    const fusion = new THREE.Group();
+    fusion.add(fusionBall);
+    fusion.add(fusionSkin2);
+    fusion.add(fusionHeart);
+    fusion.add(torchHalo);
+    fusion.add(torchHalo2);
+    fusion.add(fusionSparks);
+    fusion.scale.setScalar(0.072);
+    disk.add(fusion);
 
     const ndc = new THREE.Vector3();
     const tmp = new THREE.Vector3();
@@ -1101,83 +1273,124 @@ export function GalaxyCanvas({ onPhase }) {
                   : "live";
       if (phase !== lastPhase) {
         lastPhase = phase;
-        phaseRef.current && phaseRef.current(phase);
+        phaseRef.current?.(phase);
       }
-      let camZ = 2.1;
+      let camZ = 2.08;
       let camX = 0;
       let camY = 0.52;
       if (t < T_SING) {
         camZ = 2.08;
-        camX = Math.sin(t * 29) * 0.01;
-        camY = 0.52 + Math.cos(t * 26) * 0.009;
+        const fade = 1 - smooth01(t, T_SING - 0.6, T_SING);
+        camX = Math.sin(t * 11.2) * 0.008 * fade;
+        camY = 0.52 + Math.cos(t * 9.4) * 0.007 * fade;
       } else if (t < T_BLOOM) {
-        camZ = 2.08 + 1.2 * ((t - T_SING) / (T_BLOOM - T_SING));
+        camZ = 2.08 + 1.7 * smooth01(t, T_SING, T_BLOOM);
       } else if (t < T_SUCK) {
-        camZ = 3.28 - 1.5 * ((t - T_BLOOM) / (T_SUCK - T_BLOOM));
+        camZ = 3.78 - 2.0 * smooth01(t, T_BLOOM, T_SUCK);
       } else if (t < T_RING) {
-        camZ = 1.72 + Math.sin(t * 18) * 0.04;
-        camX = Math.sin(t * 33) * 0.01;
-        camY = 0.52 + Math.cos(t * 27) * 0.01;
+        const ringShake = 1 - smooth01(t, T_RING - 0.6, T_RING);
+        camZ = 1.78 + Math.sin(t * 7.4) * 0.022 * ringShake;
+        camX = Math.sin(t * 9.6) * 0.007 * ringShake;
+        camY = 0.52 + Math.cos(t * 8.2) * 0.007 * ringShake;
       } else {
-        const u = Math.min(1, (t - T_RING) / (T_NOVA - T_RING));
-        const ease = u * u * (3 - 2 * u);
-        camZ = 1.78 + 2.77 * ease;
+        camZ = 1.78 + 2.77 * smooth01(t, T_RING, T_NOVA);
       }
       camera.position.set(camX, camY, camZ);
       camera.lookAt(0, 0.08, 0);
 
-      const bloomK = phase === "bloom" ? Math.min(1, (t - T_SING) / (T_BLOOM - T_SING)) : 0;
-      const suckK = phase === "suck" ? 1 - (t - T_BLOOM) / (T_SUCK - T_BLOOM) : 0;
-      const novaK = phase === "nova" ? Math.min(1, (t - T_RING) / ((T_NOVA - T_RING) * 0.58)) : 0;
-      const novaExplode = phase === "nova" ? 1 - Math.pow(1 - novaK, 1.35) : phase === "live" ? 1 : 0;
+      const suckK = t < T_BLOOM ? 1 : 1 - smooth01(t, T_BLOOM, T_SUCK);
+      const novaK = t < T_RING ? 0 : Math.min(1, smooth01(t, T_RING, T_RING + (T_NOVA - T_RING) * 0.62));
+      const novaExplode = t < T_RING ? 0 : t >= T_NOVA ? 1 : 1 - Math.pow(1 - novaK, 1.4);
       let geoScale = 0;
-      if (phase === "bloom") geoScale = bloomK;
-      else if (phase === "suck") geoScale = Math.max(0, suckK);
-      else if (phase === "nova") geoScale = novaExplode;
-      else if (phase === "live") geoScale = 1;
+      if (t >= T_SING && t < T_SUCK) {
+        const up = smooth01(t, T_SING + (T_BLOOM - T_SING) * 0.38, T_BLOOM);
+        geoScale = Math.min(up, suckK);
+      } else if (t >= T_RING) {
+        geoScale = novaExplode;
+      }
       sacred.visible = geoScale > 0.02;
       wild.visible = geoScale > 0.02;
       sacred.scale.setScalar(geoScale);
       wild.scale.setScalar(geoScale);
-      blob.visible = phase === "nova" || phase === "live";
-      blob.scale.setScalar(phase === "live" ? 1 : novaExplode);
-      const late = phase === "nova" || phase === "live";
+      const lateK = t < T_RING ? 0 : smooth01(t, T_RING + 0.12, T_RING + 2.15);
+      blob.visible = lateK > 0.03;
+      blob.scale.setScalar((t >= T_NOVA ? 1 : novaExplode) * Math.max(lateK, 0.04));
+      const late = lateK > 0.05;
       jetA.visible = late;
       jetB.visible = late;
       jetGlowA.visible = late;
       jetGlowB.visible = late;
-      farPts.visible = late;
+      farPts.visible = lateK > 0.08;
+      const nebK = t < T_NOVA - 1.5 ? 0 : smooth01(t, T_NOVA - 1.5, T_NOVA + 0.7);
       nebulae.forEach((n) => {
-        n.visible = phase === "live";
+        n.visible = nebK > 0.04;
+        (n.material).opacity = 0.14 * nebK;
       });
       for (const el of electrons) {
-        el.mesh.visible = late;
-        el.trail.visible = late && novaExplode > 0.2;
-        el.wave.visible = late && novaExplode > 0.2;
+        el.mesh.visible = lateK > 0.08;
+        el.trail.visible = lateK > 0.18;
+        el.wave.visible = lateK > 0.18;
       }
       fadeWires.forEach((m, i) => {
         const mat = m.material;
-        if (phase === "live" || (phase === "nova" && novaExplode > 0.45)) {
-          const u = Math.max(0, t - T_RING - 0.6 - i * 0.55);
-          mat.opacity = Math.min(0.9, u * 0.22);
-        } else if (phase === "bloom" || phase === "suck") {
-          mat.opacity = 0;
+        if (t > T_RING + 0.45) {
+          const u = Math.max(0, t - T_RING - 0.7 - i * 0.55);
+          mat.opacity = Math.min(0.9, u * 0.2);
         } else {
           mat.opacity = 0;
         }
       });
+      const fusionAmt =
+        t < T_SING
+          ? 1
+          : t < T_BLOOM
+            ? 1 - smooth01(t, T_SING, T_SING + 1.05)
+            : t < T_SUCK
+              ? smooth01(t, T_SUCK - 0.78, T_SUCK)
+              : t < T_RING
+                ? 1
+                : 1 - smooth01(t, T_RING, T_RING + 1.15);
       const corePulse =
-        phase === "singularity"
-          ? 0.048 + 0.022 * Math.sin(t * 8)
-          : phase === "ring"
-            ? 0.028 + 0.02 * Math.sin(t * 20)
-            : phase === "suck"
-              ? 0.035
-              : 0.02;
-      coreGlow.visible = phase === "singularity" || phase === "ring" || phase === "suck";
-      coreGlow.scale.set(corePulse, corePulse, 1);
-      (coreGlow.material).opacity =
-        phase === "ring" ? 0.7 + 0.3 * Math.sin(t * 24) : 0.92;
+        t < T_SING || (t >= T_SING && t < T_SING + 1.05)
+          ? 0.072 + 0.01 * Math.sin(t * 14) + 0.006 * Math.sin(t * 37)
+          : t >= T_SUCK - 0.78 && t < T_RING + 1.15
+            ? t < T_RING
+              ? 0.058 + 0.012 * Math.sin(t * 24) + 0.008 * Math.sin(t * 55)
+              : 0.058 * fusionAmt
+            : 0.072 * fusionAmt;
+      fusion.visible = fusionAmt > 0.02;
+      diskPts.visible = fusionAmt < 0.72;
+      const gravWin = 0.5 + 0.5 * Math.sin(t * 6.8);
+      const fight = Math.sin(t * 6.8);
+      const s = Math.max(0.003, corePulse) * (0.9 + 0.12 * Math.sin(t * 6.8));
+      fusion.scale.set(s * (1 + 0.1 * fight), s * (1 - 0.16 * gravWin), s * (1 + 0.1 * fight));
+      fusion.rotation.y += dt * (t >= T_SUCK && t < T_RING ? 2.4 : 1.55);
+      fusion.rotation.z += dt * 0.55;
+      fusionMat.rotation = t * 0.65;
+      fusionMat.opacity = fusionAmt;
+      (fusionSkin2.material).rotation = -t * 0.42;
+      (fusionSkin2.material).opacity = 0.38 * fusionAmt;
+      (fusionHeart.material).color.setHSL((t * 0.1) % 1, 0.16, 0.96);
+      (fusionHeart.material).opacity = 0.85 * fusionAmt;
+      fusionHeart.scale.setScalar(0.62 + 0.22 * gravWin);
+      (torchHalo.material).rotation = t * 0.55;
+      (torchHalo.material).color.setHSL((t * 0.09) % 1, 0.28, 0.92);
+      (torchHalo.material).opacity = (0.28 + 0.1 * Math.sin(t * 8)) * fusionAmt;
+      (torchHalo2.material).rotation = -t * 0.38;
+      (torchHalo2.material).color.setHSL((t * 0.09 + 0.33) % 1, 0.24, 0.9);
+      (torchHalo2.material).opacity = (0.18 + 0.08 * Math.sin(t * 6.2 + 1.2)) * fusionAmt;
+      fusionSparks.rotation.y += dt * 2.4;
+      fusionSparks.rotation.x += dt * 0.9;
+      (fusionSparks.material).size = 0.016 + 0.01 * (0.5 + 0.5 * Math.sin(t * 12));
+      (fusionSparks.material).opacity = fusionAmt;
+      const punch = t < T_RING ? 0 : smooth01(t, T_RING + 0.4, T_RING + 1.9);
+      horizon.visible = punch > 0.06;
+      horizon.scale.setScalar(Math.max(0.02, punch));
+      einstein.visible = punch > 0.06;
+      (einstein.material).opacity = 0.75 * punch;
+      heatPts.visible = punch > 0.06;
+      (heatPts.material).opacity = punch;
+      lensMat.uniforms.uPunch.value = punch;
       const breath = 1 + 0.016 * Math.sin(tW * 0.323) + 0.007 * Math.sin(tW * 0.731);
       disk.scale.setScalar(breath);
       disk.rotation.y += 0.0048 * dt;
@@ -1189,7 +1402,7 @@ export function GalaxyCanvas({ onPhase }) {
       heatPts.rotation.y += 0.34 * dt;
 
       const send = Math.pow(Math.max(0, Math.sin(tW * 0.89)), 4);
-      const jetOp = 0.08 + send * 0.29;
+      const jetOp = (0.08 + send * 0.29) * lateK;
       const ja = jetA.material;
       const jb = jetB.material;
       ja.uniforms.uPulse.value = jetOp;
@@ -1199,7 +1412,7 @@ export function GalaxyCanvas({ onPhase }) {
       jb.uniforms.uColor.value.setHSL(pastelW + 0.02, 0.12, 0.92);
       jetA.scale.set(1, 0.88 + send * 0.34, 1);
       jetB.scale.set(1, 0.88 + send * 0.34, 1);
-      const glow = 0.16 + send * 0.5;
+      const glow = (0.16 + send * 0.5) * lateK;
       (jetGlowA.material).opacity = glow;
       (jetGlowB.material).opacity = glow;
       const gs = 0.18 + send * 0.16;
@@ -1296,6 +1509,10 @@ export function GalaxyCanvas({ onPhase }) {
       diskMat.dispose();
       blob.geometry.dispose();
       blobMat.dispose();
+      fusionMat.dispose();
+      sparkGeo.dispose();
+      torchTex.dispose();
+      tieTex.dispose();
       farGeo.dispose();
       electrons.forEach((el) => {
         el.trail.geometry.dispose();
@@ -1308,4 +1525,3 @@ export function GalaxyCanvas({ onPhase }) {
 
   return <div ref={mountRef} className="galaxy-mount" aria-hidden />;
 }
-export default GalaxyCanvas;
