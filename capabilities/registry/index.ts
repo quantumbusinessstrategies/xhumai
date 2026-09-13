@@ -243,6 +243,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/waste-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { waste: "array" } }
+  },
+  {
+    id: "habit-extractor",
+    name: "Habit Extractor",
+    description: "Surface recurring habits, routines, and behavioral patterns from notes so compounding habits can be reinforced and draining ones redesigned",
+    category: "productivity",
+    endpoint: "/api/capabilities/habit-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { habits: "array" } }
   }
 ];
 
