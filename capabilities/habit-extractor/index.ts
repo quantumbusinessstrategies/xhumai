@@ -2,17 +2,34 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Habit Extractor Capability
- * Surfaces recurring habits, routines, and behavioral patterns from free-form
- * notes so positive ones can be reinforced and draining ones redesigned.
- * Directly serves Work Less. Live More. by making automatic behavior visible.
+ * Surfaces recurring habits, routines, and behavioral patterns from notes
+ * so compounding habits can be reinforced and draining ones redesigned.
  * Stub for now; later becomes real AI.
+ *
+ * Complements:
+ * - energy-extractor     → drains vs restoratives
+ * - leverage-extractor   → systems that keep working after you stop
+ * - progress-extractor   → what already moved
+ * - habit-extractor      → the repeating loops that shape capacity over time
  */
 
-export async function runHabitExtractor(input: string): Promise<{ habits: string[] }> {
+export interface HabitItem {
+  text: string;
+  type?: 'compounding' | 'draining' | 'neutral' | 'unknown';
+  frequency?: string;
+  suggestion?: string;
+  context?: string;
+}
+
+export interface HabitResult {
+  habits: HabitItem[];
+}
+
+export async function runHabitExtractor(input: string): Promise<HabitResult> {
   const start = Date.now();
 
   try {
-    if (!input || input.trim().length < 15) {
+    if (!input || input.trim().length < 20) {
       throw new Error('Text is too short to extract habits');
     }
 
@@ -23,25 +40,59 @@ export async function runHabitExtractor(input: string): Promise<{ habits: string
       .filter(s => s.length > 8);
 
     const habitPatterns = [
-      /\b(every|always|usually|tend to|habit|routine|daily|weekly|morning|evening|regularly|consistently|often|never|keep|start|stop)\b/i,
-      /\b(I|we)\s+(do|make|check|review|write|read|meet|call|scroll|check in)\b/i,
-      /^[-*\u2022]\s+/,
+      /\b(every day|daily|weekly|every morning|every night|every week|habit|routine|always|usually|tend to|I (do|check|review|write|run|walk|meditat|journal|plan|reflect))/i,
+      /\b(I (start|end|begin) (my|the) day|before bed|after lunch|first thing|last thing)\b/i,
+      /\b(ritual|practice|cadence|rhythm|loop|pattern)\b/i,
     ];
 
-    const habits: string[] = [];
+    const typeFrom = (line: string): HabitItem['type'] => {
+      if (/\b(compound|leverage|system|automat|review|reflect|journal|plan|walk|meditat|sleep|deep work|focus block)\b/i.test(line)) return 'compounding';
+      if (/\b(scroll|check email|meeting|interrupt|context switch|busy work|react|doom|procrastinat)\b/i.test(line)) return 'draining';
+      if (/\b(habit|routine|every|always|usually)\b/i.test(line)) return 'neutral';
+      return 'unknown';
+    };
+
+    const habits: HabitItem[] = [];
+
     for (const line of lines) {
-      if (habitPatterns.some(p => p.test(line))) {
-        const cleaned = line.replace(/^[-*\u2022]\s+/, '').replace(/^\d+[.)]\s+/, '').trim();
-        if (cleaned.length > 5 && !habits.includes(cleaned)) {
-          habits.push(cleaned);
+      const cleaned = line
+        .replace(/^[-*\u2022]\s+/, '')
+        .replace(/^\d+[.)]\s+/, '')
+        .trim();
+      if (cleaned.length < 10) continue;
+
+      if (habitPatterns.some(p => p.test(cleaned))) {
+        if (!habits.some(h => h.text === cleaned)) {
+          const type = typeFrom(cleaned);
+          habits.push({
+            text: cleaned,
+            type,
+            frequency: /\b(daily|every day|every morning|every night)\b/i.test(cleaned)
+              ? 'daily'
+              : /\b(weekly|every week)\b/i.test(cleaned)
+              ? 'weekly'
+              : undefined,
+            suggestion:
+              type === 'compounding'
+                ? 'Protect and expand this loop; it compounds'
+                : type === 'draining'
+                ? 'Redesign, batch, or eliminate this loop'
+                : 'Make the intended outcome and frequency explicit',
+            context: cleaned.length > 90 ? cleaned.slice(0, 90) + '…' : cleaned,
+          });
         }
       }
     }
 
-    // Fallback: short lines that look like patterns
     if (habits.length === 0) {
-      for (const line of lines.slice(0, 5)) {
-        if (line.length < 140) habits.push(line);
+      for (const line of lines.slice(0, 3)) {
+        if (line.length < 140) {
+          habits.push({
+            text: line,
+            type: 'unknown',
+            context: line,
+          });
+        }
       }
     }
     // ------------------------------------------------
