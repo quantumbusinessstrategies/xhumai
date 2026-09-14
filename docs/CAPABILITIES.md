@@ -30,7 +30,7 @@ Every capability is an asset. Every asset compounds.
 | stakeholder-extractor | Stakeholder Extractor | productivity | stub (logging live) |
 | progress-extractor | Progress Extractor | productivity | stub (logging live) |
 | clarity-extractor | Clarity Extractor | productivity | stub (logging live) |
-| habit-extractor | Habit Extractor | productivity | stub (logging live) |
+| elimination-extractor | Elimination Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -72,6 +72,6 @@ Every capability is an asset. Every asset compounds.
 - **Stakeholder Extractor** → who is affected / who needs buy-in visible, work is not built in a vacuum
 - **Progress Extractor** → completed work, wins, and momentum visible, effort feels cumulative instead of endless
 - **Clarity Extractor** → vague language and fuzzy commitments visible, ambiguity shrinks so execution can start
-- **Habit Extractor** → recurring loops visible, compounding habits reinforced and draining ones redesigned so capacity compounds over time
+- **Elimination Extractor** → unnecessary work, meetings, and processes visible so they can be stopped; capacity returns; future work shrinks
 
 Together they turn notes into leverage.

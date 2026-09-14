@@ -1,14 +1,12 @@
 # Changelog
 
-## v2.5 — 2026-09-13
-- Added **Habit Extractor** capability (productivity category)
-  - Surfaces recurring habits, routines, and behavioral patterns from free-form notes
-  - Distinguishes compounding vs draining loops and suggests redesign
+## v2.5 — 2026-09-14
+- Added **Elimination Extractor** capability (productivity category)
+  - Surfaces work, processes, meetings, habits, tools, and obligations that can be stopped, simplified, or radically reduced
   - Full usage logging for self-improvement loop
   - Wired into capability registry + API route + intent classifier signals
-  - Complements energy (drains/restoratives) and leverage (systems that keep working) with the repeating loops that shape capacity over time
-- Quantum Core version bump to 2.9.0
-- Direct progress toward "Work Less. Live More." — habits become visible so routines can be redesigned toward freedom
+  - Complements leverage (what to build that compounds) and delegation (what to hand off) with elimination (what to stop doing)
+- Direct progress toward "Work Less. Live More." — unnecessary load becomes visible so capacity returns and future work shrinks
 
 ## v2.4 — 2026-09-09
 - Added **Clarity Extractor** capability (productivity category)
