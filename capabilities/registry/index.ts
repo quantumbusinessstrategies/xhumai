@@ -236,6 +236,15 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { clarities: "array" } }
   },
   {
+    id: "elimination-extractor",
+    name: "Elimination Extractor",
+    description: "Surface work, processes, meetings, habits, and obligations that can be stopped or radically simplified so capacity returns and future work shrinks",
+    category: "productivity",
+    endpoint: "/api/capabilities/elimination-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { eliminations: "array" } }
+  },
+  {
     id: "waste-extractor",
     name: "Waste Extractor",
     description: "Surface repetitive, low-value, eliminable, or automatable work from notes so effort can be cut and living more becomes the default",
