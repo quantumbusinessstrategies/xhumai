@@ -261,6 +261,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/habit-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { habits: "array" } }
+  },
+  {
+    id: "goal-extractor",
+    name: "Goal Extractor",
+    description: "Surface goals, desired outcomes, success definitions, and north-star aims from notes so effort aligns to what actually matters",
+    category: "productivity",
+    endpoint: "/api/capabilities/goal-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { goals: "array" } }
   }
 ];
 
