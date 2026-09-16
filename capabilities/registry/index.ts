@@ -236,40 +236,13 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { clarities: "array" } }
   },
   {
-    id: "elimination-extractor",
-    name: "Elimination Extractor",
-    description: "Surface work, processes, meetings, habits, and obligations that can be stopped or radically simplified so capacity returns and future work shrinks",
-    category: "productivity",
-    endpoint: "/api/capabilities/elimination-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { eliminations: "array" } }
-  },
-  {
-    id: "waste-extractor",
-    name: "Waste Extractor",
-    description: "Surface repetitive, low-value, eliminable, or automatable work from notes so effort can be cut and living more becomes the default",
-    category: "productivity",
-    endpoint: "/api/capabilities/waste-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { waste: "array" } }
-  },
-  {
     id: "habit-extractor",
     name: "Habit Extractor",
-    description: "Surface recurring habits, routines, and behavioral patterns from notes so compounding habits can be reinforced and draining ones redesigned",
+    description: "Surface recurring behaviors, routines, and patterns from notes so they can be systemized, automated, or deliberately dropped — freeing time for living more",
     category: "productivity",
     endpoint: "/api/capabilities/habit-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { habits: "array" } }
-  },
-  {
-    id: "goal-extractor",
-    name: "Goal Extractor",
-    description: "Surface goals, desired outcomes, success definitions, and north-star aims from notes so effort aligns to what actually matters",
-    category: "productivity",
-    endpoint: "/api/capabilities/goal-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { goals: "array" } }
   }
 ];
 
