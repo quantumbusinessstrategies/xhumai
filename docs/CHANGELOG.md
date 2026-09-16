@@ -1,13 +1,13 @@
 # Changelog
 
 ## v2.5 — 2026-09-15
-- Added **Goal Extractor** capability (productivity category)
-  - Surfaces goals, desired outcomes, success definitions, and north-star aims from free-form notes
+- Added **Habit Extractor** capability (productivity category)
+  - Surfaces recurring behaviors, routines, and patterns from free-form notes
   - Full usage logging for self-improvement loop
   - Wired into capability registry + API route + intent classifier signals
-  - Complements metric (how we know) and progress (what moved) with goal (what we are aiming for)
+  - Complements leverage (systems that keep working) and energy (drains/restoratives) with habit (recurring loops that compound or consume)
 - Quantum Core version bump to 2.9.0
-- Direct progress toward "Work Less. Live More." — goals become visible so effort aligns to outcomes instead of busywork
+- Direct progress toward "Work Less. Live More." — habits become visible so they can be systemized, automated, or dropped
 
 ## v2.4 — 2026-09-09
 - Added **Clarity Extractor** capability (productivity category)

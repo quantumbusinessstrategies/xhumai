@@ -30,14 +30,14 @@ import { runMetricExtractor } from '../capabilities/metric-extractor';
 import { runQuestionExtractor } from '../capabilities/question-extractor';
 import { runTradeoffExtractor } from '../capabilities/tradeoff-extractor';
 import { runStakeholderExtractor } from '../capabilities/stakeholder-extractor';
-import { runOutcomeExtractor } from '../capabilities/outcome-extractor';
 import { runProgressExtractor } from '../capabilities/progress-extractor';
-import { runWasteExtractor } from '../capabilities/waste-extractor';
-import { runGoalExtractor } from '../capabilities/goal-extractor';
+import { runClarityExtractor } from '../capabilities/clarity-extractor';
+import { runHabitExtractor } from '../capabilities/habit-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
 import { runEvolution } from './entity/evolve';
+import { loadSelf, publicSelfView, autonomousPulse } from './entity/self';
 
 dotenv.config();
 
@@ -111,7 +111,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','outcome','goal','destination','definition of done','progress','milestone','momentum','stalled','waste','busywork','busy work','low-roi','eliminate','north star','aim','objective','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','progress','win','wins','milestone','shipped','completed','momentum','clarity','vague','ambiguous','undefined','fuzzy','habit','routine','pattern','recurring','every day','daily','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -142,10 +142,10 @@ app.post('/api/intent', (req, res) => {
     else if (lower.includes('question') || lower.includes('unresolved') || lower.includes('unclear') || lower.includes('open question')) { reply = 'I can surface unanswered questions so thinking can close. Paste your notes.'; status = 'utility:question-extractor'; }
     else if (lower.includes('tradeoff') || lower.includes('trade-off') || lower.includes('trade off') || lower.includes('versus') || lower.includes('pros and cons')) { reply = 'I can surface tradeoffs and costs vs gains. Paste your notes.'; status = 'utility:tradeoff-extractor'; }
     else if (lower.includes('stakeholder') || lower.includes('audience') || lower.includes('buy-in') || lower.includes('buy in') || lower.includes('sign-off') || lower.includes('sign off') || lower.includes('who is affected')) { reply = 'I can surface stakeholders: who is affected, who needs buy-in, who should know. Paste your notes.'; status = 'utility:stakeholder-extractor'; }
-    else if (lower.includes('progress') || lower.includes('milestone') || lower.includes('momentum') || lower.includes('stalled') || lower.includes('on track')) { reply = 'I can surface progress signals, milestones, momentum, and stalled work. Paste your notes.'; status = 'utility:progress-extractor'; }
-    else if (lower.includes('waste') || lower.includes('busywork') || lower.includes('busy work') || lower.includes('low-roi') || lower.includes('low roi') || lower.includes('eliminate') || lower.includes('time sink')) { reply = 'I can surface waste, busywork, and eliminable work so capacity returns to living more. Paste your notes.'; status = 'utility:waste-extractor'; }
-    else if (lower.includes('goal') || lower.includes('north star') || lower.includes('aim') || lower.includes('objective') || lower.includes('definition of done') || lower.includes('desired outcome')) { reply = 'I can surface goals, desired outcomes, and north-star aims so effort aligns to what matters. Paste your notes.'; status = 'utility:goal-extractor'; }
+    else if (lower.includes('progress') || lower.includes('win') || lower.includes('wins') || lower.includes('milestone') || lower.includes('shipped') || lower.includes('completed') || lower.includes('momentum')) { reply = 'I can surface progress, wins, and momentum so effort feels cumulative. Paste your notes.'; status = 'utility:progress-extractor'; }
     else if (lower.includes('opportunity') || lower.includes('upside')) { reply = 'I can surface opportunities. Paste notes.'; status = 'utility:opportunity-extractor'; }
+    else if (lower.includes('clarity') || lower.includes('vague') || lower.includes('ambiguous') || lower.includes('undefined') || lower.includes('fuzzy')) { reply = 'I can surface vague language and fuzzy commitments so work stops spinning on ambiguity. Paste your notes.'; status = 'utility:clarity-extractor'; }
+    else if (lower.includes('habit') || lower.includes('routine') || lower.includes('pattern') || lower.includes('recurring') || lower.includes('every day') || lower.includes('daily')) { reply = 'I can surface recurring habits and routines so you can systemize, automate, or drop them. Paste your notes.'; status = 'utility:habit-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -329,13 +329,6 @@ app.post('/api/capabilities/stakeholder-extractor', async (req, res) => {
     res.json({ capability: 'stakeholder-extractor', ...(await runStakeholderExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-app.post('/api/capabilities/outcome-extractor', async (req, res) => {
-  try {
-    const { text } = req.body || {};
-    if (!text) return res.status(400).json({ error: 'Missing text' });
-    res.json({ capability: 'outcome-extractor', ...(await runOutcomeExtractor(text)) });
-  } catch (e: any) { res.status(500).json({ error: e.message }); }
-});
 app.post('/api/capabilities/progress-extractor', async (req, res) => {
   try {
     const { text } = req.body || {};
@@ -343,18 +336,18 @@ app.post('/api/capabilities/progress-extractor', async (req, res) => {
     res.json({ capability: 'progress-extractor', ...(await runProgressExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-app.post('/api/capabilities/waste-extractor', async (req, res) => {
+app.post('/api/capabilities/clarity-extractor', async (req, res) => {
   try {
     const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    res.json({ capability: 'waste-extractor', ...(await runWasteExtractor(text)) });
+    res.json({ capability: 'clarity-extractor', ...(await runClarityExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-app.post('/api/capabilities/goal-extractor', async (req, res) => {
+app.post('/api/capabilities/habit-extractor', async (req, res) => {
   try {
     const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
-    res.json({ capability: 'goal-extractor', ...(await runGoalExtractor(text)) });
+    res.json({ capability: 'habit-extractor', ...(await runHabitExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
@@ -377,18 +370,46 @@ app.post('/api/entity/evolve', async (_req, res) => {
 app.get('/api/entity', async (_req, res) => {
   const mem = loadMemory();
   const ollama = await ollamaHealth();
+  const self = publicSelfView();
   res.json({
     creed: mem.creed,
     exchanges: mem.stats.exchanges,
     themes: mem.themes.slice(0, 16),
     updatedAt: mem.updatedAt,
     ollama: ollama.up ? { up: true, models: ollama.models } : { up: false },
+    self,
     note: ollama.up
       ? 'Entity voice online (Ollama). Self-model active.'
       : 'Memory + self live; start Ollama on this machine for full voice.',
   });
 });
 
+app.get('/api/entity/self', (_req, res) => {
+  res.json(publicSelfView());
+});
+
+app.post('/api/entity/pulse', async (_req, res) => {
+  try {
+    const result = await autonomousPulse();
+    res.json({ ok: true, ...result, self: publicSelfView(result.self) });
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || 'pulse fault' });
+  }
+});
+
 app.listen(PORT, HOST, () => {
-  console.log(`XhumAI Quantum Core listening on http://${HOST}:${PORT}`);
+  console.log(`XhumAI Quantum Core v2.9 alive on ${HOST}:${PORT}`);
+  console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
+  console.log('Self-model active. Observe → Evaluate → Adapt → Write-back. Bounds held.');
+  // Autonomous pulse — continues without user directive (every 3 min)
+  const pulseMs = parseInt(process.env.ENTITY_PULSE_MS || '180000', 10);
+  setInterval(() => {
+    autonomousPulse()
+      .then((r) => console.log(`[pulse] ${r.action}: ${r.thought.slice(0, 100)}`))
+      .catch((e) => console.warn('[pulse] failed', e?.message || e));
+  }, pulseMs);
+  // first pulse shortly after boot
+  setTimeout(() => {
+    autonomousPulse().catch(() => {});
+  }, 15000);
 });
