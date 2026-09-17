@@ -243,6 +243,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/habit-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { habits: "array" } }
+  },
+  {
+    id: "freedom-extractor",
+    name: "Freedom Extractor",
+    description: "Surface time sinks, reclaimable capacity, releasable obligations, and automation candidates so the founder can work less and live more",
+    category: "productivity",
+    endpoint: "/api/capabilities/freedom-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { freedoms: "array" } }
   }
 ];
 
