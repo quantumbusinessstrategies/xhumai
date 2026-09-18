@@ -252,6 +252,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/freedom-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { freedoms: "array" } }
+  },
+  {
+    id: "compound-extractor",
+    name: "Compound Extractor",
+    description: "Surface compounding loops, habits, feedback systems, and self-reinforcing patterns so advantages grow without constant input",
+    category: "productivity",
+    endpoint: "/api/capabilities/compound-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { compounds: "array" } }
   }
 ];
 
