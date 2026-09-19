@@ -236,31 +236,13 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { clarities: "array" } }
   },
   {
-    id: "habit-extractor",
-    name: "Habit Extractor",
-    description: "Surface recurring behaviors, routines, and patterns from notes so they can be systemized, automated, or deliberately dropped — freeing time for living more",
+    id: "reclaim-extractor",
+    name: "Reclaim Extractor",
+    description: "Surface time sinks, low-leverage loops, and reclaim opportunities so hours and energy return to living more",
     category: "productivity",
-    endpoint: "/api/capabilities/habit-extractor",
+    endpoint: "/api/capabilities/reclaim-extractor",
     inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { habits: "array" } }
-  },
-  {
-    id: "freedom-extractor",
-    name: "Freedom Extractor",
-    description: "Surface time sinks, reclaimable capacity, releasable obligations, and automation candidates so the founder can work less and live more",
-    category: "productivity",
-    endpoint: "/api/capabilities/freedom-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { freedoms: "array" } }
-  },
-  {
-    id: "compound-extractor",
-    name: "Compound Extractor",
-    description: "Surface compounding loops, habits, feedback systems, and self-reinforcing patterns so advantages grow without constant input",
-    category: "productivity",
-    endpoint: "/api/capabilities/compound-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { compounds: "array" } }
+    outputSchema: { type: "object", properties: { reclaims: "array" } }
   }
 ];
 
