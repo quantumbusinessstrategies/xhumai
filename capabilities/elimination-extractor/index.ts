@@ -2,24 +2,24 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Elimination Extractor Capability
- * Surfaces work, processes, meetings, habits, and obligations that can be
- * stopped, simplified, or radically reduced so capacity returns and future
- * work shrinks. Direct expression of "Work Less. Live More."
+ * Surfaces work, meetings, habits, obligations, and processes that can be
+ * eliminated or radically simplified so that less work remains and more
+ * living becomes possible. Direct expression of the creed: Work Less. Live More.
  * Stub for now; later becomes real AI.
  *
  * Complements:
- * - leverage-extractor   → what to build that keeps working
- * - delegation-extractor → what to hand off
- * - energy-extractor     → what drains vs restores
- * - elimination-extractor → what to stop doing entirely
+ * - delegation-extractor  → what can leave the human
+ * - energy-extractor      → what drains life-force
+ * - leverage-extractor    → what compounds after you stop
+ * - priority-sorter       → where attention should go
+ * - elimination-extractor → what should simply cease to exist
  */
 
 export interface EliminationItem {
   item: string;
-  type?: 'meeting' | 'process' | 'report' | 'habit' | 'tool' | 'obligation' | 'other';
-  reason?: string;
+  mode?: 'eliminate' | 'simplify' | 'merge' | 'automate-away' | 'unknown';
   impact?: 'high' | 'medium' | 'low';
-  effortToStop?: 'low' | 'medium' | 'high';
+  reason?: string;
 }
 
 export interface EliminationResult {
@@ -34,24 +34,24 @@ export async function runEliminationExtractor(input: string): Promise<Eliminatio
       throw new Error('Text is too short to extract eliminations');
     }
 
-    // --- STUB LOGIC (replace with real model later) ---
     const lines = input
       .split(/[\n.!?;]+/)
       .map(s => s.trim())
       .filter(s => s.length > 8);
 
     const eliminationPatterns = [
-      /\b(stop|drop|kill|cancel|remove|eliminate|get rid of|no longer|don't need|unnecessary|waste|redundant|busywork|busy work|overhead|bloat)\b/i,
-      /\b(too many|too much|always doing|keep doing|still doing|every week|every day|recurring|standing meeting)\b/i,
-      /\b(never used|no one reads|no one uses|doesn't help|low value|low impact|checkbox|status update for the sake)\b/i,
-      /\b(simplify|cut|reduce|trim|slash|retire|sunset|deprecate)\b/i,
+      /\b(stop doing|don'?t need|no longer needed|can cut|can drop|can kill|eliminate|remove|cancel|scrap|ditch|get rid of)\b/i,
+      /\b(waste of time|not worth|low value|busywork|busy work|redundant|duplicate|overlap|pointless|unnecessary)\b/i,
+      /\b(too many meetings|meeting load|status update|weekly sync|standup that|report that no one reads)\b/i,
+      /\b(simplify|streamline|collapse|merge|combine|one less|fewer)\b/i,
+      /\b(habit|routine|process|workflow|step that|extra layer|middleman)\b/i,
     ];
 
-    const meetingHints = /\b(meeting|sync|standup|stand-up|call|huddle|review session)\b/i;
-    const processHints = /\b(process|workflow|procedure|checklist|approval|sign-off|sign off)\b/i;
-    const reportHints = /\b(report|dashboard|status update|weekly update|metrics email)\b/i;
-    const habitHints = /\b(habit|routine|always check|always do|ritual)\b/i;
-    const toolHints = /\b(tool|app|software|subscription|platform we don't)\b/i;
+    const simplifyHints = /\b(simplify|streamline|reduce|fewer|less|collapse|merge|combine)\b/i;
+    const automateHints = /\b(automat|script|bot|agent|zap|workflow|system)\b/i;
+    const mergeHints = /\b(merge|combine|collapse into|fold into)\b/i;
+    const highHints = /\b(huge|major|massive|big|significant|critical|always|every day|constant)\b/i;
+    const lowHints = /\b(minor|small|occasional|sometimes|slight)\b/i;
 
     const eliminations: EliminationItem[] = [];
 
@@ -63,41 +63,45 @@ export async function runEliminationExtractor(input: string): Promise<Eliminatio
       if (cleaned.length < 10) continue;
 
       if (eliminationPatterns.some(p => p.test(cleaned))) {
-        let type: EliminationItem['type'] = 'other';
-        if (meetingHints.test(cleaned)) type = 'meeting';
-        else if (processHints.test(cleaned)) type = 'process';
-        else if (reportHints.test(cleaned)) type = 'report';
-        else if (habitHints.test(cleaned)) type = 'habit';
-        else if (toolHints.test(cleaned)) type = 'tool';
-        else if (/\b(obligation|commitment|promise we should drop)\b/i.test(cleaned)) type = 'obligation';
+        let mode: EliminationItem['mode'] = 'eliminate';
+        if (automateHints.test(cleaned)) mode = 'automate-away';
+        else if (mergeHints.test(cleaned)) mode = 'merge';
+        else if (simplifyHints.test(cleaned)) mode = 'simplify';
+
+        let impact: EliminationItem['impact'] = 'medium';
+        if (highHints.test(cleaned)) impact = 'high';
+        else if (lowHints.test(cleaned)) impact = 'low';
 
         if (!eliminations.some(e => e.item === cleaned)) {
           eliminations.push({
             item: cleaned,
-            type,
-            reason: 'Candidate for elimination or radical simplification',
-            impact: cleaned.length > 90 ? 'medium' : 'high',
-            effortToStop: /\b(political|stakeholder|legal|compliance)\b/i.test(cleaned) ? 'high' : 'low',
+            mode,
+            impact,
+            reason:
+              mode === 'automate-away'
+                ? 'Candidate to disappear via a system so the human never touches it'
+                : mode === 'simplify'
+                  ? 'Candidate to shrink until the cost is near zero'
+                  : mode === 'merge'
+                    ? 'Candidate to fold into something that already exists'
+                    : 'Candidate to cease so capacity and life return',
           });
         }
       }
     }
 
-    // Light fallback so sparse input still returns value
     if (eliminations.length === 0) {
       for (const line of lines.slice(0, 3)) {
         if (line.length < 140) {
           eliminations.push({
             item: line,
-            type: 'other',
-            reason: 'Review for possible elimination or simplification',
+            mode: 'unknown',
             impact: 'medium',
-            effortToStop: 'medium',
+            reason: 'Candidate for elimination review — does this need to exist?',
           });
         }
       }
     }
-    // ------------------------------------------------
 
     const duration = Date.now() - start;
 

@@ -236,13 +236,13 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { clarities: "array" } }
   },
   {
-    id: "reclaim-extractor",
-    name: "Reclaim Extractor",
-    description: "Surface time sinks, low-leverage loops, and reclaim opportunities so hours and energy return to living more",
+    id: "elimination-extractor",
+    name: "Elimination Extractor",
+    description: "Surface work, meetings, habits, and obligations that can be eliminated or radically simplified so less work remains and more living is possible",
     category: "productivity",
-    endpoint: "/api/capabilities/reclaim-extractor",
+    endpoint: "/api/capabilities/elimination-extractor",
     inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { reclaims: "array" } }
+    outputSchema: { type: "object", properties: { eliminations: "array" } }
   }
 ];
 
