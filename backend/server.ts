@@ -33,6 +33,7 @@ import { runStakeholderExtractor } from '../capabilities/stakeholder-extractor';
 import { runProgressExtractor } from '../capabilities/progress-extractor';
 import { runClarityExtractor } from '../capabilities/clarity-extractor';
 import { runEliminationExtractor } from '../capabilities/elimination-extractor';
+import { runReclaimExtractor } from '../capabilities/reclaim-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -111,7 +112,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','progress','win','wins','milestone','shipped','completed','momentum','clarity','vague','ambiguous','undefined','fuzzy','eliminat','cut','drop','simplify','waste','redundant','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','progress','win','wins','milestone','shipped','completed','momentum','clarity','vague','ambiguous','undefined','fuzzy','eliminat','cut','drop','simplify','waste','redundant','reclaim','time sink','hours back','free up','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -146,6 +147,7 @@ app.post('/api/intent', (req, res) => {
     else if (lower.includes('opportunity') || lower.includes('upside')) { reply = 'I can surface opportunities. Paste notes.'; status = 'utility:opportunity-extractor'; }
     else if (lower.includes('clarity') || lower.includes('vague') || lower.includes('ambiguous') || lower.includes('undefined') || lower.includes('fuzzy')) { reply = 'I can surface vague language and fuzzy commitments so work stops spinning on ambiguity. Paste your notes.'; status = 'utility:clarity-extractor'; }
     else if (lower.includes('eliminat') || lower.includes('cut work') || lower.includes('drop this') || lower.includes('simplify') || lower.includes('waste of') || lower.includes('redundant')) { reply = 'I can surface work that can be eliminated or radically simplified so less remains and more living is possible. Paste your notes.'; status = 'utility:elimination-extractor'; }
+    else if (lower.includes('reclaim') || lower.includes('time sink') || lower.includes('hours back') || lower.includes('free up time') || lower.includes('give back hours')) { reply = 'I can surface time sinks and reclaimable hours so capacity returns to living more. Paste your notes.'; status = 'utility:reclaim-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -350,11 +352,20 @@ app.post('/api/capabilities/elimination-extractor', async (req, res) => {
     res.json({ capability: 'elimination-extractor', ...(await runEliminationExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-
-// NOTE: Remaining entity routes and app.listen are preserved from main.
-// Full original tail retained conceptually; this push focuses on capability wiring.
+app.post('/api/capabilities/reclaim-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'reclaim-extractor', ...(await runReclaimExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 
 app.use('/api/admin', adminRoutes);
+app.get('/api/agents', (_req, res) => res.json({ count: agents.length, agents }));
+app.post('/api/agents/:id/run', async (req, res) => {
+  try { res.json(await runAgent(req.params.id)); }
+  catch (e: any) { res.status(404).json({ error: e.message }); }
+});
 
 app.post('/api/entity/evolve', async (_req, res) => {
   try {
