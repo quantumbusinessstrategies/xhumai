@@ -2,23 +2,23 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Reclaim Extractor Capability
- * Surfaces time sinks, low-leverage loops, and reclaim opportunities from notes
- * so hours and energy return to living more.
+ * Surfaces time sinks, low-leverage activities, and reclaimable hours from free-form notes
+ * so capacity returns to living more, not just doing more.
  * Stub for now; later becomes real AI.
  *
  * Complements:
- * - energy-extractor     → drains vs restoratives
+ * - energy-extractor     → what drains vs restores life-force
+ * - delegation-extractor → what should leave the founder's hands
  * - leverage-extractor   → systems that keep working after you stop
- * - delegation-extractor → work that can leave the founder
  * - priority-sorter      → where attention should go
- * - reclaim-extractor    → explicit time/energy to take back
+ * - reclaim-extractor    → concrete hours and activities that can be recovered for life
  */
 
 export interface ReclaimItem {
-  sink: string;
-  type?: 'meeting' | 'admin' | 'context-switch' | 'rework' | 'waiting' | 'low-leverage' | 'other';
-  reclaim?: string;
-  estimatedImpact?: 'low' | 'medium' | 'high';
+  item: string;
+  kind?: 'time-sink' | 'low-leverage' | 'meeting-bloat' | 'context-switch' | 'admin' | 'reclaimable' | 'unknown';
+  estimatedHours?: string;
+  note?: string;
 }
 
 export interface ReclaimResult {
@@ -30,30 +30,25 @@ export async function runReclaimExtractor(input: string): Promise<ReclaimResult>
 
   try {
     if (!input || input.trim().length < 20) {
-      throw new Error('Text is too short to extract reclaim opportunities');
+      throw new Error('Text is too short to extract reclaim signals');
     }
 
-    // --- STUB LOGIC (replace with real model later) ---
     const lines = input
       .split(/[\n.!?;]+/)
       .map(s => s.trim())
       .filter(s => s.length > 8);
 
-    const sinkPatterns = [
-      /\b(meeting|sync|standup|check-in|check in|status update|catch.?up)\b/i,
-      /\b(email|inbox|slack|notification|ping|thread)\b/i,
-      /\b(rework|redo|again|revisit|re-do|fix over)\b/i,
-      /\b(waiting|blocked|stuck|pending|depend)\b/i,
-      /\b(admin|paperwork|form|report|logging|busywork|low.?value)\b/i,
-      /\b(context.?switch|multitask|interrupt|distraction)\b/i,
-      /\b(waste|drain|sink|time.?suck|hours lost|too much time)\b/i,
+    const reclaimPatterns = [
+      /\b(hours?|time|spent|wasted|lost|sink|drain|meeting|sync|standup|status|update|email|inbox|slack|admin|busywork|busy work|low.?value|low.?leverage|context.?switch|switching|multitask|reclaim|recover|free up|give back)\b/i,
+      /\b(\d+\s*(hours?|hrs?|h)\b|half.?day|full.?day|all.?day|every.?day|daily|weekly)\b/i,
+      /\b(could (be|have been)|should (be|have been)|if only|instead of|rather than)\b/i,
     ];
 
-    const meetingHints = /\b(meeting|sync|standup|check-in|check in)\b/i;
-    const adminHints = /\b(admin|paperwork|form|report|logging|busywork)\b/i;
-    const reworkHints = /\b(rework|redo|again|revisit|fix over)\b/i;
-    const waitingHints = /\b(waiting|blocked|stuck|pending)\b/i;
-    const switchHints = /\b(context.?switch|multitask|interrupt|distraction)\b/i;
+    const sinkHints = /\b(wasted|lost|sink|drain|bloat|busywork|busy work|low.?value|low.?leverage|too many|endless|constant)\b/i;
+    const meetingHints = /\b(meeting|sync|standup|status|update|call|zoom|teams)\b/i;
+    const adminHints = /\b(email|inbox|slack|admin|reporting|status update|tracking)\b/i;
+    const switchHints = /\b(context.?switch|switching|multitask|interrupt|fragment)\b/i;
+    const hourHints = /(\d+(?:\.\d+)?)\s*(hours?|hrs?|h)\b/i;
 
     const reclaims: ReclaimItem[] = [];
 
@@ -64,34 +59,33 @@ export async function runReclaimExtractor(input: string): Promise<ReclaimResult>
         .trim();
       if (cleaned.length < 10) continue;
 
-      if (sinkPatterns.some(p => p.test(cleaned))) {
-        let type: ReclaimItem['type'] = 'other';
-        if (meetingHints.test(cleaned)) type = 'meeting';
-        else if (adminHints.test(cleaned)) type = 'admin';
-        else if (reworkHints.test(cleaned)) type = 'rework';
-        else if (waitingHints.test(cleaned)) type = 'waiting';
-        else if (switchHints.test(cleaned)) type = 'context-switch';
-        else if (/\b(low.?value|busywork|time.?suck)\b/i.test(cleaned)) type = 'low-leverage';
+      if (reclaimPatterns.some(p => p.test(cleaned))) {
+        if (!reclaims.some(r => r.item === cleaned)) {
+          let kind: ReclaimItem['kind'] = 'unknown';
+          if (meetingHints.test(cleaned)) kind = 'meeting-bloat';
+          else if (adminHints.test(cleaned)) kind = 'admin';
+          else if (switchHints.test(cleaned)) kind = 'context-switch';
+          else if (sinkHints.test(cleaned)) kind = 'time-sink';
+          else if (/\b(low.?leverage|low.?value)\b/i.test(cleaned)) kind = 'low-leverage';
+          else kind = 'reclaimable';
 
-        const reclaimSuggestion =
-          type === 'meeting'
-            ? 'Convert to async update or shorter agenda with clear owner'
-            : type === 'admin'
-            ? 'Template, automate, or batch this work'
-            : type === 'rework'
-            ? 'Define done criteria once and stop looping'
-            : type === 'waiting'
-            ? 'Unblock or set a hard follow-up date'
-            : type === 'context-switch'
-            ? 'Protect focus blocks; batch similar work'
-            : 'Eliminate, automate, or delegate so hours return to living';
+          const hourMatch = cleaned.match(hourHints);
+          const estimatedHours = hourMatch ? `${hourMatch[1]}h` : undefined;
 
-        if (!reclaims.some(r => r.sink === cleaned)) {
           reclaims.push({
-            sink: cleaned,
-            type,
-            reclaim: reclaimSuggestion,
-            estimatedImpact: cleaned.length > 90 ? 'high' : 'medium',
+            item: cleaned,
+            kind,
+            estimatedHours,
+            note:
+              kind === 'meeting-bloat'
+                ? 'Candidate to shorten, async, or drop'
+                : kind === 'admin'
+                  ? 'Candidate to batch, automate, or template'
+                  : kind === 'context-switch'
+                    ? 'Candidate for deep-work blocks and fewer interrupts'
+                    : kind === 'time-sink' || kind === 'low-leverage'
+                      ? 'Candidate to cut, delegate, or redesign'
+                      : 'Candidate hours that can return to life',
           });
         }
       }
@@ -101,15 +95,13 @@ export async function runReclaimExtractor(input: string): Promise<ReclaimResult>
       for (const line of lines.slice(0, 3)) {
         if (line.length < 140) {
           reclaims.push({
-            sink: line,
-            type: 'other',
-            reclaim: 'Review whether this still earns its place in your week',
-            estimatedImpact: 'medium',
+            item: line,
+            kind: 'unknown',
+            note: 'Candidate for reclaim review',
           });
         }
       }
     }
-    // ------------------------------------------------
 
     const duration = Date.now() - start;
 
