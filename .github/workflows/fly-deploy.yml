@@ -1,0 +1,27 @@
+name: Deploy core to Fly
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - "capabilities/**"
+      - "Dockerfile"
+      - "fly.toml"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - ".dockerignore"
+      - ".github/workflows/fly-deploy.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.FLY_API_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only --yes
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
