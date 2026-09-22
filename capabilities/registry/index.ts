@@ -157,7 +157,7 @@ export const capabilities: Capability[] = [
   {
     id: "delegation-extractor",
     name: "Delegation Extractor",
-    description: "Surface work that can be delegated, automated, or dropped so founder time returns to high-leverage work",
+    description: "Surface work that can be delegated, automated, or drop so founder time returns to high-leverage work",
     category: "productivity",
     endpoint: "/api/capabilities/delegation-extractor",
     inputSchema: { type: "text" },
@@ -243,6 +243,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/reclaim-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { reclaims: "array" } }
+  },
+  {
+    id: "boundary-extractor",
+    name: "Boundary Extractor",
+    description: "Surface personal, professional, and temporal boundaries so capacity is protected and living more remains possible",
+    category: "productivity",
+    endpoint: "/api/capabilities/boundary-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { boundaries: "array" } }
   }
 ];
 
