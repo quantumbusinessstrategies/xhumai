@@ -252,6 +252,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/boundary-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { boundaries: "array" } }
+  },
+  {
+    id: "freedom-extractor",
+    name: "Freedom Extractor",
+    description: "Surface moves that increase autonomy, eliminate recurring work, or expand optionality so the system compounds into more life",
+    category: "productivity",
+    endpoint: "/api/capabilities/freedom-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { freedoms: "array" } }
   }
 ];
 
