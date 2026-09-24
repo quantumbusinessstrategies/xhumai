@@ -30,9 +30,9 @@ Every capability is an asset. Every asset compounds.
 | stakeholder-extractor | Stakeholder Extractor | productivity | stub (logging live) |
 | progress-extractor | Progress Extractor | productivity | stub (logging live) |
 | clarity-extractor | Clarity Extractor | productivity | stub (logging live) |
+| elimination-extractor | Elimination Extractor | productivity | stub (logging live) |
 | reclaim-extractor | Reclaim Extractor | productivity | stub (logging live) |
-| boundary-extractor | Boundary Extractor | productivity | stub (logging live) |
-| freedom-extractor | Freedom Extractor | productivity | stub (logging live) |
+| habit-extractor | Habit Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -74,8 +74,8 @@ Every capability is an asset. Every asset compounds.
 - **Stakeholder Extractor** → who is affected / who needs buy-in visible, work is not built in a vacuum
 - **Progress Extractor** → completed work, wins, and momentum visible, effort feels cumulative instead of endless
 - **Clarity Extractor** → vague language and fuzzy commitments visible, ambiguity shrinks so execution can start
-- **Reclaim Extractor** → time sinks and low-leverage activities visible, hours return to living more
-- **Boundary Extractor** → personal and temporal lines visible, capacity stays protected
-- **Freedom Extractor** → autonomy, elimination, and optionality moves visible, the system compounds into more life
+- **Elimination Extractor** → work that can be cut or radically simplified, so less remains
+- **Reclaim Extractor** → time sinks and reclaimable hours, capacity returns to living more
+- **Habit Extractor** → recurring routines and rituals visible, living more becomes designed instead of accidental
 
 Together they turn notes into leverage.
