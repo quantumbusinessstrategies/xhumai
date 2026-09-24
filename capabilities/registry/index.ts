@@ -157,7 +157,7 @@ export const capabilities: Capability[] = [
   {
     id: "delegation-extractor",
     name: "Delegation Extractor",
-    description: "Surface work that can be delegated, automated, or drop so founder time returns to high-leverage work",
+    description: "Surface work that can be delegated, automated, or dropped so founder time returns to high-leverage work",
     category: "productivity",
     endpoint: "/api/capabilities/delegation-extractor",
     inputSchema: { type: "text" },
@@ -236,31 +236,13 @@ export const capabilities: Capability[] = [
     outputSchema: { type: "object", properties: { clarities: "array" } }
   },
   {
-    id: "reclaim-extractor",
-    name: "Reclaim Extractor",
-    description: "Surface time sinks, low-leverage activities, and reclaimable hours from notes so capacity returns to living more",
+    id: "habit-extractor",
+    name: "Habit Extractor",
+    description: "Surface recurring habits, routines, and rituals from notes so living more becomes designed instead of accidental",
     category: "productivity",
-    endpoint: "/api/capabilities/reclaim-extractor",
+    endpoint: "/api/capabilities/habit-extractor",
     inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { reclaims: "array" } }
-  },
-  {
-    id: "boundary-extractor",
-    name: "Boundary Extractor",
-    description: "Surface personal, professional, and temporal boundaries so capacity is protected and living more remains possible",
-    category: "productivity",
-    endpoint: "/api/capabilities/boundary-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { boundaries: "array" } }
-  },
-  {
-    id: "freedom-extractor",
-    name: "Freedom Extractor",
-    description: "Surface moves that increase autonomy, eliminate recurring work, or expand optionality so the system compounds into more life",
-    category: "productivity",
-    endpoint: "/api/capabilities/freedom-extractor",
-    inputSchema: { type: "text" },
-    outputSchema: { type: "object", properties: { freedoms: "array" } }
+    outputSchema: { type: "object", properties: { habits: "array" } }
   }
 ];
 
