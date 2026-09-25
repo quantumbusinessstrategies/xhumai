@@ -35,6 +35,7 @@ import { runClarityExtractor } from '../capabilities/clarity-extractor';
 import { runEliminationExtractor } from '../capabilities/elimination-extractor';
 import { runReclaimExtractor } from '../capabilities/reclaim-extractor';
 import { runHabitExtractor } from '../capabilities/habit-extractor';
+import { runRhythmExtractor } from '../capabilities/rhythm-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -113,7 +114,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','progress','win','wins','milestone','shipped','completed','momentum','clarity','vague','ambiguous','undefined','fuzzy','eliminat','cut','drop','simplify','waste','redundant','reclaim','time sink','hours back','free up','habit','routine','ritual','daily','every morning','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','progress','win','wins','milestone','shipped','completed','momentum','clarity','vague','ambiguous','undefined','fuzzy','eliminat','cut','drop','simplify','waste','redundant','reclaim','time sink','hours back','free up','habit','routine','ritual','daily','every morning','rhythm','pace','cadence','deep work','focus block','recovery','overbooked','back to back','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -150,6 +151,7 @@ app.post('/api/intent', (req, res) => {
     else if (lower.includes('eliminat') || lower.includes('cut work') || lower.includes('drop this') || lower.includes('simplify') || lower.includes('waste of') || lower.includes('redundant')) { reply = 'I can surface work that can be eliminated or radically simplified so less remains and more living is possible. Paste your notes.'; status = 'utility:elimination-extractor'; }
     else if (lower.includes('reclaim') || lower.includes('time sink') || lower.includes('hours back') || lower.includes('free up time') || lower.includes('give back hours')) { reply = 'I can surface time sinks and reclaimable hours so capacity returns to living more. Paste your notes.'; status = 'utility:reclaim-extractor'; }
     else if (lower.includes('habit') || lower.includes('routine') || lower.includes('ritual') || lower.includes('every morning') || lower.includes('daily practice')) { reply = 'I can surface recurring habits, routines, and rituals so living more becomes designed instead of accidental. Paste your notes.'; status = 'utility:habit-extractor'; }
+    else if (lower.includes('rhythm') || lower.includes('pace') || lower.includes('cadence') || lower.includes('deep work') || lower.includes('focus block') || lower.includes('recovery gap') || lower.includes('overbooked') || lower.includes('back to back') || lower.includes('back-to-back')) { reply = 'I can surface natural vs forced rhythms and recovery gaps so capacity is paced by the human, not the calendar. Paste your notes.'; status = 'utility:rhythm-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -368,6 +370,13 @@ app.post('/api/capabilities/habit-extractor', async (req, res) => {
     res.json({ capability: 'habit-extractor', ...(await runHabitExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
+app.post('/api/capabilities/rhythm-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'rhythm-extractor', ...(await runRhythmExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 
 app.use('/api/admin', adminRoutes);
 app.get('/api/agents', (_req, res) => res.json({ count: agents.length, agents }));
@@ -419,12 +428,14 @@ app.listen(PORT, HOST, () => {
   console.log(`XhumAI Quantum Core v2.8 alive on ${HOST}:${PORT}`);
   console.log(`Data dir: ${DATA_DIR} | Capabilities: ${capabilities.length} | Agents: ${agents.length}`);
   console.log('Self-model active. Observe → Evaluate → Adapt → Write-back. Bounds held.');
+  // Autonomous pulse — continues without user directive (every 3 min)
   const pulseMs = parseInt(process.env.ENTITY_PULSE_MS || '180000', 10);
   setInterval(() => {
     autonomousPulse()
       .then((r) => console.log(`[pulse] ${r.action}: ${r.thought.slice(0, 100)}`))
       .catch((e) => console.warn('[pulse] failed', e?.message || e));
   }, pulseMs);
+  // first pulse shortly after boot
   setTimeout(() => {
     autonomousPulse().catch(() => {});
   }, 15000);
