@@ -243,6 +243,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/habit-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { habits: "array" } }
+  },
+  {
+    id: "rhythm-extractor",
+    name: "Rhythm Extractor",
+    description: "Surface natural work/rest rhythms, forced schedules, recovery gaps, and calendar tyranny so capacity is designed around human pace instead of infinite availability",
+    category: "productivity",
+    endpoint: "/api/capabilities/rhythm-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { rhythms: "array" } }
   }
 ];
 
