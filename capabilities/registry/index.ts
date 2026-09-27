@@ -234,6 +234,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/clarity-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { clarities: "array" } }
+  },
+  {
+    id: "freedom-extractor",
+    name: "Freedom Extractor",
+    description: "Surface decisions, systems, and moves that increase autonomy, reduce recurring work, or expand future optionality so capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/freedom-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { freedoms: "array" } }
   }
 ];
 
