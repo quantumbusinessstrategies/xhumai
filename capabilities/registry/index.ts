@@ -243,6 +243,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/freedom-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { freedoms: "array" } }
+  },
+  {
+    id: "elimination-extractor",
+    name: "Elimination Extractor",
+    description: "Surface work, habits, meetings, and obligations that can be permanently stopped or removed so capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/elimination-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { eliminations: "array" } }
   }
 ];
 
