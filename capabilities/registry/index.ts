@@ -252,6 +252,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/rhythm-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { rhythms: "array" } }
+  },
+  {
+    id: "capacity-extractor",
+    name: "Capacity Extractor",
+    description: "Surface bandwidth, overcommitment, load signals, and available capacity so work is sized to the human and living more remains possible",
+    category: "productivity",
+    endpoint: "/api/capabilities/capacity-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { capacities: "array" } }
   }
 ];
 

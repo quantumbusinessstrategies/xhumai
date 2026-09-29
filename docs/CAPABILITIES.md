@@ -33,6 +33,8 @@ Every capability is an asset. Every asset compounds.
 | elimination-extractor | Elimination Extractor | productivity | stub (logging live) |
 | reclaim-extractor | Reclaim Extractor | productivity | stub (logging live) |
 | habit-extractor | Habit Extractor | productivity | stub (logging live) |
+| rhythm-extractor | Rhythm Extractor | productivity | stub (logging live) |
+| capacity-extractor | Capacity Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -77,5 +79,7 @@ Every capability is an asset. Every asset compounds.
 - **Elimination Extractor** → work that can be cut or radically simplified, so less remains
 - **Reclaim Extractor** → time sinks and reclaimable hours, capacity returns to living more
 - **Habit Extractor** → recurring routines and rituals visible, living more becomes designed instead of accidental
+- **Rhythm Extractor** → natural vs forced pace and recovery gaps visible, capacity is paced by the human
+- **Capacity Extractor** → bandwidth, overload, and available headroom visible so work is sized to real human capacity
 
 Together they turn notes into leverage.
