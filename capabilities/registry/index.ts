@@ -261,6 +261,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/capacity-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { capacities: "array" } }
+  },
+  {
+    id: "attention-extractor",
+    name: "Attention Extractor",
+    description: "Surface attention leaks, interruptions, and compounding focus so living more is not eaten by noise",
+    category: "productivity",
+    endpoint: "/api/capabilities/attention-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { attentions: "array" } }
   }
 ];
 
