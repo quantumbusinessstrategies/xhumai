@@ -36,6 +36,7 @@ Every capability is an asset. Every asset compounds.
 | rhythm-extractor | Rhythm Extractor | productivity | stub (logging live) |
 | capacity-extractor | Capacity Extractor | productivity | stub (logging live) |
 | attention-extractor | Attention Extractor | productivity | stub (logging live) |
+| boundary-extractor | Boundary Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -83,5 +84,6 @@ Every capability is an asset. Every asset compounds.
 - **Rhythm Extractor** → natural vs forced pace and recovery gaps visible, capacity is paced by the human
 - **Capacity Extractor** → bandwidth, overload, and available headroom visible so work is sized to real human capacity
 - **Attention Extractor** → leaks vs compounding focus visible so living more is not eaten by noise
+- **Boundary Extractor** → time, access, and scope lines visible so living more is protected instead of negotiated away
 
 Together they turn notes into leverage.
