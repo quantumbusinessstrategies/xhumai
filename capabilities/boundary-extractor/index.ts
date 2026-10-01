@@ -2,22 +2,16 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Boundary Extractor Capability
- * Surfaces personal, professional, and temporal boundaries from free-form notes
- * so capacity is protected and living more remains possible.
+ * Surfaces lines that protect capacity: no-meeting zones, refusal points,
+ * after-hours rules, and commitments that should not leak into life.
+ * Directly serves the creed: Work Less. Live More.
  * Stub for now; later becomes real AI.
- *
- * Complements:
- * - energy-extractor      → what drains vs restores
- * - constraint-extractor  → hard limits on the work itself
- * - delegation-extractor  → what can leave your hands
- * - reclaim-extractor     → time sinks to recover
- * - boundary-extractor    → the lines that keep work from consuming life
  */
 
 export interface BoundaryItem {
-  text: string;
-  type?: 'time' | 'energy' | 'scope' | 'relationship' | 'digital' | 'unknown';
-  strength?: 'hard' | 'soft' | 'aspirational';
+  item: string;
+  kind?: 'time' | 'access' | 'scope' | 'relationship' | 'unknown';
+  strength?: 'hard' | 'soft' | 'missing';
   note?: string;
 }
 
@@ -30,7 +24,7 @@ export async function runBoundaryExtractor(input: string): Promise<BoundaryResul
 
   try {
     if (!input || input.trim().length < 20) {
-      throw new Error('Text is too short to extract boundaries');
+      throw new Error('Text is too short to extract boundary signals');
     }
 
     const lines = input
@@ -39,21 +33,17 @@ export async function runBoundaryExtractor(input: string): Promise<BoundaryResul
       .filter(s => s.length > 8);
 
     const boundaryPatterns = [
-      /\b(no meetings after|no work after|shutdown|hard stop|cutoff|off by|ends at)\b/i,
-      /\b(protect|protected time|deep work block|no-meeting|focus block|sacred)\b/i,
-      /\b(boundary|boundaries|limit myself|I will not|I don't|won't take|refuse)\b/i,
-      /\b(family time|evening free|weekend free|phone off|notifications off|do not disturb)\b/i,
-      /\b(scope creep|out of scope|not my job|outside my role|above my pay)\b/i,
-      /\b(max hours|cap at|no more than \d+|limit to)\b/i,
+      /\b(boundary|boundaries|say no|protect time|guardrail|no-meeting|no meeting|after hours|after-hours|do not disturb|off limits|off-limits)\b/i,
+      /\b(weekends are|not available|won't take|will not take|hard stop|cutoff|office hours|working hours)\b/i,
+      /\b(scope creep|out of scope|not my job|not our job|escalate instead)\b/i,
     ];
 
-    const timeHints = /\b(after|before|by|hours|evening|weekend|shutdown|cutoff|block)\b/i;
-    const energyHints = /\b(energy|drain|protect|sacred|focus|deep work)\b/i;
-    const scopeHints = /\b(scope|role|job|out of|creep|not my)\b/i;
-    const relationshipHints = /\b(family|partner|kids|team|client|say no)\b/i;
-    const digitalHints = /\b(phone|notification|slack|email|do not disturb|offline)\b/i;
-    const hardHints = /\b(hard|never|will not|won't|must not|absolute)\b/i;
-    const softHints = /\b(try to|prefer|ideally|aim to|should)\b/i;
+    const timeHints = /\b(hours|weekend|evening|night|calendar|meeting|time|cutoff|hard stop)\b/i;
+    const accessHints = /\b(slack|ping|phone|always on|always-on|do not disturb|available)\b/i;
+    const scopeHints = /\b(scope|not my job|out of scope|creep|extra work)\b/i;
+    const relHints = /\b(client|boss|team|family|partner|stakeholder)\b/i;
+    const hardHints = /\b(never|hard stop|non-negotiable|must not|will not)\b/i;
+    const missingHints = /\b(always available|can't say no|no boundary|leaks into|evenings too)\b/i;
 
     const boundaries: BoundaryItem[] = [];
 
@@ -65,28 +55,27 @@ export async function runBoundaryExtractor(input: string): Promise<BoundaryResul
       if (cleaned.length < 10) continue;
 
       if (boundaryPatterns.some(p => p.test(cleaned))) {
-        let type: BoundaryItem['type'] = 'unknown';
-        if (timeHints.test(cleaned)) type = 'time';
-        else if (energyHints.test(cleaned)) type = 'energy';
-        else if (scopeHints.test(cleaned)) type = 'scope';
-        else if (relationshipHints.test(cleaned)) type = 'relationship';
-        else if (digitalHints.test(cleaned)) type = 'digital';
+        let kind: BoundaryItem['kind'] = 'unknown';
+        if (timeHints.test(cleaned)) kind = 'time';
+        else if (accessHints.test(cleaned)) kind = 'access';
+        else if (scopeHints.test(cleaned)) kind = 'scope';
+        else if (relHints.test(cleaned)) kind = 'relationship';
 
         let strength: BoundaryItem['strength'] = 'soft';
         if (hardHints.test(cleaned)) strength = 'hard';
-        else if (softHints.test(cleaned)) strength = 'aspirational';
+        if (missingHints.test(cleaned)) strength = 'missing';
 
-        if (!boundaries.some(b => b.text === cleaned)) {
+        if (!boundaries.some(b => b.item === cleaned)) {
           boundaries.push({
-            text: cleaned,
-            type,
+            item: cleaned,
+            kind,
             strength,
             note:
-              strength === 'hard'
-                ? 'Protect this line — it directly enables living more'
-                : strength === 'aspirational'
-                  ? 'Candidate to harden into a real boundary'
-                  : 'Boundary signal worth making explicit',
+              strength === 'missing'
+                ? 'Capacity is leaking here — draw a line so living more stays possible'
+                : strength === 'hard'
+                  ? 'Protect this line; it is already buying life back'
+                  : 'Candidate to make explicit and defend',
           });
         }
       }
@@ -96,9 +85,9 @@ export async function runBoundaryExtractor(input: string): Promise<BoundaryResul
       for (const line of lines.slice(0, 3)) {
         if (line.length < 140) {
           boundaries.push({
-            text: line,
-            type: 'unknown',
-            strength: 'aspirational',
+            item: line,
+            kind: 'unknown',
+            strength: 'soft',
             note: 'Candidate for boundary review',
           });
         }
