@@ -270,6 +270,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/attention-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { attentions: "array" } }
+  },
+  {
+    id: "boundary-extractor",
+    name: "Boundary Extractor",
+    description: "Surface time, access, and scope boundaries that protect capacity so living more is not negotiated away",
+    category: "productivity",
+    endpoint: "/api/capabilities/boundary-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { boundaries: "array" } }
   }
 ];
 
