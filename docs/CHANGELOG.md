@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.6 — 2026-10-01
+- Added **Presence Extractor** capability (productivity category)
+  - Surfaces people, play, body, place, and unstructured time from free-form notes
+  - Full usage logging for self-improvement loop
+  - Registered in capabilities/registry/index.ts
+  - Route module at backend/routes/presence.ts (`POST /api/capabilities/presence-extractor`)
+  - Intent keywords: presence, live more, family, friends, play, hobby, unscheduled, margin, phone down, no time for
+  - Complements reclaim (hours back), freedom (autonomy), rhythm (pace), energy (restoration), and boundary (protection) with presence (where the hours go)
+- Direct progress toward "Work Less. Live More." — living more becomes a named destination instead of leftover time
+
 ## v2.5 — 2026-09-15
 - Added **Habit Extractor** capability (productivity category)
   - Surfaces recurring behaviors, routines, and patterns from free-form notes

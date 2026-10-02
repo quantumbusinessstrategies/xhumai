@@ -279,6 +279,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/boundary-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { boundaries: "array" } }
+  },
+  {
+    id: "presence-extractor",
+    name: "Presence Extractor",
+    description: "Surface people, play, body, place, and unstructured time so reclaimed hours have a life to return to",
+    category: "productivity",
+    endpoint: "/api/capabilities/presence-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { presences: "array" } }
   }
 ];
 
