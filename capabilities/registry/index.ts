@@ -288,6 +288,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/presence-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { presences: "array" } }
+  },
+  {
+    id: "decline-extractor",
+    name: "Decline Extractor",
+    description: "Surface incoming requests, invites, and obligations that should be declined, deferred, or narrowed so a default yes does not spend the life the creed is trying to return",
+    category: "productivity",
+    endpoint: "/api/capabilities/decline-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { declines: "array" } }
   }
 ];
 
