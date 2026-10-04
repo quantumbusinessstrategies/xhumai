@@ -33,6 +33,7 @@ import { runStakeholderExtractor } from '../capabilities/stakeholder-extractor';
 import { runProgressExtractor } from '../capabilities/progress-extractor';
 import { runClarityExtractor } from '../capabilities/clarity-extractor';
 import { runFreedomExtractor } from '../capabilities/freedom-extractor';
+import { runBoundaryExtractor } from '../capabilities/boundary-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -111,7 +112,7 @@ app.post('/api/stars', (req, res) => {
 
 function classifyIntent(text: string): 'chat' | 'utility' | 'directive' {
   const t = text.toLowerCase();
-  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','progress','win','wins','milestone','shipped','completed','momentum','clarity','vague','ambiguous','undefined','fuzzy','freedom','autonomy','optionality','extract','analyze'];
+  const utilityWords = ['summarize','summary','action','todo','decision','follow-up','deadline','blocker','priority','owner','risk','opportunity','assumption','constraint','commitment','promise','leverage','compound','automat','delegat','handoff','hand off','outsource','offload','energy','drain','restore','burnout','depend','prerequisite','metric','kpi','okr','question','unresolved','unclear','tradeoff','trade-off','trade off','versus','stakeholder','audience','buy-in','buy in','sign-off','sign off','progress','win','wins','milestone','shipped','completed','momentum','clarity','vague','ambiguous','undefined','fuzzy','freedom','autonomy','optionality','boundary','boundaries','after hours','off limits','extract','analyze'];
   if (utilityWords.some(w => t.includes(w))) return 'utility';
   const directiveWords = ['build','make me','i need','help me','do this','run','execute'];
   if (directiveWords.some(w => t.includes(w))) return 'directive';
@@ -146,6 +147,7 @@ app.post('/api/intent', (req, res) => {
     else if (lower.includes('opportunity') || lower.includes('upside')) { reply = 'I can surface opportunities. Paste notes.'; status = 'utility:opportunity-extractor'; }
     else if (lower.includes('clarity') || lower.includes('vague') || lower.includes('ambiguous') || lower.includes('undefined') || lower.includes('fuzzy')) { reply = 'I can surface vague language and fuzzy commitments so work stops spinning on ambiguity. Paste your notes.'; status = 'utility:clarity-extractor'; }
     else if (lower.includes('freedom') || lower.includes('autonomy') || lower.includes('optionality') || lower.includes('buy back time')) { reply = 'I can surface moves that increase autonomy, optionality, and freedom so capacity returns to living more. Paste your notes.'; status = 'utility:freedom-extractor'; }
+    else if (lower.includes('boundary') || lower.includes('boundaries') || lower.includes('after hours') || lower.includes('off limits') || lower.includes('protect capacity') || lower.includes('do not disturb')) { reply = 'I can surface the lines that protect capacity — time, scope, energy, and refusal — so work stops expanding into life. Paste your notes.'; status = 'utility:boundary-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -348,6 +350,14 @@ app.post('/api/capabilities/freedom-extractor', async (req, res) => {
     const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     res.json({ capability: 'freedom-extractor', ...(await runFreedomExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/capabilities/boundary-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'boundary-extractor', ...(await runBoundaryExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
