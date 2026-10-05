@@ -297,6 +297,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/decline-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { declines: "array" } }
+  },
+  {
+    id: "enough-extractor",
+    name: "Enough Extractor",
+    description: "Surface finish lines, diminishing returns, and stop conditions so work ends and reclaimed hours are actually lived",
+    category: "productivity",
+    endpoint: "/api/capabilities/enough-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { enough: "array" } }
   }
 ];
 
