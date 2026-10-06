@@ -34,6 +34,7 @@ import { runProgressExtractor } from '../capabilities/progress-extractor';
 import { runClarityExtractor } from '../capabilities/clarity-extractor';
 import { runFreedomExtractor } from '../capabilities/freedom-extractor';
 import { runBoundaryExtractor } from '../capabilities/boundary-extractor';
+import { runRestExtractor } from '../capabilities/rest-extractor';
 import { runEntityChat } from './entity/chat';
 import { ollamaHealth } from './entity/ollama';
 import { loadMemory } from './entity/memory';
@@ -148,6 +149,7 @@ app.post('/api/intent', (req, res) => {
     else if (lower.includes('clarity') || lower.includes('vague') || lower.includes('ambiguous') || lower.includes('undefined') || lower.includes('fuzzy')) { reply = 'I can surface vague language and fuzzy commitments so work stops spinning on ambiguity. Paste your notes.'; status = 'utility:clarity-extractor'; }
     else if (lower.includes('freedom') || lower.includes('autonomy') || lower.includes('optionality') || lower.includes('buy back time')) { reply = 'I can surface moves that increase autonomy, optionality, and freedom so capacity returns to living more. Paste your notes.'; status = 'utility:freedom-extractor'; }
     else if (lower.includes('boundary') || lower.includes('boundaries') || lower.includes('after hours') || lower.includes('off limits') || lower.includes('protect capacity') || lower.includes('do not disturb')) { reply = 'I can surface the lines that protect capacity — time, scope, energy, and refusal — so work stops expanding into life. Paste your notes.'; status = 'utility:boundary-extractor'; }
+    else if (lower.includes('rest') || lower.includes('recover') || lower.includes('recovery') || lower.includes('sleep') || lower.includes('sabbath') || lower.includes('day off') || lower.includes('live more') || lower.includes('presence')) { reply = 'I can surface rest, recovery, and non-work time so the hours you protect are actually lived. Paste your notes.'; status = 'utility:rest-extractor'; }
     else { reply = 'Utility mode. Tell me what to extract or structure.'; status = 'utility'; }
   } else if (type === 'directive') {
     reply = 'Directive received. Describe the outcome and I will route it.';
@@ -358,6 +360,14 @@ app.post('/api/capabilities/boundary-extractor', async (req, res) => {
     const { text } = req.body || {};
     if (!text) return res.status(400).json({ error: 'Missing text' });
     res.json({ capability: 'boundary-extractor', ...(await runBoundaryExtractor(text)) });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/capabilities/rest-extractor', async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+    res.json({ capability: 'rest-extractor', ...(await runRestExtractor(text)) });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 

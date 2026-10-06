@@ -32,6 +32,7 @@ Every capability is an asset. Every asset compounds.
 | clarity-extractor | Clarity Extractor | productivity | stub (logging live) |
 | freedom-extractor | Freedom Extractor | productivity | stub (logging live) |
 | boundary-extractor | Boundary Extractor | productivity | stub (logging live) |
+| rest-extractor | Rest Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -75,5 +76,6 @@ Every capability is an asset. Every asset compounds.
 - **Clarity Extractor** → vague language and fuzzy commitments visible, ambiguity shrinks so execution can start
 - **Freedom Extractor** → autonomy, optionality, and life-expanding moves visible so capacity compounds into living more
 - **Boundary Extractor** → time, scope, energy, and refusal lines visible so work stops expanding into life
+- **Rest Extractor** → rest, recovery, and non-work time visible so protected hours are lived, not leftover
 
 Together they turn notes into leverage.

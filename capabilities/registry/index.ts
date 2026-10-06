@@ -252,6 +252,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/boundary-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { boundaries: "array", gaps: "string[]" } }
+  },
+  {
+    id: "rest-extractor",
+    name: "Rest Extractor",
+    description: "Surface rest, recovery, sabbath, and non-work time so the hours a boundary protects are actually lived",
+    category: "productivity",
+    endpoint: "/api/capabilities/rest-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { rests: "array", gaps: "string[]" } }
   }
 ];
 
