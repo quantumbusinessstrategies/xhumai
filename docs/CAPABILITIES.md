@@ -39,6 +39,8 @@ Every capability is an asset. Every asset compounds.
 | boundary-extractor | Boundary Extractor | productivity | stub (logging live) |
 | presence-extractor | Presence Extractor | productivity | stub (logging live) |
 | decline-extractor | Decline Extractor | productivity | stub (registered; route pending server restore) |
+| enough-extractor | Enough Extractor | productivity | stub (registered; route pending server restore) |
+| release-extractor | Release Extractor | productivity | stub (registered; route pending server restore) |
 
 ## Seeded / Coming
 
@@ -89,5 +91,7 @@ Every capability is an asset. Every asset compounds.
 - **Boundary Extractor** → time, access, and scope lines visible so living more is protected instead of negotiated away
 - **Presence Extractor** → people, play, body, place, and unstructured time visible so reclaimed hours have a destination
 - **Decline Extractor** → incoming yeses become explicit nos, defers, or narrower yeses so capacity is not spent before the day starts
+- **Enough Extractor** → finish lines and diminishing returns visible so work actually ends
+- **Release Extractor** → held projects, old commitments, and identities that can be put down so the past stops taxing the present
 
 Together they turn notes into leverage.
