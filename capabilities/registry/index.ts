@@ -306,6 +306,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/enough-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { enough: "array" } }
+  },
+  {
+    id: "release-extractor",
+    name: "Release Extractor",
+    description: "Surface held projects, old commitments, and identities that can be let go so capacity returns to living more instead of maintaining the past",
+    category: "productivity",
+    endpoint: "/api/capabilities/release-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { releases: "array" } }
   }
 ];
 
