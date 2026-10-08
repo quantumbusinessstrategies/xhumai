@@ -41,6 +41,7 @@ Every capability is an asset. Every asset compounds.
 | decline-extractor | Decline Extractor | productivity | stub (registered; route pending server restore) |
 | enough-extractor | Enough Extractor | productivity | stub (registered; route pending server restore) |
 | release-extractor | Release Extractor | productivity | stub (registered; route pending server restore) |
+| season-extractor | Season Extractor | productivity | stub (registered; route pending server restore) |
 
 ## Seeded / Coming
 
@@ -93,5 +94,6 @@ Every capability is an asset. Every asset compounds.
 - **Decline Extractor** → incoming yeses become explicit nos, defers, or narrower yeses so capacity is not spent before the day starts
 - **Enough Extractor** → finish lines and diminishing returns visible so work actually ends
 - **Release Extractor** → held projects, old commitments, and identities that can be put down so the past stops taxing the present
+- **Season Extractor** → what belongs to this chapter versus what can wait, so the current season is lived instead of deferred until the backlog is empty
 
 Together they turn notes into leverage.
