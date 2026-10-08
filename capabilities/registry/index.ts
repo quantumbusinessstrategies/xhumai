@@ -315,6 +315,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/release-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { releases: "array" } }
+  },
+  {
+    id: "season-extractor",
+    name: "Season Extractor",
+    description: "Surface what belongs to this chapter of life versus what can wait so the current season is lived instead of indefinitely deferred",
+    category: "productivity",
+    endpoint: "/api/capabilities/season-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { seasons: "array" } }
   }
 ];
 
