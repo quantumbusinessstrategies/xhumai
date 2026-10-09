@@ -324,6 +324,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/season-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { seasons: "array" } }
+  },
+  {
+    id: "margin-extractor",
+    name: "Margin Extractor",
+    description: "Surface missing buffers, unprotected open blocks, and the reflex to refill reclaimed time so returned hours stay available for living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/margin-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { margins: "array" } }
   }
 ];
 
