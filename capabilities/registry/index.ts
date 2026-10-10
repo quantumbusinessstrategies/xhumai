@@ -333,6 +333,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/margin-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { margins: "array" } }
+  },
+  {
+    id: "aliveness-extractor",
+    name: "Aliveness Extractor",
+    description: "Surface what makes life feel alive, present, and fully lived so reclaimed capacity is directed toward actual living more rather than merely less work",
+    category: "productivity",
+    endpoint: "/api/capabilities/aliveness-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { aliveness: "array" } }
   }
 ];
 

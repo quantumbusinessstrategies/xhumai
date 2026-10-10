@@ -42,11 +42,13 @@ Every capability is an asset. Every asset compounds.
 | enough-extractor | Enough Extractor | productivity | stub (registered; route pending server restore) |
 | release-extractor | Release Extractor | productivity | stub (registered; route pending server restore) |
 | season-extractor | Season Extractor | productivity | stub (registered; route pending server restore) |
+| margin-extractor | Margin Extractor | productivity | stub (logging live) |
+| aliveness-extractor | Aliveness Extractor | productivity | stub (registered; route pending server restore) |
 
 ## Seeded / Coming
 
 | ID | Name | Category |
-|----|------|----------|
+|----|------|----------|--------|
 | pdf-to-excel | PDF to Excel | documents |
 
 ## Design Rules
@@ -95,5 +97,7 @@ Every capability is an asset. Every asset compounds.
 - **Enough Extractor** → finish lines and diminishing returns visible so work actually ends
 - **Release Extractor** → held projects, old commitments, and identities that can be put down so the past stops taxing the present
 - **Season Extractor** → what belongs to this chapter versus what can wait, so the current season is lived instead of deferred until the backlog is empty
+- **Margin Extractor** → missing buffers and the reflex to refill reclaimed time visible so returned hours stay available
+- **Aliveness Extractor** → what makes life feel alive and fully present visible so reclaimed capacity is aimed at actual living more
 
 Together they turn notes into leverage.
