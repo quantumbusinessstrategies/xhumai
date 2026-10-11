@@ -261,6 +261,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/rest-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { rests: "array", gaps: "string[]" } }
+  },
+  {
+    id: "presence-extractor",
+    name: "Presence Extractor",
+    description: "Surface moments, activities, and conditions of presence and aliveness so reclaimed capacity is directed toward actually living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/presence-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { presence: "array" } }
   }
 ];
 
