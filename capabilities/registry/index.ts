@@ -342,6 +342,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/aliveness-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { aliveness: "array" } }
+  },
+  {
+    id: "wonder-extractor",
+    name: "Wonder Extractor",
+    description: "Surface moments of wonder, awe, curiosity, discovery, and expansive experiences so reclaimed capacity is directed toward a larger, more alive life",
+    category: "productivity",
+    endpoint: "/api/capabilities/wonder-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { wonder: "array" } }
   }
 ];
 
