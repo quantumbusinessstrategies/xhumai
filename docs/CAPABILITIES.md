@@ -44,6 +44,7 @@ Every capability is an asset. Every asset compounds.
 | season-extractor | Season Extractor | productivity | stub (registered; route pending server restore) |
 | margin-extractor | Margin Extractor | productivity | stub (logging live) |
 | aliveness-extractor | Aliveness Extractor | productivity | stub (registered; route pending server restore) |
+| wonder-extractor | Wonder Extractor | productivity | stub (registered; route pending server restore) |
 
 ## Seeded / Coming
 
@@ -99,5 +100,6 @@ Every capability is an asset. Every asset compounds.
 - **Season Extractor** → what belongs to this chapter versus what can wait, so the current season is lived instead of deferred until the backlog is empty
 - **Margin Extractor** → missing buffers and the reflex to refill reclaimed time visible so returned hours stay available
 - **Aliveness Extractor** → what makes life feel alive and fully present visible so reclaimed capacity is aimed at actual living more
+- **Wonder Extractor** → moments of awe, curiosity, and expansive discovery visible so reclaimed capacity compounds into a larger life
 
 Together they turn notes into leverage.
