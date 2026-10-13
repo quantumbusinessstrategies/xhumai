@@ -351,6 +351,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/wonder-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { wonder: "array" } }
+  },
+  {
+    id: "play-extractor",
+    name: "Play Extractor",
+    description: "Surface moments of play, fun, unstructured joy, and activities done for their own sake so reclaimed hours have a destination of actual living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/play-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { plays: "array", gaps: "string[]" } }
   }
 ];
 
