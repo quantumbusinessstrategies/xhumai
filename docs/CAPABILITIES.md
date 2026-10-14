@@ -34,6 +34,7 @@ Every capability is an asset. Every asset compounds.
 | boundary-extractor | Boundary Extractor | productivity | stub (logging live) |
 | rest-extractor | Rest Extractor | productivity | stub (logging live) |
 | presence-extractor | Presence Extractor | productivity | stub (logging live) |
+| attention-extractor | Attention Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -79,5 +80,6 @@ Every capability is an asset. Every asset compounds.
 - **Boundary Extractor** → time, scope, energy, and refusal lines visible so work stops expanding into life
 - **Rest Extractor** → rest, recovery, and non-work time visible so protected hours are lived, not leftover
 - **Presence Extractor** → moments of aliveness and actual living visible so reclaimed capacity compounds into living more
+- **Attention Extractor** → attention allocation, distractions, and leverage points visible so focus compounds toward Work Less. Live More.
 
 Together they turn notes into leverage.
