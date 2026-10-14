@@ -270,6 +270,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/presence-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { presence: "array" } }
+  },
+  {
+    id: "attention-extractor",
+    name: "Attention Extractor",
+    description: "Surface where attention is currently allocated, what fragments it, and where it should compound so focus returns to leverage and living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/attention-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { attention: "array", gaps: "string[]" } }
   }
 ];
 
