@@ -288,6 +288,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/simplicity-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { simplifications: "array" } }
+  },
+  {
+    id: "elimination-extractor",
+    name: "Elimination Extractor",
+    description: "Surface low-value work, busywork, optional commitments, and activities that can be dropped so capacity permanently returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/elimination-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { eliminations: "array", gaps: "string[]" } }
   }
 ];
 

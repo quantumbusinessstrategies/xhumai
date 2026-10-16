@@ -36,6 +36,7 @@ Every capability is an asset. Every asset compounds.
 | presence-extractor | Presence Extractor | productivity | stub (logging live) |
 | attention-extractor | Attention Extractor | productivity | stub (logging live) |
 | simplicity-extractor | Simplicity Extractor | productivity | stub (logging live) |
+| elimination-extractor | Elimination Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -83,5 +84,6 @@ Every capability is an asset. Every asset compounds.
 - **Presence Extractor** → moments of aliveness and actual living visible so reclaimed capacity compounds into living more
 - **Attention Extractor** → attention allocation, distractions, and leverage points visible so focus compounds toward Work Less. Live More.
 - **Simplicity Extractor** → complexity and unnecessary process visible so the surface area of work shrinks permanently and capacity returns to living more
+- **Elimination Extractor** → low-value work, busywork, and optional commitments visible so work that should not exist is removed and capacity permanently returns to living more
 
 Together they turn notes into leverage.
