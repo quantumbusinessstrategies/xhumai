@@ -297,6 +297,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/elimination-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { eliminations: "array", gaps: "string[]" } }
+  },
+  {
+    id: "automation-extractor",
+    name: "Automation Extractor",
+    description: "Surface work that can be automated, templated, or systemized so the same outcome happens without ongoing human time and capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/automation-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { automations: "array", gaps: "string[]" } }
   }
 ];
 
