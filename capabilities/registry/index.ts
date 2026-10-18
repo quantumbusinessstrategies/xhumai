@@ -360,6 +360,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/play-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { plays: "array", gaps: "string[]" } }
+  },
+  {
+    id: "flow-extractor",
+    name: "Flow Extractor",
+    description: "Surface conditions that enable flow, deep work enablers, interruptions that fragment progress, and opportunities to design for effortless momentum so work becomes less effortful and capacity compounds into living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/flow-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { flows: "array", gaps: "string[]" } }
   }
 ];
 
