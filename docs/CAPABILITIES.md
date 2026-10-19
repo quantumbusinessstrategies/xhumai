@@ -38,6 +38,7 @@ Every capability is an asset. Every asset compounds.
 | simplicity-extractor | Simplicity Extractor | productivity | stub (logging live) |
 | elimination-extractor | Elimination Extractor | productivity | stub (logging live) |
 | automation-extractor | Automation Extractor | productivity | stub (logging live) |
+| reclaim-extractor | Reclaim Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -87,5 +88,6 @@ Every capability is an asset. Every asset compounds.
 - **Simplicity Extractor** → complexity and unnecessary process visible so the surface area of work shrinks permanently and capacity returns to living more
 - **Elimination Extractor** → low-value work, busywork, and optional commitments visible so work that should not exist is removed and capacity permanently returns to living more
 - **Automation Extractor** → recurring manual work, templates, and systemizable sequences visible so the same outcome happens without ongoing human time and capacity permanently returns to living more
+- **Reclaim Extractor** → time sinks and recoverable hours visible so the specific hours that can come back are named and returned to life
 
 Together they turn notes into leverage.
