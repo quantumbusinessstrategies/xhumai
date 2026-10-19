@@ -306,6 +306,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/automation-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { automations: "array", gaps: "string[]" } }
+  },
+  {
+    id: "reclaim-extractor",
+    name: "Reclaim Extractor",
+    description: "Surface time sinks, recoverable hours, meetings that can shrink, and attention leaks so hours return to life",
+    category: "productivity",
+    endpoint: "/api/capabilities/reclaim-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { reclaims: "array", gaps: "string[]" } }
   }
 ];
 
