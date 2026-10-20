@@ -315,6 +315,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/reclaim-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { reclaims: "array", gaps: "string[]" } }
+  },
+  {
+    id: "compound-extractor",
+    name: "Compound Extractor",
+    description: "Surface decisions, systems, assets, and moves that compound over time so small inputs keep producing value after you stop and capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/compound-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { compounds: "array", gaps: "string[]" } }
   }
 ];
 
