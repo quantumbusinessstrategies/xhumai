@@ -370,6 +370,17 @@ export const capabilities: Capability[] = [
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { flows: "array", gaps: "string[]" } }
   }
+  ,
+  {
+    id: "delight-extractor",
+    name: "Delight Extractor",
+    description: "Surface activities, moments, and conditions that produce unforced delight, joy, and pleasure so reclaimed capacity has a positive destination of actually living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/delight-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { delights: "array", gaps: "string[]" } }
+  }
+
 ];
 
 export default capabilities;
