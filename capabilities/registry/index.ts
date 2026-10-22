@@ -369,8 +369,7 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/flow-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { flows: "array", gaps: "string[]" } }
-  }
-  ,
+  },
   {
     id: "delight-extractor",
     name: "Delight Extractor",
@@ -379,8 +378,16 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/delight-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { delights: "array", gaps: "string[]" } }
+  },
+  {
+    id: "signal-extractor",
+    name: "Signal Extractor",
+    description: "Surface high-signal information, decisions, and actions versus noise and low-value updates so attention compounds and capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/signal-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { signals: "array", gaps: "string[]" } }
   }
-
 ];
 
 export default capabilities;
