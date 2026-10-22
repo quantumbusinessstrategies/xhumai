@@ -48,6 +48,7 @@ Every capability is an asset. Every asset compounds.
 | play-extractor | Play Extractor | productivity | stub (registered; route pending server restore) |
 | flow-extractor | Flow Extractor | productivity | stub (registered; route pending server restore) |
 | delight-extractor | Delight Extractor | productivity | stub (registered; route pending server restore) |
+| signal-extractor | Signal Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -106,7 +107,7 @@ Every capability is an asset. Every asset compounds.
 - **Wonder Extractor** → moments of awe, curiosity, and expansive discovery visible so reclaimed capacity compounds into a larger life
 - **Play Extractor** → play, fun, and unstructured joy visible so reclaimed hours have a living destination instead of remaining empty or being refilled with more work
 - **Flow Extractor** → conditions for effortless progress and deep work visible so work becomes less hard and living more is the natural result of protected momentum
-
 - **Delight Extractor** → unforced joy, pleasure, and moments done for their own sake visible so reclaimed hours have a living destination instead of remaining empty or being refilled with more work
+- **Signal Extractor** → high-signal vs noise visible so attention compounds only where it matters and capacity returns to living more
 
 Together they turn notes into leverage.
