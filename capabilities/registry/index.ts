@@ -324,6 +324,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/compound-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { compounds: "array", gaps: "string[]" } }
+  },
+  {
+    id: "joy-extractor",
+    name: "Joy Extractor",
+    description: "Surface sources of joy, delight, play, and genuine fulfillment so reclaimed capacity is directed toward actually living more instead of being refilled with work",
+    category: "productivity",
+    endpoint: "/api/capabilities/joy-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { joys: "array", gaps: "string[]" } }
   }
 ];
 
