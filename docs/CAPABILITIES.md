@@ -40,6 +40,7 @@ Every capability is an asset. Every asset compounds.
 | automation-extractor | Automation Extractor | productivity | stub (logging live) |
 | reclaim-extractor | Reclaim Extractor | productivity | stub (logging live) |
 | compound-extractor | Compound Extractor | productivity | stub (logging live) |
+| joy-extractor | Joy Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -91,5 +92,6 @@ Every capability is an asset. Every asset compounds.
 - **Automation Extractor** → recurring manual work, templates, and systemizable sequences visible so the same outcome happens without ongoing human time and capacity permanently returns to living more
 - **Reclaim Extractor** → time sinks and recoverable hours visible so the specific hours that can come back are named and returned to life
 - **Compound Extractor** → decisions, systems, assets, and moves that compound over time visible so small inputs keep producing value after you stop and capacity permanently returns to living more
+- **Joy Extractor** → sources of joy, play, and fulfillment visible so reclaimed capacity is directed toward actually living more instead of being refilled with work
 
 Together they turn notes into leverage.
