@@ -333,6 +333,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/rhythm-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { rhythms: "array", gaps: "string[]" } }
+  },
+  {
+    id: "capacity-extractor",
+    name: "Capacity Extractor",
+    description: "Surface current load, sustainable capacity, headroom, and overdraw signals so work is sized to available energy and life is not borrowed against",
+    category: "productivity",
+    endpoint: "/api/capabilities/capacity-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { capacities: "array", gaps: "string[]" } }
   }
 ];
 
