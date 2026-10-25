@@ -41,6 +41,7 @@ Every capability is an asset. Every asset compounds.
 | reclaim-extractor | Reclaim Extractor | productivity | stub (logging live) |
 | compound-extractor | Compound Extractor | productivity | stub (logging live) |
 | rhythm-extractor | Rhythm Extractor | productivity | stub (logging live) |
+| capacity-extractor | Capacity Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -93,5 +94,6 @@ Every capability is an asset. Every asset compounds.
 - **Reclaim Extractor** → time sinks and recoverable hours visible so the specific hours that can come back are named and returned to life
 - **Compound Extractor** → decisions, systems, assets, and moves that compound over time visible so small inputs keep producing value after you stop and capacity permanently returns to living more
 - **Rhythm Extractor** → natural energy cycles and optimal windows visible so work rides the body's wave instead of fighting it and capacity compounds into living more
+- **Capacity Extractor** → current load, sustainable capacity, and headroom visible so work is sized to the real container and life is not overdrawn
 
 Together they turn notes into leverage.
