@@ -333,6 +333,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/rhythm-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { rhythms: "array", gaps: "string[]" } }
+  },
+  {
+    id: "margin-extractor",
+    name: "Margin Extractor",
+    description: "Surface buffers, slack, unscheduled time, and protected margin so capacity is not fully allocated and life has room to exist",
+    category: "productivity",
+    endpoint: "/api/capabilities/margin-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { margins: "array", gaps: "string[]" } }
   }
 ];
 
