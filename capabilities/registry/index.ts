@@ -342,6 +342,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/margin-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { margins: "array", gaps: "string[]" } }
+  },
+  {
+    id: "sovereignty-extractor",
+    name: "Sovereignty Extractor",
+    description: "Surface points of personal agency, control, and non-negotiable self-direction so external demands do not own the calendar and capacity permanently returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/sovereignty-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { sovereignties: "array", gaps: "string[]" } }
   }
 ];
 
