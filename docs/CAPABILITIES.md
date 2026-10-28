@@ -43,6 +43,7 @@ Every capability is an asset. Every asset compounds.
 | rhythm-extractor | Rhythm Extractor | productivity | stub (logging live) |
 | margin-extractor | Margin Extractor | productivity | stub (logging live) |
 | sovereignty-extractor | Sovereignty Extractor | productivity | stub (logging live) |
+| vitality-extractor | Vitality Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -97,5 +98,6 @@ Every capability is an asset. Every asset compounds.
 - **Rhythm Extractor** → natural energy cycles and optimal windows visible so work rides the body's wave instead of fighting it and capacity compounds into living more
 - **Margin Extractor** → buffers, slack, and unscheduled space visible so capacity is not fully allocated and life has room to exist instead of remaining residual
 - **Sovereignty Extractor** → points of personal agency, control, and non-negotiable self-direction visible so external demands do not own the calendar and capacity permanently returns to living more
+- **Vitality Extractor** → sources of vitality, movement, nature, and health practices visible so reclaimed capacity is invested in actual living instead of remaining abstract
 
 Together they turn notes into leverage.
