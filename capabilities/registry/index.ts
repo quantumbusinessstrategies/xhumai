@@ -351,6 +351,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/sovereignty-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { sovereignties: "array", gaps: "string[]" } }
+  },
+  {
+    id: "vitality-extractor",
+    name: "Vitality Extractor",
+    description: "Surface sources of vitality, health practices, movement, nature, and life-force restoratives so reclaimed capacity is invested in actual living",
+    category: "productivity",
+    endpoint: "/api/capabilities/vitality-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { vitalities: "array", gaps: "string[]" } }
   }
 ];
 
