@@ -360,6 +360,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/vitality-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { vitalities: "array", gaps: "string[]" } }
+  },
+  {
+    id: "play-extractor",
+    name: "Play Extractor",
+    description: "Surface sources of play, joy, delight, and non-productive pleasure so reclaimed capacity is invested in actual living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/play-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { plays: "array", gaps: "string[]" } }
   }
 ];
 
