@@ -369,6 +369,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/play-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { plays: "array", gaps: "string[]" } }
+  },
+  {
+    id: "connection-extractor",
+    name: "Connection Extractor",
+    description: "Surface relationships, community, and social bonds that enrich life so reclaimed capacity is invested in actual living more with others",
+    category: "productivity",
+    endpoint: "/api/capabilities/connection-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { connections: "array", gaps: "string[]" } }
   }
 ];
 
