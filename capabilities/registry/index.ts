@@ -378,6 +378,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/connection-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { connections: "array", gaps: "string[]" } }
+  },
+  {
+    id: "meaning-extractor",
+    name: "Meaning Extractor",
+    description: "Surface what gives life meaning, purpose, and fulfillment beyond productivity so reclaimed capacity is invested in actual living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/meaning-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { meanings: "array", gaps: "string[]" } }
   }
 ];
 
