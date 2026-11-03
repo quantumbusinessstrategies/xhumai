@@ -378,6 +378,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/connection-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { connections: "array", gaps: "string[]" } }
+  },
+  {
+    id: "purpose-extractor",
+    name: "Purpose Extractor",
+    description: "Surface sources of meaning, purpose, core why's, and life-aligned goals so effort is directed toward living more rather than empty productivity",
+    category: "productivity",
+    endpoint: "/api/capabilities/purpose-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { purposes: "array", gaps: "string[]" } }
   }
 ];
 
