@@ -387,6 +387,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/purpose-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { purposes: "array", gaps: "string[]" } }
+  },
+  {
+    id: "stillness-extractor",
+    name: "Stillness Extractor",
+    description: "Surface conditions of quiet, unscheduled space, absence of input, and deliberate non-doing so reclaimed capacity can be inhabited rather than immediately refilled",
+    category: "productivity",
+    endpoint: "/api/capabilities/stillness-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { stillnesses: "array", gaps: "string[]" } }
   }
 ];
 
