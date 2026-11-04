@@ -47,6 +47,7 @@ Every capability is an asset. Every asset compounds.
 | play-extractor | Play Extractor | productivity | stub (logging live) |
 | connection-extractor | Connection Extractor | productivity | stub (logging live) |
 | purpose-extractor | Purpose Extractor | productivity | stub (logging live) |
+| stillness-extractor | Stillness Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -105,5 +106,6 @@ Every capability is an asset. Every asset compounds.
 - **Play Extractor** → sources of play, joy, delight, and non-productive pleasure visible so reclaimed capacity lands in actual living more, not optimized work
 - **Connection Extractor** → relationships, community, and social bonds visible so reclaimed capacity is invested in actual living with others and belonging compounds
 - **Purpose Extractor** → sources of meaning and core why's visible so reclaimed capacity is directed toward actual living more, not empty productivity
+- **Stillness Extractor** → quiet, unscheduled space, and deliberate non-doing visible so reclaimed capacity can be inhabited rather than immediately refilled
 
 Together they turn notes into leverage.
