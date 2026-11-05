@@ -396,6 +396,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/stillness-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { stillnesses: "array", gaps: "string[]" } }
+  },
+  {
+    id: "wonder-extractor",
+    name: "Wonder Extractor",
+    description: "Surface sources of wonder, awe, curiosity, and moments of vivid aliveness so reclaimed capacity is invested in actual living more rather than managed productivity",
+    category: "productivity",
+    endpoint: "/api/capabilities/wonder-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { wonders: "array", gaps: "string[]" } }
   }
 ];
 
