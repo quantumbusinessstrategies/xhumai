@@ -48,6 +48,7 @@ Every capability is an asset. Every asset compounds.
 | connection-extractor | Connection Extractor | productivity | stub (logging live) |
 | purpose-extractor | Purpose Extractor | productivity | stub (logging live) |
 | stillness-extractor | Stillness Extractor | productivity | stub (logging live) |
+| wonder-extractor | Wonder Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -107,5 +108,6 @@ Every capability is an asset. Every asset compounds.
 - **Connection Extractor** → relationships, community, and social bonds visible so reclaimed capacity is invested in actual living with others and belonging compounds
 - **Purpose Extractor** → sources of meaning and core why's visible so reclaimed capacity is directed toward actual living more, not empty productivity
 - **Stillness Extractor** → quiet, unscheduled space, and deliberate non-doing visible so reclaimed capacity can be inhabited rather than immediately refilled
+- **Wonder Extractor** → sources of wonder, awe, and curiosity visible so reclaimed capacity is invested in the quality of attention that makes living more vivid rather than managed
 
 Together they turn notes into leverage.
