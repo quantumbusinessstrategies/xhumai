@@ -405,6 +405,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/wonder-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { wonders: "array", gaps: "string[]" } }
+  },
+  {
+    id: "leisure-extractor",
+    name: "Leisure Extractor",
+    description: "Surface sources of leisure, unstructured time, hobbies, and non-work activities so reclaimed capacity is invested in actual living more rather than optimized work",
+    category: "productivity",
+    endpoint: "/api/capabilities/leisure-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { leisures: "array", gaps: "string[]" } }
   }
 ];
 
