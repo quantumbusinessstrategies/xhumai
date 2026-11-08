@@ -396,6 +396,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/stillness-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { stillness: "array", gaps: "string[]" } }
+  },
+  {
+    id: "savor-extractor",
+    name: "Savor Extractor",
+    description: "Surface moments, activities, and conditions of savoring and lingering appreciation so reclaimed capacity is inhabited with quality presence rather than rushed through or immediately refilled",
+    category: "productivity",
+    endpoint: "/api/capabilities/savor-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { savors: "array", gaps: "string[]" } }
   }
 ];
 
