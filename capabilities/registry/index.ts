@@ -405,6 +405,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/savor-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { savors: "array", gaps: "string[]" } }
+  },
+  {
+    id: "gratitude-extractor",
+    name: "Gratitude Extractor",
+    description: "Surface sources of gratitude, appreciation, and contentment from notes so the mind registers existing abundance and capacity permanently returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/gratitude-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { gratitudes: "array", gaps: "string[]" } }
   }
 ];
 
