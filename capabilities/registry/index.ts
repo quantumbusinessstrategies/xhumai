@@ -405,6 +405,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/savor-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { savors: "array", gaps: "string[]" } }
+  },
+  {
+    id: "balance-extractor",
+    name: "Balance Extractor",
+    description: "Surface work-life imbalances, overcommitments, under-living signals, and points where work expands into life so the ratio shifts and capacity permanently returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/balance-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { balances: "array", gaps: "string[]" } }
   }
 ];
 
