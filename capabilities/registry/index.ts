@@ -432,6 +432,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/delight-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { delights: "array", gaps: "string[]" } }
+  },
+  {
+    id: "recovery-extractor",
+    name: "Recovery Extractor",
+    description: "Surface recovery practices, sleep hygiene, downtime, and restoration windows so reclaimed capacity is invested in actual recovery for living more rather than further optimization",
+    category: "productivity",
+    endpoint: "/api/capabilities/recovery-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { recoveries: "array", gaps: "string[]" } }
   }
 ];
 
