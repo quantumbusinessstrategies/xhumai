@@ -52,6 +52,7 @@ Every capability is an asset. Every asset compounds.
 | leisure-extractor | Leisure Extractor | productivity | stub (logging live) |
 | enough-extractor | Enough Extractor | productivity | stub (logging live) |
 | delight-extractor | Delight Extractor | productivity | stub (logging live) |
+| recovery-extractor | Recovery Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -115,5 +116,6 @@ Every capability is an asset. Every asset compounds.
 - **Leisure Extractor** → sources of leisure, unstructured time, hobbies, and non-work activities visible so reclaimed capacity is invested in actual living more rather than optimized work
 - **Enough Extractor** → what is already enough or completed visible so unnecessary striving quiets and capacity permanently returns to living more
 - **Delight Extractor** → sources of delight, small pleasures, and unearned joy visible so reclaimed capacity is invested in actual living more rather than further optimization
+- **Recovery Extractor** → recovery practices, sleep, and downtime visible so reclaimed capacity is invested in sustainable living more rather than further optimization
 
 Together they turn notes into leverage.
