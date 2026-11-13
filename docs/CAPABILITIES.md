@@ -52,6 +52,7 @@ Every capability is an asset. Every asset compounds.
 | stillness-extractor | Stillness Extractor | productivity | stub (registered; route pending server restore) |
 | savor-extractor | Savor Extractor | productivity | stub (registered; route pending server restore) |
 | balance-extractor | Balance Extractor | productivity | stub (registered; route pending server restore) |
+| completion-extractor | Completion Extractor | productivity | stub (registered; route pending server restore) |
 
 ## Seeded / Coming
 
@@ -115,5 +116,6 @@ Every capability is an asset. Every asset compounds.
 - **Stillness Extractor** → moments of quiet, non-doing, and presence without productivity visible so reclaimed capacity is lived rather than refilled with more work
 - **Savor Extractor** → moments of lingering appreciation and present tasting visible so reclaimed capacity is inhabited with quality presence rather than rushed through or immediately refilled
 - **Balance Extractor** → work-life imbalances, overcommitments, and under-living signals visible so the ratio shifts and capacity permanently returns to living more
+- **Completion Extractor** → finished work and closed loops visible so open items stop taxing attention and capacity returns to living more
 
 Together they turn notes into leverage.
