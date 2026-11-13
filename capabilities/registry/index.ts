@@ -414,6 +414,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/balance-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { balances: "array", gaps: "string[]" } }
+  },
+  {
+    id: "completion-extractor",
+    name: "Completion Extractor",
+    description: "Surface finished work, closed loops, decisions made, and explicit completions so open items stop taxing attention and capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/completion-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { completions: "array", gaps: "string[]" } }
   }
 ];
 
