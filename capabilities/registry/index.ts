@@ -432,6 +432,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/delight-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { delights: "array", gaps: "string[]" } }
+  },
+  {
+    id: "aliveness-extractor",
+    name: "Aliveness Extractor",
+    description: "Surface moments, conditions, and practices of aliveness, vitality, and full presence so reclaimed capacity is directed into actually living more rather than residual productivity",
+    category: "productivity",
+    endpoint: "/api/capabilities/aliveness-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { alivenesses: "array", gaps: "string[]" } }
   }
 ];
 
