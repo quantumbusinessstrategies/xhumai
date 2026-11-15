@@ -53,11 +53,12 @@ Every capability is an asset. Every asset compounds.
 | savor-extractor | Savor Extractor | productivity | stub (registered; route pending server restore) |
 | balance-extractor | Balance Extractor | productivity | stub (registered; route pending server restore) |
 | completion-extractor | Completion Extractor | productivity | stub (registered; route pending server restore) |
+| recovery-extractor | Recovery Extractor | productivity | stub (registered; route pending server restore) |
 
 ## Seeded / Coming
 
 | ID | Name | Category |
-|----|------|----------|--------|
+|----|------|----------|
 | pdf-to-excel | PDF to Excel | documents |
 
 ## Design Rules
@@ -117,5 +118,6 @@ Every capability is an asset. Every asset compounds.
 - **Savor Extractor** → moments of lingering appreciation and present tasting visible so reclaimed capacity is inhabited with quality presence rather than rushed through or immediately refilled
 - **Balance Extractor** → work-life imbalances, overcommitments, and under-living signals visible so the ratio shifts and capacity permanently returns to living more
 - **Completion Extractor** → finished work and closed loops visible so open items stop taxing attention and capacity returns to living more
+- **Recovery Extractor** → recovery practices and regenerative activities visible so reclaimed capacity is restored, not just freed, and living more becomes sustainable
 
 Together they turn notes into leverage.
