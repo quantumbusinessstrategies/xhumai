@@ -2,23 +2,23 @@ import { logUsage } from '../../backend/utils/logger';
 
 /**
  * Flow Extractor Capability
- * Surfaces conditions that enable flow, deep work enablers, interruptions that fragment progress,
- * and opportunities to design for effortless momentum so work becomes less effortful and capacity
- * compounds into living more.
+ * Surfaces activities, conditions, and environments that produce flow state
+ * so reclaimed capacity is invested in effortless, immersive living rather than forced productivity.
  * Directly serves the creed: Work Less. Live More.
  * Stub for now; later becomes real AI.
  *
  * Complements:
- * - attention-extractor   → where focus is allocated
- * - energy-extractor      → what drains vs restores
- * - simplicity-extractor  → reduce friction in the work itself
- * - flow-extractor        → design the conditions so progress feels effortless
+ * - rhythm-extractor     → energy cycles and optimal windows
+ * - presence-extractor   → conditions of presence
+ * - aliveness-extractor  → felt sense of being fully alive
+ * - play-extractor       → non-productive joy
+ * - flow-extractor       → the deep absorption where living more becomes effortless
  */
 
 export interface FlowItem {
   item: string;
-  type?: 'enabler' | 'blocker' | 'interruption' | 'design' | 'unknown';
-  impact?: 'high' | 'medium' | 'low';
+  type?: 'activity' | 'condition' | 'environment' | 'relationship' | 'unknown';
+  intensity?: 'high' | 'medium' | 'low';
   note?: string;
 }
 
@@ -41,18 +41,17 @@ export async function runFlowExtractor(input: string): Promise<FlowResult> {
       .filter(s => s.length > 8);
 
     const flowPatterns = [
-      /\b(flow|deep work|in the zone|momentum|effortless|uninterrupted|focus block|maker time)\b/i,
-      /\b(interrupt|context switch|meeting|notification|distraction|fragmented|constant)\b/i,
-      /\b(design|protect|batch|schedule|ritual|environment|conditions for)\b/i,
+      /\b(flow|in the zone|lost track of time|absorbed|immersed|effortless|deep focus|time disappeared)\b/i,
+      /\b(when I|while|during|doing|making|writing|coding|playing|creating)\b/i,
     ];
 
-    const enablerHints = /\b(flow|deep work|zone|momentum|uninterrupted|clear|protected)\b/i;
-    const blockerHints = /\b(can't focus|stuck|scattered|overwhelmed|too many)\b/i;
-    const interruptionHints = /\b(interrupt|context switch|meeting|slack|notification|ping)\b/i;
-    const designHints = /\b(design|protect|batch|block|ritual|environment)\b/i;
-    const highHints = /\b(hours|every|always|constantly|most|critical)\b/i;
-    const lowHints = /\b(occasionally|sometimes|minor|small)\b/i;
-    const gapHints = /\b(always interrupted|no deep work|can't get into flow|constant context)\b/i;
+    const activityHints = /\b(writing|coding|playing|creating|building|designing|reading|walking|running|cooking)\b/i;
+    const conditionHints = /\b(when|if|during|while|condition|after|before|morning|evening)\b/i;
+    const environmentHints = /\b(quiet|alone|outdoors|nature|music|desk|space|room)\b/i;
+    const relationshipHints = /\b(with|together|collaborating|pairing)\b/i;
+    const highHints = /\b(always|every time|completely|deeply|fully|lost hours|time vanishes)\b/i;
+    const lowHints = /\b(sometimes|maybe|if time|wish|once|almost|rarely)\b/i;
+    const gapHints = /\b(distracted|interrupted|never finish|can't focus|fragmented|always switching|no time for)\b/i;
 
     const flows: FlowItem[] = [];
     const gaps: string[] = [];
@@ -70,44 +69,44 @@ export async function runFlowExtractor(input: string): Promise<FlowResult> {
 
       if (flowPatterns.some(p => p.test(cleaned))) {
         let type: FlowItem['type'] = 'unknown';
-        if (enablerHints.test(cleaned)) type = 'enabler';
-        else if (blockerHints.test(cleaned)) type = 'blocker';
-        else if (interruptionHints.test(cleaned)) type = 'interruption';
-        else if (designHints.test(cleaned)) type = 'design';
+        if (activityHints.test(cleaned)) type = 'activity';
+        else if (relationshipHints.test(cleaned)) type = 'relationship';
+        else if (environmentHints.test(cleaned)) type = 'environment';
+        else if (conditionHints.test(cleaned)) type = 'condition';
 
-        let impact: FlowItem['impact'] = 'medium';
-        if (highHints.test(cleaned)) impact = 'high';
-        else if (lowHints.test(cleaned)) impact = 'low';
+        let intensity: FlowItem['intensity'] = 'medium';
+        if (highHints.test(cleaned)) intensity = 'high';
+        else if (lowHints.test(cleaned)) intensity = 'low';
 
         if (!flows.some(f => f.item === cleaned)) {
           flows.push({
             item: cleaned,
             type,
-            impact,
+            intensity,
             note:
-              type === 'enabler'
-                ? 'Flow enabler — protect and amplify so progress compounds with less effort'
-                : type === 'blocker'
-                  ? 'Flow blocker — remove so work stops feeling hard'
-                  : type === 'interruption'
-                    ? 'Interruption signal — batch or eliminate so deep work becomes possible'
-                    : type === 'design'
-                      ? 'Design opportunity — shape conditions so effortless progress is the default'
-                      : 'Flow candidate — does this support or fragment effortless progress?',
+              type === 'activity'
+                ? 'Activity that generates flow — protect the conditions so living more is effortless'
+                : type === 'environment'
+                  ? 'Environment for flow — recreate it so absorption becomes default'
+                  : type === 'condition'
+                    ? 'Condition that unlocks flow — make it non-negotiable so capacity compounds into living more'
+                    : type === 'relationship'
+                      ? 'Relational flow — capacity invested here multiplies presence'
+                      : 'Flow signal — name it so reclaimed capacity has a direction toward effortless living more',
           });
         }
       }
     }
 
     if (flows.length === 0) {
-      gaps.push('No explicit flow signals found — conditions for effortless progress remain invisible');
+      gaps.push('No explicit flow / absorption / effortless signals found — reclaimed capacity may stay forced');
       for (const line of lines.slice(0, 2)) {
         if (line.length < 140) {
           flows.push({
             item: line,
             type: 'unknown',
-            impact: 'medium',
-            note: 'Candidate for flow review — can this be designed for less effort?',
+            intensity: 'low',
+            note: 'Candidate for flow — name what makes time disappear or living more stays a slogan',
           });
         }
       }
