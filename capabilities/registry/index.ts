@@ -28,6 +28,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/yield-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { yields: "array", gaps: "string[]" } }
+  },
+  {
+    id: "flow-extractor",
+    name: "Flow Extractor",
+    description: "Surface activities, conditions, and environments that produce flow state so reclaimed capacity is invested in effortless, immersive living rather than forced productivity",
+    category: "productivity",
+    endpoint: "/api/capabilities/flow-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { flows: "array", gaps: "string[]" } }
   }
 ];
 
