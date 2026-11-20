@@ -450,6 +450,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/gratitude-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { gratitudes: "array", gaps: "string[]" } }
+  },
+  {
+    id: "flow-extractor",
+    name: "Flow Extractor",
+    description: "Surface states of flow, deep engagement, and effortless productivity so work consumes less resistance and capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/flow-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { flows: "array", gaps: "string[]" } }
   }
 ];
 
