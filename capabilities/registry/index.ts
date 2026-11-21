@@ -459,6 +459,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/flow-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { flows: "array", gaps: "string[]" } }
+  },
+  {
+    id: "ease-extractor",
+    name: "Ease Extractor",
+    description: "Surface points of ease, low-resistance paths, frictionless sequences, and work that already flows without struggle so effort is not the default and capacity returns to living more",
+    category: "productivity",
+    endpoint: "/api/capabilities/ease-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { eases: "array", gaps: "string[]" } }
   }
 ];
 
