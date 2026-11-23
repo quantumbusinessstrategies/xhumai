@@ -55,6 +55,8 @@ Every capability is an asset. Every asset compounds.
 | gratitude-extractor | Gratitude Extractor | productivity | stub (logging live) |
 | flow-extractor | Flow Extractor | productivity | stub (logging live) |
 | ease-extractor | Ease Extractor | productivity | stub (logging live) |
+| release-extractor | Release Extractor | productivity | stub (logging live) |
+| permission-extractor | Permission Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -121,5 +123,7 @@ Every capability is an asset. Every asset compounds.
 - **Gratitude Extractor** → sources of gratitude and what is already good visible so reclaimed capacity is invested in recognition rather than more striving and living more becomes present rather than future
 - **Flow Extractor** → states of flow and effortless engagement visible so work consumes less resistance and capacity returns to living more
 - **Ease Extractor** → points of ease and low-resistance paths visible so work consumes less struggle and capacity permanently returns to living more
+- **Release Extractor** → burdens, obligations, identities, and attachments that can be released visible so capacity permanently returns to living more instead of being held by what no longer serves
+- **Permission Extractor** → explicit and implicit permissions to stop, rest, say no, and live more visible so capacity returns without guilt or internal resistance and living more becomes allowed rather than earned
 
 Together they turn notes into leverage.
