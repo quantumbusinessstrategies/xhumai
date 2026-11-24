@@ -57,6 +57,7 @@ Every capability is an asset. Every asset compounds.
 | ease-extractor | Ease Extractor | productivity | stub (logging live) |
 | release-extractor | Release Extractor | productivity | stub (logging live) |
 | permission-extractor | Permission Extractor | productivity | stub (logging live) |
+| yield-extractor | Yield Extractor | productivity | stub (logging live) |
 
 ## Seeded / Coming
 
@@ -125,5 +126,6 @@ Every capability is an asset. Every asset compounds.
 - **Ease Extractor** → points of ease and low-resistance paths visible so work consumes less struggle and capacity permanently returns to living more
 - **Release Extractor** → burdens, obligations, identities, and attachments that can be released visible so capacity permanently returns to living more instead of being held by what no longer serves
 - **Permission Extractor** → explicit and implicit permissions to stop, rest, say no, and live more visible so capacity returns without guilt or internal resistance and living more becomes allowed rather than earned
+- **Yield Extractor** → yields, returns on effort, diminishing returns, and low-yield activities visible so further investment stops and capacity permanently returns to living more
 
 Together they turn notes into leverage.
