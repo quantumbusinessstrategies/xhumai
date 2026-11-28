@@ -10,7 +10,6 @@ export interface Capability {
 
 // Seed capabilities
 export const capabilities: Capability[] = [
-  // ... (abbreviated for this example, but in real I need full)
   {
     id: "completion-extractor",
     name: "Completion Extractor",
@@ -37,6 +36,15 @@ export const capabilities: Capability[] = [
     endpoint: "/api/capabilities/flow-extractor",
     inputSchema: { type: "text" },
     outputSchema: { type: "object", properties: { flows: "array", gaps: "string[]" } }
+  },
+  {
+    id: "recovery-extractor",
+    name: "Recovery Extractor",
+    description: "Surface recovery practices, restoration activities, and gaps where recovery is missing so reclaimed capacity is invested in actual restoration rather than more work",
+    category: "productivity",
+    endpoint: "/api/capabilities/recovery-extractor",
+    inputSchema: { type: "text" },
+    outputSchema: { type: "object", properties: { recoveries: "array", gaps: "string[]" } }
   }
 ];
 
